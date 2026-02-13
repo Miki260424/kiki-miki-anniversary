@@ -163,6 +163,9 @@ body {
   color: rgb(0, 0, 0);
   font-weight: 400;
   word-spacing: 5px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
   overflow: hidden;
 }
 .imageTimeline {
@@ -588,6 +591,8 @@ body {
 .memoryText{
   color: #CC3366;
   font-size: 1.25em;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .descriptionTextMemory{
   margin-left: 20px;
