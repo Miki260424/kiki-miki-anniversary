@@ -142,13 +142,18 @@ async function addMemory(memoryData) {
     }
 
     // Save text data to Firebase
-    const docRef = await db.collection("memories").add({
-      title: memoryData.title,
-      description: memoryData.description || "",
-      date: memoryData.date,
-      imageUrl: imageUrl,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
+    async function addMemory(memoryData) {
+      const docRef = await db.collection("memories").add({
+        title: memoryData.title,
+        city: memoryData.city || "", // ← ADDED
+        place: memoryData.place || "", // ← ADDED
+        country: memoryData.country || "", // ← ADDED
+        description: memoryData.description || "",
+        date: memoryData.date,
+        imageUrl: imageUrl,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
 
     console.log("✅ Memory added to Firebase:", docRef.id);
     if (imageUrl) {
