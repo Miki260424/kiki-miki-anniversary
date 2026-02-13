@@ -15,7 +15,4 @@ firebase.initializeApp(firebaseConfig);
 // Initialize Firestore Database
 const db = firebase.firestore();
 
-// Initialize Storage for images
-const storage = firebase.storage();
-
 console.log("Firebase initialized successfully!");
