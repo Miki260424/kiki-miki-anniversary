@@ -1,6 +1,9 @@
-// Database Helper Functions
+// Database Helper Functions - Flexible Version
+// Works with any Firebase structure
 // Firebase: Text data (songs, movies, memories metadata)
 // Cloudinary: Images
+
+console.log("🔧 Loading database-helpers.js...");
 
 // ===== AUTHENTICATION CHECK =====
 function checkAuthentication() {
@@ -70,7 +73,6 @@ async function addFavouriteMovie(movieData) {
   try {
     let posterUrl = "";
 
-    // Upload poster to Cloudinary if provided
     if (movieData.posterFile) {
       console.log("📤 Uploading movie poster to Cloudinary...");
       posterUrl = await uploadImageToCloudinary(
@@ -119,50 +121,46 @@ async function getAllMovies() {
   }
 }
 
-async function deleteMovie(movieId) {
-  try {
-    await db.collection("movies").doc(movieId).delete();
-    console.log("✅ Movie deleted");
-  } catch (error) {
-    console.error("❌ Error deleting movie:", error);
-    throw error;
-  }
-}
-
 // ===== TIMELINE MEMORIES =====
 
 async function addMemory(memoryData) {
+  console.log("📝 addMemory called");
+  console.log("   Data received:", memoryData);
+
   try {
     let imageUrl = "";
 
     // Upload image to Cloudinary if provided
     if (memoryData.image) {
-      console.log("📤 Uploading memory image to Cloudinary...");
+      console.log("📤 Uploading image to Cloudinary...");
       imageUrl = await uploadImageToCloudinary(memoryData.image, "memories");
+      console.log("✅ Image uploaded:", imageUrl);
     }
 
-    // Save text data to Firebase
-    async function addMemory(memoryData) {
-      const docRef = await db.collection("memories").add({
-        title: memoryData.title,
-        city: memoryData.city || "", // ← ADDED
-        place: memoryData.place || "", // ← ADDED
-        country: memoryData.country || "", // ← ADDED
-        description: memoryData.description || "",
-        date: memoryData.date,
-        imageUrl: imageUrl,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-    }
+    // Build the memory object - ONLY include fields that have values
+    const memoryDoc = {
+      title: memoryData.title || "Untitled",
+      date: memoryData.date || new Date().toISOString().split("T")[0],
+      imageUrl: imageUrl,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
 
-    console.log("✅ Memory added to Firebase:", docRef.id);
-    if (imageUrl) {
-      console.log("✅ Image saved to Cloudinary:", imageUrl);
-    }
+    // Add optional fields only if they have values
+    if (memoryData.city) memoryDoc.city = memoryData.city;
+    if (memoryData.place) memoryDoc.place = memoryData.place;
+    if (memoryData.country) memoryDoc.country = memoryData.country;
+    if (memoryData.description) memoryDoc.description = memoryData.description;
+
+    console.log("💾 Saving to Firebase:", memoryDoc);
+
+    const docRef = await db.collection("memories").add(memoryDoc);
+
+    console.log("✅ Memory saved with ID:", docRef.id);
 
     return docRef.id;
   } catch (error) {
-    console.error("❌ Error adding memory:", error);
+    console.error("❌ Error in addMemory:", error);
+    console.error("   Error message:", error.message);
     throw error;
   }
 }
@@ -177,15 +175,22 @@ async function getAllMemoriesByCreated() {
 
     const memories = [];
     snapshot.forEach((doc) => {
+      const data = doc.data();
+
+      // Safely get all fields, use empty string if missing
       memories.push({
         id: doc.id,
-        title: doc.data().title,
-        description: doc.data().description,
-        date: doc.data().date,
-        imageUrl: doc.data().imageUrl,
+        title: data.title || "Untitled",
+        city: data.city || "",
+        place: data.place || "",
+        country: data.country || "",
+        description: data.description || "",
+        date: data.date || "",
+        imageUrl: data.imageUrl || "",
       });
     });
 
+    console.log(`✅ Retrieved ${memories.length} memories`);
     return memories;
   } catch (error) {
     console.error("❌ Error getting memories:", error);
@@ -203,15 +208,21 @@ async function getAllMemoriesByDate(ascending = true) {
 
     const memories = [];
     snapshot.forEach((doc) => {
+      const data = doc.data();
+
       memories.push({
         id: doc.id,
-        title: doc.data().title,
-        description: doc.data().description,
-        date: doc.data().date,
-        imageUrl: doc.data().imageUrl,
+        title: data.title || "Untitled",
+        city: data.city || "",
+        place: data.place || "",
+        country: data.country || "",
+        description: data.description || "",
+        date: data.date || "",
+        imageUrl: data.imageUrl || "",
       });
     });
 
+    console.log(`✅ Retrieved ${memories.length} memories`);
     return memories;
   } catch (error) {
     console.error("❌ Error getting memories:", error);
@@ -227,7 +238,7 @@ async function getAllMemories() {
 async function deleteMemory(memoryId) {
   try {
     await db.collection("memories").doc(memoryId).delete();
-    console.log("✅ Memory deleted from Firebase");
+    console.log("✅ Memory deleted");
   } catch (error) {
     console.error("❌ Error deleting memory:", error);
     throw error;

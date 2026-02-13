@@ -147,7 +147,7 @@ body {
   transition: transform 0.2s ease-in-out;
   transform-origin: center;
   will-change: transform;
-  /* overflow: hidden; */
+  overflow: hidden;
   cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
   z-index: 50;
   border: 3px solid red;
@@ -163,6 +163,7 @@ body {
   color: rgb(0, 0, 0);
   font-weight: 400;
   word-spacing: 5px;
+  overflow: hidden;
 }
 .imageTimeline {
   width: 95%;
