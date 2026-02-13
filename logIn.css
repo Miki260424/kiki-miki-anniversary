@@ -1,0 +1,173 @@
+@font-face {
+  font-family: Rochester;
+  src: url(FontsLogInPage/Rochester-Regular.ttf);
+}
+
+@font-face {
+  font-family: Rokkitt;
+  src: url(FontsLogInPage/Rokkitt-VariableFont_wght.ttf);
+}
+
+@font-face {
+  font-family: "";
+  src: url();
+}
+
+body {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 154, 162, 1) 0%,
+    rgba(255, 198, 204, 1) 70%,
+    rgba(255, 228, 225, 1) 100%
+  );
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--c.png) 0 0, auto;
+}
+
+#logInWIndow {
+  border: 2px solid white;
+  width: 450px;
+  width: min(450px, 90%);
+  height: 300px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  box-shadow: white 0 4px 15px;
+  /* border: 2px solid black; */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  flex-basis: 50%;
+}
+#logInUpperPart {
+  /* border: 2px solid rgb(0, 255, 55); */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.logInH1 {
+  /* border: 1px solid blue; */
+  color: black;
+  font-family: "Rochester";
+  font-weight: 100;
+  text-align: center;
+  font-size: 36px;
+  margin-top: 10px;
+}
+
+.logInH3 {
+  /* border: 1px solid blue; */
+  color: black;
+  font-family: Rokkitt;
+  font-size: 12px;
+  text-align: center;
+  width: fit-content;
+  margin-right: auto;
+  margin-left: auto;
+  font-weight: 500;
+  margin-top: -20px;
+}
+#logInLowerPart {
+  /* border: 2px solid red; */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#logInButton{
+  /* border: 2px solid red;*/
+   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+    box-sizing: border-box;
+}
+
+.logInBtn {
+  color: white;
+  flex: 1;
+  max-width: 400px;
+  margin-right:  min(25px, 10px); 
+  margin-left: min(25px, 10px); 
+  width: 100%;
+  height: 33px;
+  background: linear-gradient(to right, #ffb6c1 0%, #f78da7 100%);
+  border: none;
+  /* text-shadow: -1px -1px 0 #CC3366,
+  1px -1px 0 #CC3366,
+  -1px 1px 0 #CC3366,
+  1px 1px 0 #CC3366; */
+  -webkit-text-stroke: 1px #cc3366;
+  font-size: 26px;
+  font-family: Rochester;
+  border-radius: 5px;
+  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  transition: all 0.2s ease-in-out;
+  
+}
+.logInBtn:hover{
+  box-shadow: 0 0 15px white;
+  /* border: 1px solid white; */
+}
+.logInBtn:active{
+  background: linear-gradient(to left, #ffb6c1 0%, #f78da7 100%);
+  scale: 0.98;
+
+}
+#logInDate {
+  /* border: 2px solid green; */
+  width: 100%;
+  gap: 20px;
+  
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.timeDate {
+  /* width: clamp(20px, 12.5vw, 66px); */
+  height: 45px;
+  flex: 1;
+  max-width: 66px;
+  min-width: 40px;
+  /* margin-right: 10px; */
+  /* margin-left: 10px; */
+  margin-bottom: 20px;
+  background-color: transparent;
+  border: 1px solid white;
+  border-radius: 20px;
+  text-align: center;
+  outline: none;
+  box-shadow: 0 0 5px white;
+  backdrop-filter: blur(20px);
+  caret-color: #cc3366;
+}
+.timeDate:first-child{
+  margin-left: min(15px, 10px);
+}
+.timeDate:last-child{
+  margin-right: min(15px, 10px);
+}
+.timeDate::placeholder{
+  font-family: Rochester;
+  font-size: 12px;
+
+}
+.timeDate:last-child {
+  /* width: clamp(70px, 12.5vw, 110px); */
+  height: 45px;
+  flex: 1.5;
+  max-width: 110px;
+  /* min-width: 70px; */
+}

@@ -1,0 +1,1016 @@
+@font-face {
+  font-family: KikiMiki;
+  src: url(fonts/DynaPuff/DynaPuff-VariableFont_wdth\wght.ttf) format("woff2");
+}
+
+@font-face {
+  font-family: "loveLight";
+  src: url(FontsFavourite/LoveLight-Regular.ttf);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  position: relative;
+  font-family: "Quicksand", sans-serif;
+  cursor: url("cursor/Preppy\ Pinky\ Spider-Man\ Arrow--c.png"), auto;
+  display: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+header {
+  /* position: sticky; */
+  background-color: transparent;
+  position: absolute;
+  border-bottom: 2px solid #ffb6c1;
+  width: 100%;
+  height: 90px;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  /* backdrop-filter: blur(10px); */
+  /* background: linear-gradient(45deg, #ff9aa2 0%, #ffc6cc 70%, #ffe4e1 100%); */
+  background: linear-gradient(
+    45deg,
+    rgba(255, 154, 162, 0.5) 0%,
+    rgba(255, 198, 204, 0.5) 70%,
+    rgba(255, 228, 225, 0.5) 100%
+  );
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 0 15px white;
+  position: fixed;
+}
+
+.navigation {
+  /* border: 2px solid green; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 1rem;
+}
+.navlist {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  /* border: 2px solid blue; */
+  justify-content: space-evenly;
+  align-items: center;
+  width: auto;
+  max-width: 75%;
+  flex: 3;
+  height: 100%;
+  /* float: right; */
+}
+nav h1 {
+  font-family: "loveLight";
+  font-size: clamp(32px, 4.5vw, 64px);
+  white-space: nowrap;
+  color: rgb(255, 255, 255);
+  font-weight: 400;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  /* border: 2px solid red; */
+  margin-left: 1%;
+}
+.listItemLink {
+  text-decoration: none;
+  text-transform: uppercase;
+  font-family: "Quicksand", sans-serif;
+  font-weight: 700;
+  /* font-size: 1.2rem; */
+  font-size: clamp(12px, 1.5vw, 22px);
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 2px white;
+  color: #662244;
+  /* color: #cc3366; */
+  transition: all 0.3s ease;
+  cursor: url("cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png") 0 0, auto;
+  position: relative;
+  /* border: 2px solid green; */
+  white-space: nowrap;
+}
+.listItemLink::before {
+  content: "";
+  position: absolute;
+  display: block;
+  left: 50%;
+  bottom: -2px;
+  height: 2px;
+  width: 0;
+  border-bottom: 1px solid #cc3366;
+  transform: translateX(-50%);
+  transition: all 0.2s ease-in-out;
+}
+.listItemLink:hover::before {
+  width: 100%;
+}
+.listItemLink:hover {
+  text-shadow: 2px 2px 2px #ffc6cc;
+  color: #cc3366;
+}
+
+.logoImage {
+  position: relative;
+  height: 100%;
+}
+
+.navlist li {
+  list-style-type: none;
+  text-decoration: none;
+}
+
+#logOut {
+  /* margin-right: 1%; */
+  padding: 8px 22px;
+  font-size: clamp(0.5rem, 1.5vw, 1rem);
+  font-weight: 600;
+  color: white;
+  background: #cc3366;
+  /* border: 2px solid #cc3366; */
+  border: none;
+  border-radius: 10px;
+  cursor: url("cursor/Preppy Pinky Spider-Man Arrow--p.png"), auto;
+  transition: all 0.25s ease-in-out;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 10px rgba(255, 200, 215, 0.4);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.logOutIcon{
+  display: none;
+}
+
+#logOut:hover {
+  background: #cc3366;
+  color: white;
+  box-shadow: 0 0 15px rgba(255, 180, 200, 0.7);
+  transform: translateY(-2px);
+}
+
+#logOut:active {
+  transform: translateY(0);
+  box-shadow: 0 0 10px rgba(255, 150, 180, 0.5);
+}
+
+#timeTogether {
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  width: 100%;
+}
+
+.heroImageTitle {
+  position: absolute;
+  color: white;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "Quicksand", sans-serif;
+  text-align: center;
+  width: 40%;
+  font-size: clamp(16px, 5vw, 32px);
+  /* border: 2px solid red; */
+  user-select: none;
+}
+@media (max-width: 900px){
+  .heartOfSec::before{
+    width: 1px;
+  }
+  .listItemLink{
+    display: none;
+  }
+}
+
+
+
+#kikimiki {
+  width: 100%;
+  /* background-image: url(sliki/adorable-hearts-ribbon-copy-space.jpg); */
+  /* background-image: url(sliki/pozadina.jpg); */
+  background-image: url(sliki/job523-nunoon-05.jpg);
+  filter: brightness(50%);
+  background-position: center;
+  background-size: cover;
+}
+/* spin */
+
+#centarSpin {
+  position: absolute;
+  display: block;
+  width: calc(100% - 15px);
+  max-height: 100%;
+  height: 100%;
+  /* border: 2px solid red; */
+}
+
+#spin {
+  position: absolute;
+  z-index: 1;
+  border-radius: 50%;
+  display: block;
+  width: 15%;
+  height: 15%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: url("cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png"), auto;
+  color: #cc3366;
+  text-shadow: 2px 2px #ffffff;
+  font-size: 1.5rem;
+  font-family: monospace;
+  font-style: oblique;
+  border: 5px outset;
+  background-color: #ffb6c1;
+}
+#spin:active {
+  background-color: #ffb6b8;
+  border: 5px inset;
+  color: #df386f;
+}
+
+#bigCircle {
+  background-color: rgb(207, 207, 207);
+  border: 15px solid rgb(207, 207, 207);
+  position: relative;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#bigCircle div {
+  display: flex;
+  height: 50%;
+  width: 14%;
+  overflow: hidden;
+  clip-path: polygon(100% 0%, 50% 100%, 0 0);
+  transform-origin: bottom;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  font: bold 20px;
+  font-family: cursive;
+  position: absolute;
+  top: 0;
+}
+
+#bigCircle div:nth-child(odd) {
+  background-color: #ffb6c1;
+}
+#bigCircle div:nth-child(even) {
+  background-color: #f78da7;
+}
+
+#bigCircle div:nth-child(1) {
+  transform: rotate(90deg);
+}
+#bigCircle div:nth-child(2) {
+  transform: rotate(105deg);
+}
+#bigCircle div:nth-child(3) {
+  transform: rotate(120deg);
+}
+#bigCircle div:nth-child(4) {
+  transform: rotate(135deg);
+}
+#bigCircle div:nth-child(5) {
+  transform: rotate(150deg);
+}
+#bigCircle div:nth-child(6) {
+  transform: rotate(165deg);
+}
+#bigCircle div:nth-child(7) {
+  transform: rotate(180deg);
+}
+#bigCircle div:nth-child(8) {
+  transform: rotate(195deg);
+}
+#bigCircle div:nth-child(9) {
+  transform: rotate(210deg);
+}
+#bigCircle div:nth-child(10) {
+  transform: rotate(225deg);
+}
+#bigCircle div:nth-child(11) {
+  transform: rotate(240deg);
+}
+#bigCircle div:nth-child(12) {
+  transform: rotate(255deg);
+}
+#bigCircle div:nth-child(13) {
+  transform: rotate(270deg);
+}
+#bigCircle div:nth-child(14) {
+  transform: rotate(285deg);
+}
+#bigCircle div:nth-child(15) {
+  transform: rotate(300deg);
+}
+#bigCircle div:nth-child(16) {
+  transform: rotate(315deg);
+}
+#bigCircle div:nth-child(17) {
+  transform: rotate(330deg);
+}
+#bigCircle div:nth-child(18) {
+  transform: rotate(345deg);
+}
+#bigCircle div:nth-child(19) {
+  transform: rotate(0deg);
+}
+#bigCircle div:nth-child(20) {
+  transform: rotate(15deg);
+}
+#bigCircle div:nth-child(21) {
+  transform: rotate(30deg);
+}
+#bigCircle div:nth-child(22) {
+  transform: rotate(45deg);
+}
+#bigCircle div:nth-child(23) {
+  transform: rotate(60deg);
+}
+#bigCircle div:nth-child(24) {
+  transform: rotate(75deg);
+}
+
+#spinTheWheel {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-flow: row wrap;
+  background: linear-gradient(45deg, #ff9aa2 0%, #ffc6cc 70%, #ffe4e1 100%);
+  /* clip-path: polygon(
+    0 0,
+    100% 0%,
+    100% calc(100% - 30px),
+    calc(50% + 30px) calc(100% - 30px),
+    50% 100%,
+    calc(50% - 30px) calc(100% - 30px),
+    0 calc(100% - 30px)
+  ); */
+  /* border-radius: 0 0 15% 15%; */
+  /* border-radius: 0 0 10% 10%; */
+}
+
+#textBox {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  /* border: 2px solid red; */
+}
+#envelopeOutline {
+  width: 40%;
+  height: 39%;
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 0 0 15px 15px;
+  border: none;
+  /* border: 2px solid green; */
+}
+
+#openEnvelopeTransition {
+  position: relative;
+  top: 0;
+  border: 1px solid #f596a7;
+  left: 0;
+  background-color: #f596a7;
+  max-height: 100%;
+  height: 100% !important;
+  width: 100% !important;
+  transform-origin: top;
+  clip-path: polygon(50% 50%, 100% 0, 0 0);
+  z-index: 3;
+  /* border: 2px solid yellow; */
+}
+.rotateOpenAnimation {
+  animation: rotateOpen 1.5s ease-in-out forwards;
+  animation-iteration-count: 1;
+}
+.rotateCloseAnimation {
+  animation: rotateClose 1.5s ease-in-out forwards;
+  animation-iteration-count: 1;
+}
+@keyframes rotateOpen {
+  0% {
+    background-color: #f596a7;
+    transform: rotateX(0deg);
+    z-index: 3;
+  }
+  50% {
+    background-color: #f596a7;
+  }
+  90% {
+    z-index: 3;
+  }
+  100% {
+    background-color: #ee2d2a;
+    transform: rotateX(180deg);
+    z-index: 2;
+  }
+}
+@keyframes rotateClose {
+  100% {
+    background-color: #f596a7;
+    transform: rotateX(0deg);
+    z-index: 3;
+  }
+  90% {
+    z-index: 3;
+    background-color: #f596a7;
+  }
+  40% {
+    background-color: #ee2d2a;
+  }
+  0% {
+    background-color: #ee2d2a;
+    transform: rotateX(180deg);
+    z-index: 3;
+  }
+}
+#restOfEnvelope {
+  clip-path: polygon(
+    0 0,
+    1px 0,
+    50% calc(50% - 2px),
+    calc(100% - 1px) 0,
+    100% 100%,
+    0 100%
+  );
+  background-color: #f2728d;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  border-radius: 0 0 15px 15px;
+  z-index: 2;
+  position: absolute;
+}
+#upTriangle {
+  /* background-color: #ee2d2a ; */
+  border-radius: 0 0 15px 15px;
+  background-color: transparent;
+  max-height: 100%;
+  height: 100%;
+  width: 100%;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  border: none;
+}
+.backgroundOfEnvelope {
+  background-color: #ee2d2a;
+  margin-right: auto;
+  margin-left: auto;
+  display: block;
+  position: relative;
+  width: 99%;
+  margin-top: 1px;
+  height: 50%;
+  z-index: 2;
+  /* border: 2px solid red; */
+  
+}
+.backgroundEnvelopeUpAnimation {
+  animation: backgroundUp 1.5s ease forwards;
+  animation-delay: 250ms;
+  animation-iteration-count: 1;
+}
+.backgroundEnvelopeDownAnimation {
+  animation: backgroundDown 2s ease forwards;
+  animation-iteration-count: 1;
+  animation-delay: 1s;
+}
+@keyframes backgroundUp {
+  from {
+    margin-top: 1px;
+  }
+  to {
+    margin-top: -1px;
+  }
+}
+@keyframes backgroundDown {
+  from {
+    margin-top: -1px;
+  }
+  to {
+    margin-top: 1px;
+  }
+}
+#messageOfTheSpin {
+  width: 91%;
+  height: 99% !important;
+  background-color: #fffafc;
+  position: absolute;
+  border-radius: 15px;
+  top: 1px;
+  z-index: 2;
+}
+.paperUpAnimation {
+  animation: paperUp 2s ease-in-out forwards;
+}
+.paperDownAnimation {
+  animation: paperDown 2s ease-in-out forwards;
+}
+@keyframes paperUp {
+  0% {
+    transform: translateY(0%);
+  }
+  100% {
+    transform: translateY(-60%);
+  }
+}
+@keyframes paperDown {
+  0% {
+    transform: translateY(-60%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+#message {
+  padding: 2rem;
+  margin: auto;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(255, 150, 180, 0.3);
+  height: 100%;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  color: #5c2a45;
+}
+.fadeInAnimation {
+  animation: fadeIn 1.5s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#downTriangle {
+  background-color: #f596a7;
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(0 100%, 50% 50%, 100% 100%);
+  border-radius: 0 0 15px 15px;
+}
+
+#forKikica,
+#fromMikica {
+  font-size: 1.2rem;
+  font-style: italic;
+  color: #cc3366;
+  margin-bottom: 1rem;
+}
+
+#mainReason {
+  font-size: 1.4rem;
+  font-weight: normal;
+  margin-bottom: 1rem;
+  color: #662244;
+  /* text-transform: capitalize; */
+}
+
+#spinText {
+  width: 50%;
+  margin: 40px auto;
+  border: 2px solid black;
+}
+
+#spinCollection {
+  /* border: 2px solid green; */
+  height: 100%;
+  width: 50%;
+  position: relative;
+  margin: 40px auto;
+}
+.spinAndArrow {
+  /* border: 2px solid blue; */
+  max-height: 500px;
+  height: 100%;
+  max-width: 515px;
+  width: 100%;
+  position: relative;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+#arrow {
+  height: 25px;
+  width: 50px;
+  position: absolute;
+  z-index: 3;
+  background-color: rgb(0, 0, 0);
+  top: 50%;
+  right: 0;
+  transform: translate(0, -50%);
+  clip-path: path(
+    "M 0,12.5 L 37.5,25 A 12.5,12.5 0 0 0 50,12.5 A 12.5,12.5 0 0 0 37.5,0  Z"
+  );
+}
+
+#outlineArrow {
+  height: 25px;
+  width: 50px;
+  position: absolute;
+  z-index: 4;
+  background-color: rgb(255, 255, 255);
+  top: 50%;
+  right: 0;
+  transform: translate(0, -50%);
+  clip-path: path(
+    "M 2,12.5 L 37.5,24 A 12.5,12.5 0 0 0 49,12.5 A 12.5,12.5 0 0 0 37.5,1  Z"
+  );
+}
+#circleInArrow {
+  height: 10px;
+  width: 10px;
+  z-index: 5;
+  position: absolute;
+  top: 50%;
+  right: 6.25px;
+  border-radius: 50%;
+  transform: translate(0, -50%);
+  background-color: black;
+}
+@media (max-width: 1056px) {
+  #spinTheWheel {
+    flex-direction: column;
+  }
+  #bigCircle {
+    border: 5px solid rgb(207, 207, 207);
+    position: relative;
+    max-width: 250px;
+    min-width: 250px;
+    width: 100%;
+    max-height: 250px;
+    min-height: 250px;
+    height: 100%;
+  }
+  .spinAndArrow {
+    /* border: 2px solid blue; */
+    height: 100%;
+    width: min-content;
+    position: relative;
+    margin-right: auto;
+    margin-left: auto;
+  }
+  #spinCollection {
+    /* border: 2px solid green; */
+    height: 100%;
+    width: 100%;
+    position: relative;
+    margin: 40px auto;
+  }
+  #spin{
+    font-size: 0.7rem;
+      text-shadow: 1px 1px #ffffff;
+  border: 3px outset;
+}
+  #spin:active {
+    border: 3px inset;
+  }
+
+}
+
+
+
+  #centarSpin {
+  width: calc(100% - 10px);
+  /* border: 2px solid red; */
+}
+
+
+
+#boja {
+  /* background-image: url("https://as2.ftcdn.net/jpg/02/44/61/83/1000_F_244618316_YPHrxgX9u76vE5ctT2697CXjXAEkYWAx.jpg"); */
+  background-position: bottom;
+  background-repeat: no-repeat;
+  width: 100%;
+  background-size: cover;
+  /* background: linear-gradient(45deg, rgb(0, 204, 255), rgb(255, 0, 200)); */
+  width: 100%;
+  height: 150px;
+  /* clip-path: polygon(0 0, 100% 0, 100% 80%, 55% 80%, 50% 100%, 45% 80%, 0 80%); */
+  /* clip-path: path("M 0,0 L 100,0 L 100,100 L 100,80 L 80,100 L 50,55 20,60 Z"); */
+  /* clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 30px),
+    calc(50% + 30px) calc(100% - 30px),
+    50% 100%,
+    calc(50% - 30px) calc(100% - 30px),
+    0 calc(100% - 30px)
+  ); */
+}
+
+/* spinner */
+
+#loader {
+  display: block;
+}
+.center {
+  display: flex;
+  z-index: 999;
+}
+.back {
+  z-index: 999;
+  position: fixed;
+  padding: 0;
+  margin: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  animation-name: backdiv;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+}
+
+.heart {
+  z-index: 999;
+  position: absolute;
+  margin: auto;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: pink;
+  height: 50px;
+  width: 50px;
+  transform: rotate(-45deg);
+  animation-name: beat;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+}
+.heart:after {
+  background-color: pink;
+  content: "";
+  border-radius: 50%;
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  top: 0px;
+  left: 25px;
+}
+.heart:before {
+  background-color: pink;
+  content: "";
+  border-radius: 50%;
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  top: -25px;
+  left: 0px;
+}
+
+@keyframes backdiv {
+  50% {
+    background: #ffe6f2;
+  }
+}
+
+@keyframes beat {
+  0% {
+    transform: scale(1) rotate(-45deg);
+  }
+  50% {
+    transform: scale(0.6) rotate(-45deg);
+  }
+}
+
+/* image slider */
+
+#FirstImageSlider {
+  width: 100%;
+  height: 100%;
+}
+#slider {
+  width: 100%;
+  max-width: 600px;
+  height: 300px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  aspect-ratio: 16 / 9;
+}
+
+#imageContainer {
+  width: 80%;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transition: all 0.5s ease-in-out;
+}
+#leftA,
+#rightA {
+  width: 10%;
+  min-width: 40px;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: url("cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png"), auto;
+}
+
+.arrowR,
+.arrowL {
+  height: 15%;
+  margin-right: auto;
+  margin-left: auto;
+}
+.arrowL {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 768px) {
+  #slider {
+    height: auto;
+  }
+  .imageContainer {
+    width: 100%;
+    height: 300px;
+  }
+  .arrowR,
+  .arrowL {
+    width: 100%;
+    height: 40px;
+    justify-content: center;
+  }
+}
+
+#wrapperOfHearts{
+  /* border: 2px solid green; */
+  height: 70dvh;
+  overflow: hidden;
+}
+
+.heartHang{
+  /* border: 2px solid red; */
+  height: clamp(30vh, calc(20vh + 30vw), 60vh);
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  position: relative;
+  overflow: visible;
+ /* overflow: hidden; */
+  /* clip-path: inset(0px 0px -80px 0px ); */
+  /* padding-bottom: 100px; */
+}
+.divOfHearts{
+  /* border: 2px solid black; */
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  position: relative;
+  /* overflow: hidden; */
+}
+.hanger{
+  /* border: 2px solid rgb(255, 0, 200); */
+  overflow: visible;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  transform-origin: top center;
+    /* animation: swing 4.5s cubic-bezier(.36,0,.64,1) infinite; */
+}
+.heartOfSec{
+  /* border: 2px solid green; */
+  width: 70%;
+  position: absolute;
+  z-index: 2;
+  
+}
+
+.divOfHearts:nth-child(1) .hanger{
+      animation: swing 5s cubic-bezier(.36,0,.64,1) infinite;
+}
+.divOfHearts:nth-child(2) .hanger{
+      animation: swing 4.5s cubic-bezier(.36,0,.64,1) infinite;
+}
+.divOfHearts:nth-child(3) .hanger{
+      animation: swing 4s cubic-bezier(.36,0,.64,1) infinite;
+}
+.divOfHearts:nth-child(4) .hanger{
+      animation: swing 5s cubic-bezier(.36,0,.64,1) infinite;
+}
+.divOfHearts:nth-child(5) .hanger{
+      animation: swing 6s cubic-bezier(.36,0,.64,1) infinite;
+}
+.divOfHearts:nth-child(6) .hanger{
+      animation: swing 5.5s cubic-bezier(.36,0,.64,1) infinite;
+}
+.divOfHearts:nth-child(7) .hanger{
+      animation: swing 4.8s cubic-bezier(.36,0,.64,1) infinite;
+}
+
+
+.divOfHearts:nth-child(1) .heartOfSec{
+  top: 30%;
+}
+.divOfHearts:nth-child(2) .heartOfSec{
+  top: 80%;
+}
+.divOfHearts:nth-child(3) .heartOfSec{
+  top: 45%;
+}
+.divOfHearts:nth-child(4) .heartOfSec{
+  top: 10%;
+}
+.divOfHearts:nth-child(5) .heartOfSec{
+  top: 60%;
+}
+.divOfHearts:nth-child(6) .heartOfSec{
+  top: 40%;
+}
+.divOfHearts:nth-child(7) .heartOfSec{
+  top: 15%;
+}
+
+.heartOfSec img{
+  width: 100%;
+  z-index: 50;
+  user-select: none;
+  cursor: url("  /cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png")0 0, auto;
+}
+.heartOfSec::before{
+  content: '';
+  position: absolute;
+  width: 2px;
+  background-color: black;
+  height: 100vh;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 50%;
+  z-index: -1;
+  /* overflow: hidden; */
+}
+
+
+
+ @keyframes swing{
+  0%{
+    transform: rotate(10deg);
+        z-index: -1;
+          user-select: none;
+
+  }
+  50%{
+    transform: rotate(-10deg);
+        z-index: -1;
+  user-select: none;
+
+  }
+  100%{
+    transform: rotate(10deg);
+    z-index: -1;
+  user-select: none;
+
+  }
+}
+
+.something{
+  /* border: 2px solid red; */
+  height: 100dvh;
+  background-color: #662244;
+}

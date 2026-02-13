@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Memory Timeline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        #timelineWrapper {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid red;
+        }
+
+        #connectionSVG {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .sectionOfMemory {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 60px;
+        }
+
+        .floatMemory {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 450px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .floatMemory:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .sectionOfMemory:nth-child(odd) .floatMemory {
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+        .sectionOfMemory:nth-child(even) .floatMemory {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .memoryTitle {
+            font-size: 24px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+
+        .memoryDate {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .memoryContent {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .addMemoryBtn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .addMemoryBtn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(118, 75, 162, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .floatMemory {
+                max-width: 100%;
+            }
+
+            .sectionOfMemory:nth-child(odd) .floatMemory,
+            .sectionOfMemory:nth-child(even) .floatMemory {
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+      
+    </style>
+</head>
+<body>
+    <div id="timelineWrapper">
+        <svg id="connectionSVG"></svg>
+        
+        <div class="sectionOfMemory">
+            <div class="floatMemory">
+                <div class="memoryTitle">First Memory</div>
+                <div class="memoryDate">January 2024</div>
+                <div class="memoryContent">This is where it all began. A moment captured in time, forever remembered in this beautiful timeline.</div>
+            </div>
+        </div>
+
+        <div class="sectionOfMemory">
+            <div class="floatMemory">
+                <div class="memoryTitle">Growing Stronger</div>
+                <div class="memoryDate">March 2024</div>
+                <div class="memoryContent">Each step forward brought new experiences and lessons that shaped the journey ahead.</div>
+            </div>
+        </div>
+
+        <div class="sectionOfMemory">
+            <div class="floatMemory">
+                <div class="memoryTitle">Milestone Achieved</div>
+                <div class="memoryDate">June 2024</div>
+                <div class="memoryContent">A significant achievement that marked a turning point in this incredible adventure.</div>
+            </div>
+        </div>
+
+        <div class="sectionOfMemory">
+            <div class="floatMemory">
+                <div class="memoryTitle">New Horizons</div>
+                <div class="memoryDate">September 2024</div>
+                <div class="memoryContent">Opening doors to possibilities never imagined before, expanding the vision of what could be.</div>
+            </div>
+        </div>
+
+        <div class="sectionOfMemory">
+            <div class="floatMemory">
+                <div class="memoryTitle">Present Day</div>
+                <div class="memoryDate">October 2024</div>
+                <div class="memoryContent">The journey continues with endless possibilities ahead, building on everything learned so far.</div>
+            </div>
+        </div>
+    </div>
+
+    <button class="addMemoryBtn" onclick="addNewMemory()">+ Add Memory</button>
+
+    <script>
+        function drawLines() {
+            const svg = document.getElementById('connectionSVG');
+            const wrapper = document.getElementById('timelineWrapper');
+            const memories = document.querySelectorAll('.floatMemory');
+            
+            // Clear existing lines
+            svg.innerHTML = '';
+            
+            // Set SVG dimensions to match wrapper
+            const wrapperRect = wrapper.getBoundingClientRect();
+            svg.setAttribute('width', wrapper.scrollWidth);
+            svg.setAttribute('height', wrapper.scrollHeight);
+            
+            // Calculate positions for all memories
+            const positions = Array.from(memories).map((memory, index) => {
+                const rect = memory.getBoundingClientRect();
+                const wrapperTop = wrapperRect.top + window.scrollY;
+                const wrapperLeft = wrapperRect.left + window.scrollX;
+                
+                return {
+                    top: rect.top + window.scrollY - wrapperTop,
+                    bottom: rect.bottom + window.scrollY - wrapperTop,
+
+                    centerX: rect.left + rect.width / 2 + window.scrollX - wrapperLeft,
+                    centerY: rect.top + rect.height / 2 + window.scrollY - wrapperTop,
+
+                    leftX: rect.left + window.scrollX - wrapperLeft,
+                    rightX: rect.right + window.scrollX - wrapperLeft,
+                    
+                    width: rect.width,
+                    index: index
+                };
+            });
+            
+            // Draw connecting lines between consecutive memories
+            for (let i = 0; i < positions.length - 1; i++) {
+                const current = positions[i];
+                const next = positions[i + 1];
+                
+                // Determine if current memory is on left (odd) or right (even)
+                const isOdd = i % 2 === 0;
+                const startX = isOdd ? current.rightX : current.leftX;
+                const startY = current.centerY;
+                
+                // Horizontal line endpoint (center of next memory horizontally)
+                const horizontalEndX = next.centerX;
+                const horizontalEndY = startY;
+                
+                // Vertical line endpoint (top center of next memory)
+                const verticalEndX = next.centerX;
+                const verticalEndY = next.top;
+                
+                // Draw horizontal line
+                const horizontalLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                horizontalLine.setAttribute('x1', startX);
+                horizontalLine.setAttribute('y1', startY);
+                horizontalLine.setAttribute('x2', horizontalEndX);
+                horizontalLine.setAttribute('y2', horizontalEndY);
+                horizontalLine.setAttribute('stroke', 'rgba(255, 255, 255, 0.6)');
+                horizontalLine.setAttribute('stroke-width', '3');
+                horizontalLine.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(horizontalLine);
+                
+                // Draw vertical line
+                const verticalLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                verticalLine.setAttribute('x1', horizontalEndX);
+                verticalLine.setAttribute('y1', horizontalEndY);
+                verticalLine.setAttribute('x2', verticalEndX);
+                verticalLine.setAttribute('y2', verticalEndY);
+                verticalLine.setAttribute('stroke', 'rgba(255, 255, 255, 0.6)');
+                verticalLine.setAttribute('stroke-width', '3');
+                verticalLine.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(verticalLine);
+                
+                // Add decorative circles at connection points
+                const startCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                startCircle.setAttribute('cx', startX);
+                startCircle.setAttribute('cy', startY);
+                startCircle.setAttribute('r', '6');
+                startCircle.setAttribute('fill', 'white');
+                svg.appendChild(startCircle);
+                
+                const endCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                endCircle.setAttribute('cx', verticalEndX);
+                endCircle.setAttribute('cy', verticalEndY);
+                endCircle.setAttribute('r', '6');
+                endCircle.setAttribute('fill', 'white');
+                svg.appendChild(endCircle);
+            }
+        }
+        
+        // Add new memory dynamically
+        let memoryCount = 5;
+        function addNewMemory() {
+            memoryCount++;
+            const wrapper = document.getElementById('timelineWrapper');
+            const newSection = document.createElement('div');
+            newSection.className = 'sectionOfMemory';
+            newSection.innerHTML = `
+                <div class="floatMemory">
+                    <div class="memoryTitle">New Memory ${memoryCount}</div>
+                    <div class="memoryDate">${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+                    <div class="memoryContent">A newly added memory that seamlessly integrates into the timeline with automatic connection lines.</div>
+                </div>
+            `;
+            
+            // Insert before the last child (SVG)
+            wrapper.insertBefore(newSection, wrapper.lastElementChild);
+            
+            // Redraw lines after a brief delay to allow layout to settle
+            setTimeout(drawLines, 50);
+        }
+        
+        // Initial draw
+        window.addEventListener('load', drawLines);
+        
+        // Redraw on resize and scroll
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(drawLines, 100);
+        });
+        
+        window.addEventListener('scroll', drawLines);
+    </script>
+</body>
+</html>

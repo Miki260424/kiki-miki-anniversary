@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #timeline img {
+            width: 200px;
+            border-radius: 10px;
+            margin: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <input type="file" id="imageUpload" accept="image/*">
+    <div id="timeline"></div>
+
+
+    <div id="timeTogether">
+        <div id="kikimiki"></div>
+        <h1 class="heroImageTitle" id="timeline">It's been <span id="spanYear"></span>,
+            <span id="spanMonth"></span>, <span id="spanDay"></span>,
+            <span id="spanHour"></span>, <span id="spanMinute"></span>,
+            <span id="spanSecond"></span>
+        </h1>
+    </div>
+    <script>
+        const input = document.getElementById("imageUpload");
+        const timeline = document.getElementById("timeline");
+
+        // Load saved images from localStorage
+        window.addEventListener("DOMContentLoaded", () => {
+            const saved = JSON.parse(localStorage.getItem("timelineImages")) || [];
+            saved.forEach(src => addImageToTimeline(src));
+        });
+
+        // When a new file is uploaded
+        input.addEventListener("change", function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const imageData = e.target.result;
+                    addImageToTimeline(imageData);
+
+                    // Save to localStorage
+                    const saved = JSON.parse(localStorage.getItem("timelineImages")) || [];
+                    saved.push(imageData);
+                    localStorage.setItem("timelineImages", JSON.stringify(saved));
+                };
+
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Helper function to display images
+        function addImageToTimeline(src) {
+            const img = document.createElement("img");
+            img.src = src;
+            timeline.appendChild(img);
+        }
+
+        let divTime = document.getElementById("timeTogether");
+        let spanYear = document.getElementById("spanYear");
+        let spanMonth = document.getElementById("spanMonth");
+        let spanDay = document.getElementById("spanDay");
+        let spanHour = document.getElementById("spanHour");
+        let spanMinute = document.getElementById("spanMinute");
+        let spanSecond = document.getElementById("spanSecond");
+        const TimeTogether = {
+            year: 2024,
+            month: 4,
+            day: 26,
+            hour: 21,
+            minute: 51,
+            second: 26,
+        }
+    </script>
+</body>
+
+</html>

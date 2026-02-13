@@ -1,0 +1,229 @@
+@font-face {
+  font-family: "loveLight";
+  src: url(FontsFavourite/LoveLight-Regular.ttf);
+}
+@font-face {
+  font-family: "ribeyeMarrow";
+  src: url(FontsFavourite/RibeyeMarrow-Regular.ttf);
+}
+@font-face {
+  font-family: "addBtn";
+  src: url(FontsFavourite/SchibstedGrotesk-VariableFont_wght.ttf);
+}
+* {
+  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--c.png) 0 0, auto;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  /* background: #f3eced; */
+  /* cursor: url('/cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png')0 0, auto;  */
+  display: none;
+}
+/* ::-webkit-scrollbar-thumb{
+  background: linear-gradient(to right, #ffe4e1 100%, #ffc6cc 70%, #ff9aa2 0%);
+  border-radius: 15px;
+  border: 1px dashed black;
+  box-shadow: 0px 0px 5px black;
+  background-image: url("/FontsFavourite/images/4a0b8f60-d6b6-49a8-8fad-661d636ecd11.jpg");
+  background-size: contain;
+  background-position: cover;
+  cursor: url('/cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png')0 0, auto; 
+   background-clip: content-box;
+}
+::-webkit-scrollbar-track{
+ background-color: #eeaeca; 
+  border-radius: 15%;
+    cursor: url('/cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png')0 0, auto; 
+
+}
+::-webkit-scrollbar-button{
+  border-radius: 15px;
+  border: 1px dashed black;
+  background: linear-gradient(to right, #ffe4e1 100%, #ffc6cc 70%, #ff9aa2 0%);
+  cursor: url('/cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png')0 0, auto; 
+
+  
+} */ 
+
+body {
+  scroll-behavior: smooth;
+  transition: overflow 0.3 ease;
+}
+nav {
+  background: linear-gradient(to right, #ffe4e1 100%, #ffc6cc 70%, #ff9aa2 0%);
+  text-align: center;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 997;
+}
+nav h1 {
+  font-family: "loveLight";
+  font-size: 64px;
+  color: rgb(0, 0, 0);
+  font-weight: 400;
+}
+.wrapper {
+  /* border: 1px solid red; */
+  height: auto;
+  width: 80%;
+  margin-right: auto;
+  margin-left: auto;
+  margin-top: 5%;
+}
+.sectionFav {
+  /* border: 1px solid blue; */
+  width: 100%;
+  height: auto;
+  margin-bottom: 10%;
+}
+.texts {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.title {
+  /* border: 5px solid red; */
+  font-size: 38px;
+  font-family: "ribeyeMarrow";
+  font-weight: 100;
+  color: gray;
+}
+.addBtn {
+  font-family: "addBtn";
+  /* border: 1px solid blue; */
+  font-weight: 400;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 2%;
+  /* border: 1px solid red; */
+  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  transition: all 0.3s ease-in-out;
+}
+.addBtn:hover {
+  color: #ff758f;
+}
+.material-symbols-outlined {
+  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  margin-left: 3px;
+}
+
+.gridItems {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  /* border: 2px solid black; */
+  /* margin-bottom: 5%; */
+}
+.exampleDiv {
+  background-color: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  transition: transform 0.2s ease-in-out;
+  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+}
+.exampleDiv:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+}
+
+@media (max-width: 500px) {
+  .gridItems {
+    grid-template-columns: 1fr;
+  }
+  .title {
+    font-size: 28px;
+  }
+}
+#popUpWindow {
+  position: fixed;
+  border: 2px solid rgb(255, 255, 255);
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  width: 50%;
+  height: 70%;
+  z-index: 999;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 20px;
+  box-shadow: 0 0 20px white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  display: none;
+}
+#shadow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #eeaeca;
+  background: radial-gradient(rgba(39, 39, 39, 0.7));
+  z-index: 998;
+  top: 0;
+  position: fixed;
+  display: none;
+}
+.searchFld {
+  height: 50px;
+  width: 500px;
+  margin-top: 15%;
+
+  border-right: none;
+  border-radius: 0 auto auto 0;
+  border-top: 1px solid black;
+  border-left: 1px solid black;
+  border-bottom: 1px solid black;
+  /* outline: none; */
+}
+.searchFld:hover,
+.searchBtn:hover {
+  cursor: url("/cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png") 0 0, auto;
+}
+.searchHolder {
+  /* width: 100%;
+  height: 100%;
+  border: 1px solid black; */
+}
+.searchBtn {
+  outline: none;
+  height: 50px;
+  width: 250px;
+  margin-top: 15%;
+  border-left: none;
+  border-radius: 0 auto auto 0;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  border-right: 1px solid black;
+  background-color: #ffc6cc;
+}
+.backBtn {
+  font-family: "addBtn";
+  /* border: 1px solid blue; */
+  font-weight: 400;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 2%;
+  border: 1px solid #ffc6cc;
+  background-color: #ff758f;
+  padding: 10px 20px;
+  border-radius: 15px;
+  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  transition: all 0.3s ease-in-out;
+  color: #ffffff;
+}
+.backBtn:hover {
+  color: #ffe4e1;
+  box-shadow: 0 0 15px #ffc6cc;
+}

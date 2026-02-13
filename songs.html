@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Favorite Songs Demo</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #ffe4e1;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+  }
+  nav {
+    background: linear-gradient(to right, #ffe4e1 100%, #ffc6cc 70%, #ff9aa2 0%);
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  nav h1 { font-size: 48px; margin: 0; }
+
+  .wrapper {
+    width: 80%;
+    margin: 20px auto;
+  }
+
+  .addSection {
+    margin-bottom: 20px;
+  }
+  input[type="text"] {
+    padding: 10px;
+    font-size: 18px;
+    width: 60%;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: none;
+    background-color: #ff9aa2;
+    color: white;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: 0.2s;
+  }
+  button:hover {
+    background-color: #ff758f;
+  }
+
+  .gridItems {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  .songCard {
+    background: rgba(255,255,255,0.3);
+    backdrop-filter: blur(8px);
+    border-radius: 20px;
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  .songCard:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255,255,255,0.7);
+  }
+  .songCard img {
+    width: 100%;
+    border-radius: 15px;
+  }
+  .songCard h3, .songCard p {
+    margin: 5px 0;
+  }
+  .playBtn {
+    margin-top: 8px;
+    padding: 5px 10px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    background-color: #ff758f;
+    color: white;
+    cursor: pointer;
+  }
+  .playBtn:hover {
+    background-color: #ff4c6d;
+  }
+</style>
+</head>
+<body>
+
+<nav><h1>Kiki + Miki Favorites</h1></nav>
+
+<div class="wrapper">
+  <div class="addSection">
+    <input type="text" id="songInput" placeholder="Type a song name...">
+    <button id="addSongBtn">Add Song</button>
+  </div>
+
+  <div class="gridItems" id="songGrid">
+    <!-- Songs will appear here -->
+  </div>
+</div>
+
+<script>
+  const addBtn = document.getElementById("addSongBtn");
+  const input = document.getElementById("songInput");
+  const grid = document.getElementById("songGrid");
+
+  // Load saved songs from localStorage
+  let songs = JSON.parse(localStorage.getItem("songs")) || [];
+  songs.forEach(song => createSongCard(song));
+
+  addBtn.addEventListener("click", async () => {
+    const query = input.value.trim();
+    if (!query) return alert("Type a song name!");
+
+    try {
+      const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`);
+      const data = await response.json();
+      if (data.results.length === 0) return alert("Song not found!");
+
+      const songData = data.results[0];
+      const song = {
+        title: songData.trackName,
+        artist: songData.artistName,
+        image: songData.artworkUrl100.replace('100x100bb', '300x300bb'),
+        preview: songData.previewUrl
+      };
+
+      songs.push(song);
+      localStorage.setItem("songs", JSON.stringify(songs));
+
+      createSongCard(song);
+      input.value = "";
+    } catch (error) {
+      console.error(error);
+      alert("Error fetching song!");
+    }
+  });
+
+  function createSongCard(song) {
+    const card = document.createElement("div");
+    card.classList.add("songCard");
+    card.innerHTML = `
+      <img src="${song.image}" alt="${song.title}">
+      <h3>${song.title}</h3>
+      <p>${song.artist}</p>
+      <button class="playBtn">Play Preview</button>
+      <audio src="${song.preview}"></audio>
+    `;
+
+    const btn = card.querySelector(".playBtn");
+    const audio = card.querySelector("audio");
+
+    btn.addEventListener("click", () => {
+      // Pause all other audios
+      document.querySelectorAll("audio").forEach(a => {
+        if (a !== audio) {
+          a.pause();
+          a.currentTime = 0;
+          const otherBtn = a.parentElement.querySelector(".playBtn");
+          if (otherBtn) otherBtn.textContent = "Play Preview";
+        }
+      });
+
+      // Reset and play this audio
+      audio.pause();
+      audio.currentTime = 0;
+      audio.load(); // Ensure audio is ready
+      audio.play().catch(err => {
+        alert("Click the button to allow audio playback.");
+      });
+      btn.textContent = "Pause";
+
+      audio.onended = () => btn.textContent = "Play Preview";
+    });
+
+    grid.appendChild(card);
+  }
+</script>
+
+</body>
+</html>
