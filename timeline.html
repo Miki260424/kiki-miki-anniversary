@@ -8,11 +8,11 @@
  <!-- Firebase SDK (for text data) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-      
+
     <!-- Configurations -->
     <script src="firebase-config.js"></script>
     <script src="cloudinary-config.js"></script>
-      
+
     <!-- Database Helpers -->
     <script src="database-helpers.js"></script>
   </head>
@@ -247,19 +247,22 @@
           <h1 id="titleOfPopUp">Our first trip</h1>
         </div>
         <div id="divOfText">
-          <p>
-            <b class="boldText">City: </b
-            ><span id="popupCity" class="memoryText">Budva</span>
-          </p>
-          <p>
-            <b class="boldText">Place: </b
-            ><span id="popupPlace" class="memoryText">Montenegro</span>
-          </p>
-          <p>
-            <b class="boldText">Date: </b
-            ><span id="popupDate" class="memoryText">26.04.2024</span>
-          </p>
-          <p>
+        <p>
+          <b class="boldText">City: </b
+          ><span id="popupCity" class="memoryText">Budva</span>
+        </p>
+        <p>
+          <b class="boldText">Place: </b
+          ><span id="popupPlace" class="memoryText">Montenegro</span>
+        </p>
+        <p>
+          <b class="boldText">Country: </b
+          ><span id="popupCountry" class="memoryText">N/A</span>
+        </p>
+        <p>
+          <b class="boldText">Date: </b
+          ><span id="popupDate" class="memoryText">26.04.2024</span>
+        </p>
             <b class="boldText">Description: </b><br />
             <span
               class="memoryText descriptionTextMemory"
@@ -351,71 +354,79 @@
         }
       });
 
-      // Handle submit memory button
-      document
-        .getElementById("submitMemoryBtn")
-        .addEventListener("click", async function () {
-          const city = document.getElementById("cityInput").value;
-          const place = document.getElementById("placeInput").value;
-          const title = document.getElementById("titleInput").value;
-          const date = document.getElementById("dateInput").value;
-          const description =
-            document.getElementById("textOfDescription").value;
+// Handle submit memory button
+document
+  .getElementById("submitMemoryBtn")
+  .addEventListener("click", async function () {
+    const title = document.getElementById("titleInput").value;
+    const city = document.getElementById("cityInput").value;
+    const place = document.getElementById("placeInput").value;
+    const country = document.getElementById("countryInput").value;
+    const date = document.getElementById("dateInput").value;
+    const description = document.getElementById("textOfDescription").value;
 
-          if (!title || !date) {
-            alert("Please fill in at least the title and date!");
-            return;
-          }
+    if (!title || !date) {
+      alert("Please fill in at least the title and date!");
+      return;
+    }
 
-          try {
-            this.textContent = "Adding...";
-            this.disabled = true;
+    try {
+      this.textContent = "Uploading...";
+      this.disabled = true;
 
-            const memoryData = {
-              title,
-              city,
-              place,
-              date,
-              description,
-              imageUrl: "",
-            };
-            const memoryId = await addMemory(memoryData);
+      // Create memory data with image file
+      const memoryData = {
+        title: title,
+        city: city,
+        place: place,
+        country: country,
+        description: description,
+        date: date,
+        image: selectedFile // Pass the file directly
+      };
 
-            if (selectedFile) {
-              const imageUrl = await uploadMemoryImage(selectedFile, memoryId);
-              await updateMemory(memoryId, { imageUrl });
-              memoryData.imageUrl = imageUrl;
-            }
+      // addMemory handles both Cloudinary upload and Firebase save
+      const memoryId = await addMemory(memoryData);
+      
+      console.log("✅ Memory saved with ID:", memoryId);
 
-            memoryData.id = memoryId;
-            addMemoryToDOM(memoryData);
+      // Get the memory to display it with the Cloudinary URL
+      const memories = await getAllMemories();
+      const newMemory = memories.find(m => m.id === memoryId);
+      
+      if (newMemory) {
+        addMemoryToDOM(newMemory);
+      }
 
-            // Reset form
-            document.getElementById("cityInput").value = "";
-            document.getElementById("placeInput").value = "";
-            document.getElementById("titleInput").value = "";
-            document.getElementById("dateInput").value = "";
-            document.getElementById("textOfDescription").value = "";
-            selectedFile = null;
+      // Reset form
+      document.getElementById("titleInput").value = "";
+      document.getElementById("cityInput").value = "";
+      document.getElementById("placeInput").value = "";
+      document.getElementById("countryInput").value = "";
+      document.getElementById("dateInput").value = "";
+      document.getElementById("textOfDescription").value = "";
+      selectedFile = null;
 
-            // Close popup
-            popupOfInp.style.display = "none";
-            shadow.style.display = "none";
-            document.body.style.overflow = "visible";
+      // Reset file input
+      const fileInput = document.getElementById("fileInput");
+      if (fileInput) fileInput.value = "";
 
-            setTimeout(drawLines, 50);
-            this.textContent = "ADD OUR MEMORY";
-            this.disabled = false;
-            alert("Memory added! 🎉");
-          } catch (error) {
-            console.error("Error:", error);
-            alert("Error: " + error.message);
-            this.textContent = "ADD OUR MEMORY";
-            this.disabled = false;
-          }
-        });
+      // Close popup
+      popupOfInp.style.display = "none";
+      shadow.style.display = "none";
+      document.body.style.overflow = "visible";
 
-      // ============ EXISTING FUNCTIONS ============
+      setTimeout(drawLines, 50);
+      this.textContent = "ADD OUR MEMORY";
+      this.disabled = false;
+      alert("Memory added! 🎉");
+    } catch (error) {
+      console.error("❌ Error:", error);
+      alert("Error: " + error.message);
+      this.textContent = "ADD OUR MEMORY";
+      this.disabled = false;
+    }
+  });      // ============ EXISTING FUNCTIONS ============
 
       function drawLines() {
         const svg = document.getElementById("connectionSVG");

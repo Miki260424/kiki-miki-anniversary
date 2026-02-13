@@ -1,8 +1,8 @@
-// Database Helper Functions
-// Firebase: Text data (songs, movies, memories metadata)
-// Cloudinary: Images
+// Database Helper Functions for Kiki + Miki Anniversary Website
 
-// ===== AUTHENTICATION CHECK =====
+// ==================== AUTHENTICATION ====================
+
+// Check if user is authenticated (using the special date)
 function checkAuthentication() {
   const loggedIn = sessionStorage.getItem("loggedIn");
   if (loggedIn !== "true") {
@@ -10,221 +10,194 @@ function checkAuthentication() {
   }
 }
 
-// ===== FAVOURITE SONGS =====
+// ==================== MEMORY FUNCTIONS ====================
 
-async function addFavouriteSong(songData) {
-  try {
-    const docRef = await db.collection("songs").add({
-      name: songData.name,
-      artist: songData.artist || "",
-      spotifyUrl: songData.spotifyUrl || "",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-
-    console.log("✅ Song added:", docRef.id);
-    return docRef.id;
-  } catch (error) {
-    console.error("❌ Error adding song:", error);
-    throw error;
-  }
-}
-
-async function getAllSongs() {
-  try {
-    const snapshot = await db
-      .collection("songs")
-      .orderBy("createdAt", "desc")
-      .get();
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      name: doc.data().name,
-      artist: doc.data().artist,
-      spotifyUrl: doc.data().spotifyUrl,
-      type: "song",
-    }));
-  } catch (error) {
-    console.error("❌ Error getting songs:", error);
-    return [];
-  }
-}
-
-async function deleteSong(songId) {
-  try {
-    await db.collection("songs").doc(songId).delete();
-    console.log("✅ Song deleted");
-  } catch (error) {
-    console.error("❌ Error deleting song:", error);
-    throw error;
-  }
-}
-
-// ===== FAVOURITE MOVIES =====
-
-async function addFavouriteMovie(movieData) {
-  try {
-    let posterUrl = "";
-
-    // Upload poster to Cloudinary if provided
-    if (movieData.posterFile) {
-      console.log("📤 Uploading movie poster to Cloudinary...");
-      posterUrl = await uploadImageToCloudinary(
-        movieData.posterFile,
-        "movie-posters",
-      );
-    }
-
-    const docRef = await db.collection("movies").add({
-      name: movieData.name,
-      year: movieData.year || null,
-      posterUrl: posterUrl,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-
-    console.log("✅ Movie added:", docRef.id);
-    return docRef.id;
-  } catch (error) {
-    console.error("❌ Error adding movie:", error);
-    throw error;
-  }
-}
-
-async function getAllMovies() {
-  try {
-    const snapshot = await db
-      .collection("movies")
-      .orderBy("createdAt", "desc")
-      .get();
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      name: doc.data().name,
-      year: doc.data().year,
-      posterUrl: doc.data().posterUrl,
-      type: "movie",
-    }));
-  } catch (error) {
-    console.error("❌ Error getting movies:", error);
-    return [];
-  }
-}
-
-async function deleteMovie(movieId) {
-  try {
-    await db.collection("movies").doc(movieId).delete();
-    console.log("✅ Movie deleted");
-    // Note: Cloudinary images are not deleted (keeps storage simple)
-    // You can manually delete from Cloudinary dashboard if needed
-  } catch (error) {
-    console.error("❌ Error deleting movie:", error);
-    throw error;
-  }
-}
-
-// ===== TIMELINE MEMORIES =====
-
+// Add a new memory to the timeline
 async function addMemory(memoryData) {
   try {
-    let imageUrl = "";
-
-    // Upload image to Cloudinary if provided
-    if (memoryData.image) {
-      console.log("📤 Uploading memory image to Cloudinary...");
-      imageUrl = await uploadImageToCloudinary(memoryData.image, "memories");
-    }
-
-    // Save text data to Firebase
     const docRef = await db.collection("memories").add({
       title: memoryData.title,
-      description: memoryData.description || "",
+      city: memoryData.city,
+      place: memoryData.place,
       date: memoryData.date,
-      imageUrl: imageUrl,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      description: memoryData.description,
+      imageUrl: memoryData.imageUrl || "",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt: new Date().toISOString(),
     });
 
-    console.log("✅ Memory added to Firebase:", docRef.id);
-    if (imageUrl) {
-      console.log("✅ Image saved to Cloudinary:", imageUrl);
-    }
-
+    console.log("Memory added with ID: ", docRef.id);
     return docRef.id;
   } catch (error) {
-    console.error("❌ Error adding memory:", error);
+    console.error("Error adding memory: ", error);
     throw error;
   }
 }
 
-// Get memories sorted by creation time
-async function getAllMemoriesByCreated() {
+// Upload image to Firebase Storage
+async function uploadMemoryImage(file, memoryId) {
   try {
-    const snapshot = await db
-      .collection("memories")
-      .orderBy("createdAt", "asc")
-      .get();
+    const storageRef = storage.ref(`memories/${memoryId}/${file.name}`);
+    const snapshot = await storageRef.put(file);
+    const downloadURL = await snapshot.ref.getDownloadURL();
 
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      title: doc.data().title,
-      description: doc.data().description,
-      date: doc.data().date,
-      imageUrl: doc.data().imageUrl,
-    }));
+    console.log("Image uploaded successfully!");
+    return downloadURL;
   } catch (error) {
-    console.error("❌ Error getting memories:", error);
-    return [];
+    console.error("Error uploading image: ", error);
+    throw error;
   }
 }
 
-// Get memories sorted by date
-async function getAllMemoriesByDate(ascending = true) {
-  try {
-    const snapshot = await db
-      .collection("memories")
-      .orderBy("date", ascending ? "asc" : "desc")
-      .get();
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      title: doc.data().title,
-      description: doc.data().description,
-      date: doc.data().date,
-      imageUrl: doc.data().imageUrl,
-    }));
-  } catch (error) {
-    console.error("❌ Error getting memories:", error);
-    return [];
-  }
-}
-
-// Legacy function for backwards compatibility
+// Get all memories from database
 async function getAllMemories() {
-  return await getAllMemoriesByCreated();
+  try {
+    const snapshot = await db
+      .collection("memories")
+      .orderBy("date", "asc")
+      .get();
+
+    const memories = [];
+    snapshot.forEach((doc) => {
+      memories.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    return memories;
+  } catch (error) {
+    console.error("Error getting memories: ", error);
+    throw error;
+  }
 }
 
+// Update a memory
+async function updateMemory(memoryId, updatedData) {
+  try {
+    await db.collection("memories").doc(memoryId).update(updatedData);
+    console.log("Memory updated successfully!");
+  } catch (error) {
+    console.error("Error updating memory: ", error);
+    throw error;
+  }
+}
+
+// Delete a memory
 async function deleteMemory(memoryId) {
   try {
     await db.collection("memories").doc(memoryId).delete();
-    console.log("✅ Memory deleted from Firebase");
-    // Note: Cloudinary images are not deleted automatically
+    console.log("Memory deleted successfully!");
   } catch (error) {
-    console.error("❌ Error deleting memory:", error);
+    console.error("Error deleting memory: ", error);
     throw error;
   }
 }
 
-// ===== COMBINED FUNCTIONS =====
+// ==================== FAVOURITES FUNCTIONS ====================
 
-async function getAllFavourites() {
+// Add a favourite song
+async function addFavouriteSong(songData) {
   try {
-    const [songs, movies] = await Promise.all([getAllSongs(), getAllMovies()]);
+    const docRef = await db.collection("favourites").add({
+      type: "song",
+      name: songData.name,
+      artist: songData.artist,
+      albumArt: songData.albumArt || "",
+      spotifyUrl: songData.spotifyUrl || "",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
 
-    return [...songs, ...movies];
+    console.log("Favourite song added with ID: ", docRef.id);
+    return docRef.id;
   } catch (error) {
-    console.error("❌ Error getting all favourites:", error);
-    return [];
+    console.error("Error adding favourite: ", error);
+    throw error;
   }
 }
 
-console.log("✅ Database helpers loaded!");
-console.log("   Text data → Firebase");
-console.log("   Images → Cloudinary");
+// Get all favourites
+async function getAllFavourites() {
+  try {
+    const snapshot = await db.collection("favourites").get();
+
+    const favourites = [];
+    snapshot.forEach((doc) => {
+      favourites.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    return favourites;
+  } catch (error) {
+    console.error("Error getting favourites: ", error);
+    throw error;
+  }
+}
+
+// ==================== SPIN WHEEL REASONS ====================
+
+// Add/Update reasons for spin wheel
+async function updateSpinReasons(reasonsArray) {
+  try {
+    await db.collection("settings").doc("spinWheel").set({
+      reasons: reasonsArray,
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log("Spin reasons updated successfully!");
+  } catch (error) {
+    console.error("Error updating spin reasons: ", error);
+    throw error;
+  }
+}
+
+// Get spin wheel reasons
+async function getSpinReasons() {
+  try {
+    const doc = await db.collection("settings").doc("spinWheel").get();
+
+    if (doc.exists) {
+      return doc.data().reasons;
+    } else {
+      // Return default reasons if not found
+      return [
+        "Кога прв пат те видов знаев дека си ти таа",
+        "Reason 2",
+        "Reason 3",
+        // ... add more default reasons
+      ];
+    }
+  } catch (error) {
+    console.error("Error getting spin reasons: ", error);
+    throw error;
+  }
+}
+
+// ==================== UTILITY FUNCTIONS ====================
+
+// Real-time listener for memories (updates automatically)
+function listenToMemories(callback) {
+  return db
+    .collection("memories")
+    .orderBy("date", "asc")
+    .onSnapshot((snapshot) => {
+      const memories = [];
+      snapshot.forEach((doc) => {
+        memories.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+      callback(memories);
+    });
+}
+
+// Search for songs using Spotify API (optional)
+async function searchSongs(query) {
+  // This would require Spotify API integration
+  // For now, just return the query for manual entry
+  console.log("Searching for: " + query);
+  // You can integrate Spotify API here later if needed
+}
