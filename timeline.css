@@ -155,7 +155,7 @@ body {
 @media (max-width: 1100px){
   #timelineWrapper{
     width: 100%;
-    border: 2px solid red;
+    /* border: 2px solid red; */
   }
   .rightDiv{
     display: none;
