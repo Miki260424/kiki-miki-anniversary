@@ -340,7 +340,7 @@ body {
   font-family: "addBtn";
   /* border: 1px solid blue; */
   font-weight: 400;
-  width: 15%;
+  width: min(150px, 25%);
   display: flex;
   justify-content: center;
   align-items: center;
