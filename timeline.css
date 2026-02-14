@@ -150,7 +150,6 @@ body {
   overflow: hidden;
   cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
   z-index: 50;
-  border: 3px solid red;
 }
 
 .floatMemory:hover {
@@ -444,7 +443,7 @@ body {
   position: fixed;
   right: 2%;
   bottom: 3%;
-  width: 250px;
+  width: min(250px, 15%);
   padding: 20px;
   border-radius: 20px;
   z-index: 955;
@@ -453,6 +452,24 @@ body {
   transition: all .2s ease-in-out;
   color: #ffffff;
   border: 1px solid black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#additionSign{
+  display: none;
+}
+@media (max-width: 1500px){
+  #memoryAdd{
+    width: fit-content;
+    border-radius: 50%;
+  }
+  #btnDisapearingText{
+    display: none;
+  }
+  #additionSign{
+    display: block;
+  }
 }
 #memoryAdd:hover{
   scale: 1.1;

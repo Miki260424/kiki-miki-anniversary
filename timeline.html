@@ -6,6 +6,7 @@
     <title>Document</title>
     <link rel="stylesheet" href="timeline.css" />
  <!-- Firebase SDK (for text data) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add_2" />
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
@@ -167,7 +168,7 @@
         <div class="rightDiv"></div>
       </div>
     </div>
-    <div id="downLine" class=""></div>
+    <!-- <div id="downLine" class=""></div> -->
 
     <div id="popUpWindowInsertionOfMemory">
       <div id="addInpMemory">
@@ -253,13 +254,13 @@
           ><span id="popupCity" class="memoryText">Budva</span>
         </p>
         <p>
-          <b class="boldText">Place: </b
-          ><span id="popupPlace" class="memoryText">Montenegro</span>
-        </p>
-        <p>
           <b class="boldText">Country: </b
-          ><span id="popupCountry" class="memoryText">N/A</span>
-        </p>
+            ><span id="popupCountry" class="memoryText">N/A</span>
+          </p>
+          <p>
+            <b class="boldText">Place: </b
+            ><span id="popupPlace" class="memoryText">Montenegro</span>
+          </p>
         <p>
           <b class="boldText">Date: </b
           ><span id="popupDate" class="memoryText">26.04.2024</span>
@@ -290,7 +291,13 @@
     </div>
     <div id="boja"></div>
 
-    <button id="memoryAdd">Add a New memory</button>
+    <button id="memoryAdd"><span id="btnDisapearingText">
+      Add a New memory 
+    </span>
+        <span class="material-symbols-outlined" id="additionSign">
+          add_2
+        </span>
+    </button>
 
     <script>
       // Check authentication
@@ -496,6 +503,59 @@ document
           verticalLine.setAttribute("stroke-width", "3");
           verticalLine.setAttribute("stroke-linecap", "round");
           svg.appendChild(verticalLine);
+        }
+
+
+        // ===== L-shaped line from LAST memory to bottom =====
+        if (position.length > 0) {
+          const lastMemory = position[position.length - 1];
+          const isLastOdd = (position.length - 1) % 2 === 0;
+
+          // Start from the side of the last memory (left or right edge)
+          const lastStartX = isLastOdd ? lastMemory.rightX : lastMemory.leftX;
+          const lastStartY = lastMemory.centerY;
+
+          // Get the element ABOVE this one to align with its center
+          let horizontalEndX;
+          if (position.length >= 2) {
+            // If there's an element above, align with its center
+            const elementAbove = position[position.length - 2];
+            horizontalEndX = elementAbove.centerX;
+          } else {
+            // If this is the first/only element, use its own center
+            horizontalEndX = lastMemory.centerX;
+          }
+
+          // Bottom of the screen
+          const bottomY = wrapper.scrollHeight;
+
+          // 1. Draw HORIZONTAL line from last memory edge to align with element above
+          const lastHorizontalLine = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+          lastHorizontalLine.setAttribute("x1", lastStartX);
+          lastHorizontalLine.setAttribute("y1", lastStartY);
+          lastHorizontalLine.setAttribute("x2", horizontalEndX);
+          lastHorizontalLine.setAttribute("y2", lastStartY);
+          lastHorizontalLine.setAttribute("stroke", "white");
+          lastHorizontalLine.setAttribute("stroke-width", "3");
+          lastHorizontalLine.setAttribute("stroke-linecap", "round");
+          svg.appendChild(lastHorizontalLine);
+
+          // 2. Draw VERTICAL line from that point down to bottom
+          const lastVerticalLine = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+          lastVerticalLine.setAttribute("x1", horizontalEndX);
+          lastVerticalLine.setAttribute("y1", lastStartY);
+          lastVerticalLine.setAttribute("x2", horizontalEndX);
+          lastVerticalLine.setAttribute("y2", bottomY);
+          lastVerticalLine.setAttribute("stroke", "white");
+          lastVerticalLine.setAttribute("stroke-width", "3");
+          lastVerticalLine.setAttribute("stroke-linecap", "round");
+          svg.appendChild(lastVerticalLine);
         }
 
         let downLine = document.getElementById("downLine");
