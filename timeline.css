@@ -122,6 +122,7 @@ body {
   width: 50%;
   height: 100%;
 }
+
 .sectionOfMemory:nth-child(odd) .leftDiv {
   /* background-color: yellow; */
   order: 2;
@@ -150,6 +151,21 @@ body {
   overflow: hidden;
   cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
   z-index: 50;
+}
+@media (max-width: 1100px){
+  #timelineWrapper{
+    width: 100%;
+    border: 2px solid red;
+  }
+  .rightDiv{
+    display: none;
+  }
+  .floatMemory{
+    margin-bottom: 50px;
+    height: min(300px, 15%);
+    width: 100%;
+  }
+
 }
 
 .floatMemory:hover {
@@ -189,6 +205,7 @@ body {
   height: 100%;
   pointer-events: none;
   z-index: 0;
+  overflow: visible;
 }
 
 /*
@@ -259,17 +276,6 @@ body {
   
 } 
 */
-.upLine {
-  position: absolute;
-  border-left: 3px solid rgb(255, 255, 255);
-  /* box-shadow: -10px -10px 10px rgb(255, 255, 255),
-                  10px 10px 10px rgb(255, 255, 255) inset; */
-  top: -10%;
-  left: 50%;
-  height: 60%;
-  width: calc(40% - 5px);
-  transform: translateX(-50%);
-}
 
 .downLineImageRight {
   position: absolute;

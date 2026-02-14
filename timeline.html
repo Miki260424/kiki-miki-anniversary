@@ -31,7 +31,7 @@
         <li><a href="favourites.html">Favourites</a></li>
       </ul>
     </nav>
-    <!-- <div class="upLine"></div> -->
+    <div class="upLine"></div>
     <div id="timelineWrapper">
       <svg id="connectionSVG"></svg>
 
@@ -46,6 +46,7 @@
             <figcaption class="imageTitle">First time we met</figcaption>
           </figure>
         </div>
+        <div class="rightDiv"></div>
       </div>
       <div id="section1" class="sectionOfMemory">
         <div class="leftDiv">
@@ -58,7 +59,7 @@
             <figcaption class="imageTitle">First time we met</figcaption>
           </figure>
         </div>
-       
+        <div class="rightDiv"></div>
       </div>
 
       <div id="section1" class="sectionOfMemory">
@@ -68,6 +69,7 @@
             <figcaption class="imageTitle">First time we met</figcaption>
           </figure>
         </div>
+        <div class="rightDiv"></div>
       </div>
       <div id="section1" class="sectionOfMemory">
         <div class="leftDiv">
@@ -80,6 +82,7 @@
             <figcaption class="imageTitle">First time we met</figcaption>
           </figure>
         </div>
+        <div class="rightDiv"></div>
       </div>
 
       <div id="section1" class="sectionOfMemory">
@@ -93,6 +96,7 @@
             <figcaption class="imageTitle">First time we met</figcaption>
           </figure>
         </div>
+        <div class="rightDiv"></div>
       </div>
       <div id="section1" class="sectionOfMemory">
         <div class="leftDiv">
@@ -105,6 +109,7 @@
             <figcaption class="imageTitle">First time we met</figcaption>
           </figure>
         </div>
+        <div class="rightDiv"></div>
       </div>
 
       <div id="section1" class="sectionOfMemory">
@@ -118,6 +123,7 @@
             <figcaption class="imageTitle">First time we met</figcaption>
           </figure>
         </div>
+        <div class="rightDiv"></div>
       </div>
 
       <div id="section1" class="sectionOfMemory">
@@ -131,6 +137,7 @@
             <figcaption class="imageTitle">First time we met</figcaption>
           </figure>
         </div>
+        <div class="rightDiv"></div>
       </div>
 
       <div id="section1" class="sectionOfMemory">
@@ -144,6 +151,7 @@
             <figcaption class="imageTitle">First time we met</figcaption>
           </figure>
         </div>
+        <div class="rightDiv"></div>
       </div>
 
       <div id="section1" class="sectionOfMemory">
@@ -157,6 +165,7 @@
             <figcaption class="imageTitle">First time we met</figcaption>
           </figure>
         </div>
+        <div class="rightDiv"></div>
       </div>
     </div>
     <!-- <div id="downLine" class=""></div> -->
@@ -321,6 +330,7 @@
               <figcaption class="imageTitle">${memory.title}</figcaption>
             </figure>
           </div>
+          <div class="rightDiv"></div>
         `;
 
         wrapper.appendChild(newSection);
@@ -496,6 +506,33 @@ document
         }
 
 
+// ===== Line from FIRST memory to top of screen =====
+        if (position.length > 0) {
+          const firstMemory = position[0];
+          
+          // Start from center of first memory going straight up
+          const firstCenterX = firstMemory.centerX;
+          const firstStartY = firstMemory.top;
+          
+          // Calculate the actual distance to the top of the screen
+          // The wrapper has margin-top: 5%, plus navbar height (90px)
+          const wrapperOffsetTop = wrapper.offsetTop; // Gets the actual offset from top including margins
+          const topY = -wrapperOffsetTop;
+          
+          // Draw VERTICAL line from first memory center UP to top of screen
+          const firstVerticalLine = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+          firstVerticalLine.setAttribute("x1", firstCenterX);
+          firstVerticalLine.setAttribute("y1", firstStartY);
+          firstVerticalLine.setAttribute("x2", firstCenterX);
+          firstVerticalLine.setAttribute("y2", topY);
+          firstVerticalLine.setAttribute("stroke", "white");
+          firstVerticalLine.setAttribute("stroke-width", "3");
+          firstVerticalLine.setAttribute("stroke-linecap", "round");
+          svg.appendChild(firstVerticalLine);
+        }
         // ===== L-shaped line from LAST memory to bottom =====
         if (position.length > 0) {
           const lastMemory = position[position.length - 1];
