@@ -173,7 +173,7 @@ body {
     width: 80%;
   }
   figcaption{ 
-    font-size: 25px !important;
+    font-size: 20px !important;
   }
 }
 
@@ -182,7 +182,7 @@ body {
 }
 .imageTitle {
   text-align: center;
-  font-size: clamp(18px, 2vw, 40px);
+  font-size: clamp(20px, 2vw, 40px);
   font-family: "Monoton";
   color: rgb(0, 0, 0);
   font-weight: 400;
