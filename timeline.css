@@ -152,6 +152,10 @@ body {
   cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
   z-index: 50;
 }
+.floatMemory:last-child{
+  margin-bottom: 100px;
+}
+
 @media (max-width: 1100px){
   #timelineWrapper{
     width: 100%;
@@ -168,7 +172,9 @@ body {
   .leftDiv{
     width: 80%;
   }
-
+  figcaption{ 
+    font-size: 25px !important;
+  }
 }
 
 .floatMemory:hover {
@@ -647,6 +653,7 @@ textarea {
 .inps {
   max-width: 500px;
   width: 100%;
+  /* width: clamp(250px, 60%, 500px); */
   height: 50px;
 
 }
@@ -660,7 +667,6 @@ textarea {
 }
 #bothInps .inps {
   width: 45%;
-
   max-width: 45%;
   width: 100%;
 }
@@ -708,7 +714,6 @@ input[type="date"] {
 
 #loader {
   display: block;
-  overflow: hidden;
 }
 .center {
   display: flex;
