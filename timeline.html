@@ -185,8 +185,7 @@
           <div id="leftSideOfPopUp">
             <input type="file" name="fileInp" id="fileInput" hidden />
             <label for="fileInput" class="custom-file-btn"
-              >Upload an Image</label
-            >
+              >Upload an Image</label>
           </div>
           <div id="rightSideOfPopUp">
             <div id="divOfTextInp">
@@ -197,7 +196,17 @@
               <input type="text" class="inps" name="title" id="titleInput" placeholder="Title"/>
               <input type="text" class="inps" name="country" id="countryInput" placeholder="Country"/>
               <input type="date" class="inps" name="date" id="dateInput" placeholder="Date"/>
-              <textarea class="inpDescription" id="textOfDescription" placeholder="Description"></textarea>
+              <div id="holderOfTextareaAndImg">
+                <textarea class="inpDescription" id="textOfDescription" placeholder="Description"></textarea>
+                <div id="rightImageHolder">
+                  <input type="file" name="fileInp" id="fileInput" hidden />
+                  <label for="fileInput" class="custom-file-btn">
+                    <span id="uploadImgDisap">Upload an Image</span>
+                    <span class="material-symbols-outlined plus">add_2</span>
+                  
+                  </label>
+                </div>
+              </div>
               <button id="submitMemoryBtn">ADD OUR MEMORY</button>
             </div>
           </div>
