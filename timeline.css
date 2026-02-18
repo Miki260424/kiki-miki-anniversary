@@ -17,7 +17,9 @@
   box-sizing: border-box;
 }
 body {
-  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--c.png) 0 0, auto;
+  cursor:
+    url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--c.png) 0 0,
+    auto;
   margin: 0;
   padding: 0;
   background-image: url(corkboard/design-space-paper-textured-background.jpg);
@@ -74,15 +76,19 @@ body {
 }
 .navUl li {
   list-style-type: none;
-  cursor: url("cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png") 0 0, auto;
+  cursor:
+    url("cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png") 0 0,
+    auto;
 }
 .navUl li a {
   font-size: clamp(12px, 1.5vw, 22px);
   text-decoration: none;
   color: white;
-  cursor: url("cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png") 0 0, auto;
+  cursor:
+    url("cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png") 0 0,
+    auto;
 }
-@media (max-width: 650px){
+@media (max-width: 650px) {
   .navUl li a {
     display: none;
   }
@@ -114,8 +120,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end; 
-
+  justify-content: flex-end;
 }
 .rightDiv {
   /* border: 2px solid rgb(255, 0, 212); */
@@ -149,30 +154,32 @@ body {
   transform-origin: center;
   will-change: transform;
   overflow: hidden;
-  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  cursor:
+    url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0,
+    auto;
   z-index: 50;
 }
-.floatMemory:last-child{
+.floatMemory:last-child {
   margin-bottom: 100px;
 }
 
-@media (max-width: 1100px){
-  #timelineWrapper{
+@media (max-width: 1100px) {
+  #timelineWrapper {
     width: 100%;
     /* border: 2px solid red; */
   }
-  .rightDiv{
+  .rightDiv {
     display: none;
   }
-  .floatMemory{
+  .floatMemory {
     margin-bottom: 50px;
     height: min(300px, 15%);
     width: 100%;
   }
-  .leftDiv{
+  .leftDiv {
     width: 80%;
   }
-  figcaption{ 
+  figcaption {
     font-size: 20px !important;
   }
 }
@@ -331,7 +338,9 @@ body {
 }
 .searchFld:hover,
 .searchBtn:hover {
-  cursor: url("/cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png") 0 0, auto;
+  cursor:
+    url("/cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png") 0 0,
+    auto;
 }
 /* .searchHolder{ */
 /* width: 100%;
@@ -364,7 +373,9 @@ body {
   background-color: #ff758f;
   padding: 10px 20px;
   border-radius: 15px;
-  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  cursor:
+    url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0,
+    auto;
   transition: all 0.3s ease-in-out;
   color: #ffffff;
 }
@@ -406,7 +417,6 @@ body {
   background-color: black;
   border-radius: 2%;
   box-sizing: border-box;
-
 }
 .slika {
   width: 100%;
@@ -415,8 +425,6 @@ body {
   display: block;
   margin: 0 auto;
   box-sizing: border-box;
-  
-
 }
 
 .btnHolder {
@@ -463,35 +471,37 @@ body {
   border-radius: 20px;
   z-index: 955;
   background-color: rgba(0, 0, 0, 0.541);
-  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
-  transition: all .2s ease-in-out;
+  cursor:
+    url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0,
+    auto;
+  transition: all 0.2s ease-in-out;
   color: #ffffff;
   border: 1px solid black;
   display: flex;
   justify-content: center;
   align-items: center;
 }
-#additionSign{
+#additionSign {
   display: none;
 }
-@media (max-width: 1500px){
-  #memoryAdd{
+@media (max-width: 1500px) {
+  #memoryAdd {
     width: fit-content;
     border-radius: 50%;
   }
-  #btnDisapearingText{
+  #btnDisapearingText {
     display: none;
   }
-  #additionSign{
+  #additionSign {
     display: block;
   }
 }
-#memoryAdd:hover{
+#memoryAdd:hover {
   scale: 1.1;
   border: 1px solid rgb(255, 255, 255);
   box-shadow: 0 0 10px rgb(255, 255, 255);
 }
-#memoryAdd:focus{
+#memoryAdd:focus {
   scale: 0.95;
 }
 
@@ -513,7 +523,6 @@ body {
   align-items: center;
   display: none;
   box-sizing: border-box;
-  
 }
 #titleAndBtn {
   display: flex;
@@ -548,7 +557,9 @@ body {
   padding: 10px 40px;
   float: left;
   height: min-content;
-  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  cursor:
+    url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0,
+    auto;
   border-radius: 25px;
   font-size: large;
 }
@@ -591,16 +602,17 @@ body {
   align-items: center;
   flex: 1;
   height: 100%;
-  
 }
-.custom-file-btn{
+.custom-file-btn {
   border: 2px solid black;
   width: 50%;
   height: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  cursor:
+    url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0,
+    auto;
   font-family: "JejuHallasan";
   font-size: 1.7em;
   border-radius: 5%;
@@ -622,18 +634,18 @@ body {
   justify-content: space-evenly;
   align-items: center;
 }
-.memoryText{
-  color: #CC3366;
+.memoryText {
+  color: #cc3366;
   font-size: 1.25em;
   word-break: break-word;
   overflow-wrap: break-word;
 }
-.descriptionTextMemory{
+.descriptionTextMemory {
   margin-left: 20px;
   /* border: 1px solid red; */
   display: block;
 }
-.boldText{
+.boldText {
   font-size: 1.25em;
 }
 #bothInps {
@@ -651,17 +663,17 @@ textarea {
   height: 250px;
   resize: both;
 }
-#holderOfTextareaAndImg{
+#holderOfTextareaAndImg {
   /* border: 2px solid red; */
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
-#rightImageHolder{
+#rightImageHolder {
   display: none;
 }
-.plus{
+.plus {
   display: none;
 }
 
@@ -670,9 +682,8 @@ textarea {
   width: 100%;
   /* width: clamp(250px, 60%, 500px); */
   height: 50px;
-
 }
-#rightImageHolder{
+#rightImageHolder {
   display: none;
 }
 .inps,
@@ -680,7 +691,9 @@ textarea {
   border: none;
   outline: none;
   border: 2px dotted black;
-  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  cursor:
+    url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0,
+    auto;
   border-radius: 3px;
 }
 #bothInps .inps {
@@ -689,20 +702,20 @@ textarea {
   width: 100%;
 }
 @media (max-width: 1620px) {
-  #leftSideOfPopUp{
+  #leftSideOfPopUp {
     display: none;
   }
-  textarea{
+  textarea {
     max-width: 225px;
     width: 100%;
   }
-  #rightImageHolder{
+  #rightImageHolder {
     display: block;
     /* border: 2px solid white; */
     width: 225px;
     height: 100%;
   }
-  #holderOfTextareaAndImg{
+  #holderOfTextareaAndImg {
     display: flex;
     /* border: 2px solid red; */
     max-width: 500px;
@@ -711,37 +724,36 @@ textarea {
     align-items: center;
     box-sizing: border-box;
   }
-  .custom-file-btn{
+  .custom-file-btn {
     border: 2px solid rgb(0, 0, 0);
     width: 100%;
     height: 100%;
     color: rgb(0, 0, 0);
     background-color: white;
   }
-  #backBtnMemory{
-      display: none;
-  }
-  #rightColor{
+  #backBtnMemory {
     display: none;
   }
-  #popUpWindowInsertionOfMemory{
+  #rightColor {
+    display: none;
+  }
+  #popUpWindowInsertionOfMemory {
     background-color: #bd8100;
     width: min-content;
     padding: 0 40px;
   }
-  #titleOfPopUpInpDesc{
+  #titleOfPopUpInpDesc {
     color: white;
     font-size: 60px;
     margin-top: 50px;
-
   }
-  .empy{
+  .empy {
     display: none;
   }
-  #uploadImgDisap{
+  #uploadImgDisap {
     display: none;
   }
-  .plus{
+  .plus {
     border: 2px solid red;
     width: 100%;
     height: 100%;
@@ -751,18 +763,23 @@ textarea {
     font-size: 100px;
   }
 }
-@media (max-width: 850px){
-  
+@media (max-width: 850px) {
+  /* #addInpMemory {
+    border: 2px solid red;
+  } */
 }
 
-#fileInput{
-
+#fileInput {
 }
 input[type="date"] {
-  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  cursor:
+    url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0,
+    auto;
 }
 ::-webkit-calendar-picker-indicator {
-  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  cursor:
+    url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0,
+    auto;
 }
 #submitMemoryBtn {
   width: 500px;
@@ -771,15 +788,16 @@ input[type="date"] {
   border: 1px solid black;
   color: white;
   border-radius: 25px;
-  cursor: url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0, auto;
+  cursor:
+    url(cursor/Preppy\ Pinky\ Spider-Man\ Arrow--p.png) 0 0,
+    auto;
   transition: all 0.2s ease-in-out;
 }
-#submitMemoryBtn:hover{
- transform: scale(1.05);
+#submitMemoryBtn:hover {
+  transform: scale(1.05);
   border: 1px solid white;
   box-shadow: 0 0 10px white;
 }
-
 
 #rightColor {
   position: absolute;
@@ -793,7 +811,6 @@ input[type="date"] {
   box-sizing: border-box;
   border-left: 3px dashed #0000008a;
 }
-
 
 /* spinner */
 
