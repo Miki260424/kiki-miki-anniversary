@@ -649,7 +649,7 @@ body {
   font-size: 1.25em;
 }
 #bothInps {
-  border: 2px solid green;
+  /* border: 2px solid green; */
   gap: min(20px, 5%);
   width: 500px;
   display: flex;
@@ -695,7 +695,7 @@ textarea {
   border-radius: 3px;
 }
 #cityInput, #placeInput{
-  border: 2px solid red;
+  /* border: 2px solid red; */
   flex: 1;
 }
 @media (max-width: 1620px) {
@@ -753,7 +753,7 @@ textarea {
     display: none;
   }
   .plus {
-    border: 2px solid red;
+    /* border: 2px solid red; */
     width: 100%;
     height: 100%;
     display: flex;
@@ -771,24 +771,24 @@ textarea {
     width: 75%;
   }
   #addInpMemory {
-    border: 2px solid red;
+    /* border: 2px solid red; */
     width: 100%;
     
   }
   #wholeDiv{
-    border: 2px solid blue;
+    /* border: 2px solid blue; */
     box-sizing: border-box;
   }
   #rightSideOfPopUp{
-    border: 3px solid green;
+    /* border: 3px solid green; */
     width: 100%;
   }
   #divOfTextInp{
     width: 100%;
-    border: 2px solid black;
+    /* border: 2px solid black; */
   }
   #bothInps{
-    border: 2px solid red;
+    /* border: 2px solid red; */
     width: 100%;
     flex-direction: column;
     height: 100px;
@@ -796,9 +796,9 @@ textarea {
   .inps{
     width: 100%;
   }
-  #holderOfTextareaAndImg{
-    border: 2px solid rgb(207, 0, 0);
-    /* height: 50px; */
+  #holderOfTextareaAndImg, textarea{
+    /* border: 2px solid rgb(207, 0, 0); */
+    height: 120px;
   }
 }
 
