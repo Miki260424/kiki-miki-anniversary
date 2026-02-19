@@ -437,7 +437,7 @@ body {
   border-left: 3px dashed #0000008a;
 }
 .btnHolder div {
-  /* border: 2px solid red; */
+  border: 2px solid red;
 }
 #divOfTitle {
   display: flex;
@@ -649,8 +649,8 @@ body {
   font-size: 1.25em;
 }
 #bothInps {
-  /* border: 2px solid green; */
-
+  border: 2px solid green;
+  gap: min(20px, 5%);
   width: 500px;
   display: flex;
   flex-direction: row;
@@ -683,9 +683,7 @@ textarea {
   /* width: clamp(250px, 60%, 500px); */
   height: 50px;
 }
-#rightImageHolder {
-  display: none;
-}
+
 .inps,
 textarea {
   border: none;
@@ -696,23 +694,22 @@ textarea {
     auto;
   border-radius: 3px;
 }
-#bothInps .inps {
-  width: 45%;
-  max-width: 45%;
-  width: 100%;
+#cityInput, #placeInput{
+  border: 2px solid red;
+  flex: 1;
 }
 @media (max-width: 1620px) {
+
   #leftSideOfPopUp {
     display: none;
   }
   textarea {
-    max-width: 225px;
     width: 100%;
   }
   #rightImageHolder {
     display: block;
     /* border: 2px solid white; */
-    width: 225px;
+    width: 100%;
     height: 100%;
   }
   #holderOfTextareaAndImg {
@@ -720,6 +717,7 @@ textarea {
     /* border: 2px solid red; */
     max-width: 500px;
     width: 100%;
+    gap: min(20px, 5%);
     justify-content: space-between;
     align-items: center;
     box-sizing: border-box;
@@ -745,6 +743,7 @@ textarea {
   #titleOfPopUpInpDesc {
     color: white;
     font-size: 60px;
+
     margin-top: 50px;
   }
   .empy {
@@ -763,10 +762,44 @@ textarea {
     font-size: 100px;
   }
 }
-@media (max-width: 850px) {
-  /* #addInpMemory {
+@media (max-width: 650px) {
+  #titleOfPopUpInpDesc{
+    font-size: clamp(15px, 10vw, 40px);
+
+  }
+  #popUpWindowInsertionOfMemory{
+    width: 75%;
+  }
+  #addInpMemory {
     border: 2px solid red;
-  } */
+    width: 100%;
+    
+  }
+  #wholeDiv{
+    border: 2px solid blue;
+    box-sizing: border-box;
+  }
+  #rightSideOfPopUp{
+    border: 3px solid green;
+    width: 100%;
+  }
+  #divOfTextInp{
+    width: 100%;
+    border: 2px solid black;
+  }
+  #bothInps{
+    border: 2px solid red;
+    width: 100%;
+    flex-direction: column;
+    height: 100px;
+  }
+  .inps{
+    width: 100%;
+  }
+  #holderOfTextareaAndImg{
+    border: 2px solid rgb(207, 0, 0);
+    /* height: 50px; */
+  }
 }
 
 #fileInput {
@@ -782,8 +815,10 @@ input[type="date"] {
     auto;
 }
 #submitMemoryBtn {
-  width: 500px;
+  width: 100%;
   height: 50px;
+  font-size: clamp(10px, 2vw, 15px);
+
   background-color: black;
   border: 1px solid black;
   color: white;
