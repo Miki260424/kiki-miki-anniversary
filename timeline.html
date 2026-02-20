@@ -36,7 +36,7 @@
     <div id="timelineWrapper">
       <svg id="connectionSVG"></svg>
 
-      <div id="section1" class="sectionOfMemory">
+      <!-- <div  class="sectionOfMemory">
         <div class="leftDiv">
           <figure class="floatMemory">
             <img
@@ -49,7 +49,7 @@
         </div>
         <div class="rightDiv"></div>
       </div>
-      <div id="section1" class="sectionOfMemory">
+      <div  class="sectionOfMemory">
         <div class="leftDiv">
           <figure class="floatMemory">
             <img
@@ -63,7 +63,7 @@
         <div class="rightDiv"></div>
       </div>
 
-      <div id="section1" class="sectionOfMemory">
+      <div  class="sectionOfMemory">
         <div class="leftDiv">
           <figure class="floatMemory">
             <img class="imageTimeline" src="sliki/Kikicaaa.jpg" alt="#" />
@@ -72,7 +72,7 @@
         </div>
         <div class="rightDiv"></div>
       </div>
-      <div id="section1" class="sectionOfMemory">
+      <div  class="sectionOfMemory">
         <div class="leftDiv">
           <figure class="floatMemory">
             <img
@@ -86,7 +86,7 @@
         <div class="rightDiv"></div>
       </div>
 
-      <div id="section1" class="sectionOfMemory">
+      <div  class="sectionOfMemory">
         <div class="leftDiv">
           <figure class="floatMemory">
             <img
@@ -99,7 +99,7 @@
         </div>
         <div class="rightDiv"></div>
       </div>
-      <div id="section1" class="sectionOfMemory">
+      <div  class="sectionOfMemory">
         <div class="leftDiv">
           <figure class="floatMemory">
             <img
@@ -113,7 +113,7 @@
         <div class="rightDiv"></div>
       </div>
 
-      <div id="section1" class="sectionOfMemory">
+      <div  class="sectionOfMemory">
         <div class="leftDiv">
           <figure class="floatMemory">
             <img
@@ -127,7 +127,7 @@
         <div class="rightDiv"></div>
       </div>
 
-      <div id="section1" class="sectionOfMemory">
+      <div  class="sectionOfMemory">
         <div class="leftDiv">
           <figure class="floatMemory">
             <img
@@ -141,7 +141,7 @@
         <div class="rightDiv"></div>
       </div>
 
-      <div id="section1" class="sectionOfMemory">
+      <div  class="sectionOfMemory">
         <div class="leftDiv">
           <figure class="floatMemory">
             <img
@@ -155,7 +155,7 @@
         <div class="rightDiv"></div>
       </div>
 
-      <div id="section1" class="sectionOfMemory">
+      <div  class="sectionOfMemory">
         <div class="leftDiv">
           <figure class="floatMemory">
             <img
@@ -168,8 +168,7 @@
         </div>
         <div class="rightDiv"></div>
       </div>
-    </div>
-    <!-- <div id="downLine" class=""></div> -->
+    </div> -->
 
     <div id="popUpWindowInsertionOfMemory">
       <div id="addInpMemory">
@@ -200,7 +199,7 @@
               <div id="holderOfTextareaAndImg">
                 <textarea class="inpDescription" id="textOfDescription" placeholder="Description"></textarea>
                 <div id="rightImageHolder">
-                  <input type="file" name="fileInp" id="fileInput" hidden />
+                  <input type="file" name="fileInp" id="fileInput2" hidden />
                   <label for="fileInput" class="custom-file-btn">
                     <span id="uploadImgDisap">Upload an Image</span>
                    <span class="material-symbols-outlined ">add_2</span>
@@ -560,12 +559,6 @@ document
           svg.appendChild(lastVerticalLine);
         }
 
-        let downLine = document.getElementById("downLine");
-        if (memories.length % 2 === 0) {
-          downLine.setAttribute("class", "downLineImageRight");
-        } else {
-          downLine.setAttribute("class", "downLineImageLeft");
-        }
       }
 
       // ============ EVENT LISTENERS ============
@@ -671,7 +664,9 @@ document
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(drawLines, 100);
       });
-      window.addEventListener("scroll", drawLines);
+      window.addEventListener("scroll", () => {
+        requestAnimationFrame(drawLines);
+      });    
     </script>
   </body>
 </html>
