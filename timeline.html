@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="timeline.css" />
+    <link rel="preload" href="corkboard/design-space-paper-textured-background.jpg" as="image">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0&icon_names=add_2" />
+ <!-- Firebase SDK (for text data) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add_2" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Configurations -->
+    <script src="firebase-config.js"></script>
+    <script src="cloudinary-config.js"></script>
+
+    <!-- Database Helpers -->
+    <script src="database-helpers.js"></script>
+    <script src="safetyCode.js"></script>
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <ul class="navUl ul1">
+        <li><a href="landingPage.html">HOME</a></li>
+        <li><a href="favourites.html">Favourites</a></li>
+      </ul>
+      <h1 class="timelineH1">Our timeline</h1>
+      <ul class="navUl ul2">
+        <li><a href="landingPage.html">HOME</a></li>
+        <li><a href="favourites.html">Favourites</a></li>
+      </ul>
+    </nav>
+    <div class="upLine"></div>
+    <div id="timelineWrapper">
+      <svg id="connectionSVG"></svg>
+
+      <!-- <div  class="sectionOfMemory">
+        <div class="leftDiv">
+          <figure class="floatMemory">
+            <img
+              class="imageTimeline"
+              src="sliki/mikiKikipozaidna final image.jpg"
+              alt="#"
+            />
+            <figcaption class="imageTitle">First time we met</figcaption>
+          </figure>
+        </div>
+        <div class="rightDiv"></div>
+      </div>
+      <div  class="sectionOfMemory">
+        <div class="leftDiv">
+          <figure class="floatMemory">
+            <img
+              class="imageTimeline"
+              src="sliki/mikiKikipozaidna final image.jpg"
+              alt="#"
+            />
+            <figcaption class="imageTitle">First time we met</figcaption>
+          </figure>
+        </div>
+        <div class="rightDiv"></div>
+      </div>
+
+      <div  class="sectionOfMemory">
+        <div class="leftDiv">
+          <figure class="floatMemory">
+            <img class="imageTimeline" src="sliki/Kikicaaa.jpg" alt="#" />
+            <figcaption class="imageTitle">First time we met</figcaption>
+          </figure>
+        </div>
+        <div class="rightDiv"></div>
+      </div>
+      <div  class="sectionOfMemory">
+        <div class="leftDiv">
+          <figure class="floatMemory">
+            <img
+              class="imageTimeline"
+              src="sliki/MikiKiki/IMG_20250603_173255.jpg"
+              alt="#"
+            />
+            <figcaption class="imageTitle">First time we met</figcaption>
+          </figure>
+        </div>
+        <div class="rightDiv"></div>
+      </div>
+
+      <div  class="sectionOfMemory">
+        <div class="leftDiv">
+          <figure class="floatMemory">
+            <img
+              class="imageTimeline"
+              src="sliki/MikiKiki/IMG_20250604_191541.jpg"
+              alt="#"
+            />
+            <figcaption class="imageTitle">First time we met</figcaption>
+          </figure>
+        </div>
+        <div class="rightDiv"></div>
+      </div>
+      <div  class="sectionOfMemory">
+        <div class="leftDiv">
+          <figure class="floatMemory">
+            <img
+              class="imageTimeline"
+              src="sliki/MikiKiki/IMG_20250607_105008.jpg"
+              alt="#"
+            />
+            <figcaption class="imageTitle">First time we met</figcaption>
+          </figure>
+        </div>
+        <div class="rightDiv"></div>
+      </div>
+
+      <div  class="sectionOfMemory">
+        <div class="leftDiv">
+          <figure class="floatMemory">
+            <img
+              class="imageTimeline"
+              src="sliki/MikiKiki/IMG_20250607_105008.jpg"
+              alt="#"
+            />
+            <figcaption class="imageTitle">First time we met</figcaption>
+          </figure>
+        </div>
+        <div class="rightDiv"></div>
+      </div>
+
+      <div  class="sectionOfMemory">
+        <div class="leftDiv">
+          <figure class="floatMemory">
+            <img
+              class="imageTimeline"
+              src="sliki/MikiKiki/IMG_20250604_191639.jpg"
+              alt="#"
+            />
+            <figcaption class="imageTitle">First time we met</figcaption>
+          </figure>
+        </div>
+        <div class="rightDiv"></div>
+      </div>
+
+      <div  class="sectionOfMemory">
+        <div class="leftDiv">
+          <figure class="floatMemory">
+            <img
+              class="imageTimeline"
+              src="sliki/MikiKiki/IMG_20250604_191639.jpg"
+              alt="#"
+            />
+            <figcaption class="imageTitle">First time we met</figcaption>
+          </figure>
+        </div>
+        <div class="rightDiv"></div>
+      </div>
+
+      <div  class="sectionOfMemory">
+        <div class="leftDiv">
+          <figure class="floatMemory">
+            <img
+              class="imageTimeline"
+              src="sliki/MikiKiki/IMG_20250704_225204_1.jpg"
+              alt="#"
+            />
+            <figcaption class="imageTitle">First time we met</figcaption>
+          </figure>
+        </div>
+        <div class="rightDiv"></div>
+      </div>
+    </div> -->
+
+    <div id="popUpWindowInsertionOfMemory">
+      <div id="addInpMemory">
+        <div id="titleAndBtn">
+          <div class="empy">
+            <button id="backBtnMemory">Back</button>
+          </div>
+
+          <h1 id="titleOfPopUpInpDesc">A NEW MEMORY OF US</h1>
+          <div class="empy"></div>
+        </div>
+
+        <div id="wholeDiv">
+          <div id="leftSideOfPopUp">
+            <input type="file" name="fileInp" id="fileInput" hidden />
+            <label for="fileInput" class="custom-file-btn"
+              >Upload an Image</label>
+          </div>
+          <div id="rightSideOfPopUp">
+            <div id="divOfTextInp">
+              <div id="bothInps">
+                <input type="text" class="inps" name="city" id="cityInput" placeholder="City" />
+                <input type="text" class="inps" name="place" id="placeInput" placeholder="Place"/>
+              </div>
+              <input type="text" class="inps" name="title" id="titleInput" placeholder="Title"/>
+              <input type="text" class="inps" name="country" id="countryInput" placeholder="Country"/>
+              <input type="date" class="inps" name="date" id="dateInput" placeholder="Date"/>
+              <div id="holderOfTextareaAndImg">
+                <textarea class="inpDescription" id="textOfDescription" placeholder="Description"></textarea>
+                <div id="rightImageHolder">
+                  <input type="file" name="fileInp" id="fileInput2" hidden />
+                  <label for="fileInput" class="custom-file-btn">
+                    <span id="uploadImgDisap">Upload an Image</span>
+                   <span class="material-symbols-outlined ">add_2</span>
+                  </label>
+                </div>
+              </div>
+              <button id="submitMemoryBtn">ADD OUR MEMORY</button>
+            </div>
+          </div>
+        </div>
+        <div id="rightColor"></div>
+      </div>
+    </div>
+
+    <div id="popUpWindow">
+      <div class="imageHolder">
+        <img class="slika" />
+      </div>
+      <div class="btnHolder">
+        <div id="divOfTitle">
+          <h1 id="titleOfPopUp">Our first trip</h1>
+        </div>
+        <div id="divOfText">
+        <p>
+          <b class="boldText">City: </b
+          ><span id="popupCity" class="memoryText">Budva</span>
+        </p>
+        <p>
+          <b class="boldText">Country: </b
+            ><span id="popupCountry" class="memoryText">N/A</span>
+          </p>
+          <p>
+            <b class="boldText">Place: </b
+            ><span id="popupPlace" class="memoryText">Montenegro</span>
+          </p>
+        <p>
+          <b class="boldText">Date: </b
+          ><span id="popupDate" class="memoryText">26.04.2024</span>
+        </p>
+            <b class="boldText">Description: </b><br />
+            <span
+              class="memoryText descriptionTextMemory"
+              id="popupDescription"
+            >
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Beatae
+              voluptatum velit recusandae repellat aliquid debitis, enim, nulla
+              doloribus amet numquam sint laudantium animi ducimus, odit cum
+              similique atque vel nemo!
+            </span>
+          </p>
+        </div>
+        <div id="divOfBtn">
+          <h3 class="editBtn btnOfPop" id="editBnt">Edit</h3>
+          <h3 class="backBtn btnOfPop" id="backBnt">Done</h3>
+        </div>
+      </div>
+    </div>
+
+    <div id="shadow"></div>
+    <div id="loader">
+      <div class="back"></div>
+      <div class="heart"></div>
+    </div>
+    <div id="boja"></div>
+
+    <button id="memoryAdd"><span id="btnDisapearingText">
+      Add a New memory 
+    </span>
+        <span class="material-symbols-outlined" id="additionSign">
+          add_2
+        </span>
+    </button>
+
+    <script>
+      // Check authentication
+      checkAuthentication();
+
+      // ============ DATABASE FUNCTIONS ============
+
+      // Global variables
+      let selectedFile = null;
+      let currentMemoryId = null;
+      let btnClicked = false;
+      let shadow = document.getElementById("shadow");
+      let popUpWindow = document.getElementById("popUpWindow");
+      let popupOfInp = document.getElementById("popUpWindowInsertionOfMemory");
+      let addMemoryBtn = document.getElementById("memoryAdd");
+      let backbtnInpWindow = document.getElementById("backBtnMemory");
+      let loader = document.getElementById("loader");
+
+      // Function to add memory to DOM
+      function addMemoryToDOM(memory) {
+        const wrapper = document.getElementById("timelineWrapper");
+        const newSection = document.createElement("div");
+        newSection.className = "sectionOfMemory";
+        newSection.setAttribute("data-memory-id", memory.id);
+
+        newSection.innerHTML = `
+          <div class="leftDiv">
+            <figure class="floatMemory">
+              <img class="imageTimeline" src="${memory.imageUrl || "/sliki/default-placeholder.jpg"}" alt="${memory.title}">
+              <figcaption class="imageTitle">${memory.title}</figcaption>
+            </figure>
+          </div>
+          <div class="rightDiv"></div>
+        `;
+
+        wrapper.appendChild(newSection);
+      }
+
+      // Load memories from database on page load
+      async function loadMemoriesFromDatabase() {
+        try {
+          const memories = await getAllMemories();
+          memories.forEach((memory) => {
+            addMemoryToDOM(memory);
+          });
+          setTimeout(drawLines, 100);
+        } catch (error) {
+          console.error("Error loading memories:", error);
+        }
+      }
+
+      // Handle file selection
+      document.addEventListener("DOMContentLoaded", function () {
+        const fileInput = document.getElementById("fileInput");
+        if (fileInput) {
+          fileInput.addEventListener("change", function (e) {
+            selectedFile = e.target.files[0];
+            if (selectedFile) {
+              console.log("Image selected:", selectedFile.name);
+            }
+          });
+        }
+      });
+
+// Handle submit memory button
+document
+  .getElementById("submitMemoryBtn")
+  .addEventListener("click", async function () {
+    const title = document.getElementById("titleInput").value;
+    const city = document.getElementById("cityInput").value;
+    const place = document.getElementById("placeInput").value;
+    const country = document.getElementById("countryInput").value;
+    const date = document.getElementById("dateInput").value;
+    const description = document.getElementById("textOfDescription").value;
+
+    if (!title || !date) {
+      alert("Please fill in at least the title and date!");
+      return;
+    }
+
+    try {
+      this.textContent = "Uploading...";
+      this.disabled = true;
+
+      // Create memory data with image file
+      const memoryData = {
+        title: title,
+        city: city,
+        place: place,
+        country: country,
+        description: description,
+        date: date,
+        image: selectedFile // Pass the file directly
+      };
+
+      // addMemory handles both Cloudinary upload and Firebase save
+      const memoryId = await addMemory(memoryData);
+      
+      console.log("✅ Memory saved with ID:", memoryId);
+
+      // Get the memory to display it with the Cloudinary URL
+      const memories = await getAllMemories();
+      const newMemory = memories.find(m => m.id === memoryId);
+      
+      if (newMemory) {
+        addMemoryToDOM(newMemory);
+      }
+
+      // Reset form
+      document.getElementById("titleInput").value = "";
+      document.getElementById("cityInput").value = "";
+      document.getElementById("placeInput").value = "";
+      document.getElementById("countryInput").value = "";
+      document.getElementById("dateInput").value = "";
+      document.getElementById("textOfDescription").value = "";
+      selectedFile = null;
+
+      // Reset file input
+      const fileInput = document.getElementById("fileInput");
+      if (fileInput) fileInput.value = "";
+
+      // Close popup
+      popupOfInp.style.display = "none";
+      shadow.style.display = "none";
+      document.body.style.overflow = "visible";
+
+      setTimeout(drawLines, 50);
+      this.textContent = "ADD OUR MEMORY";
+      this.disabled = false;
+      alert("Memory added! 🎉");
+    } catch (error) {
+      console.error("❌ Error:", error);
+      alert("Error: " + error.message);
+      this.textContent = "ADD OUR MEMORY";
+      this.disabled = false;
+    }
+  });      // ============ EXISTING FUNCTIONS ============
+
+      function drawLines() {
+        const svg = document.getElementById("connectionSVG");
+        const memories = document.querySelectorAll(".floatMemory");
+        const wrapper = document.getElementById("timelineWrapper");
+
+        svg.innerHTML = "";
+
+        const wrapperRect = wrapper.getBoundingClientRect();
+        svg.setAttribute("height", wrapper.scrollHeight);
+        svg.setAttribute("width", wrapper.scrollWidth);
+
+        const position = Array.from(memories).map((memory, index) => {
+          const rect = memory.getBoundingClientRect();
+          const wrapperTop = wrapperRect.top + window.scrollY;
+          const wrapperLeft = wrapperRect.left + window.scrollX;
+
+          return {
+            top: rect.top + window.scrollY - wrapperTop,
+            bottom: rect.bottom + window.scrollY - wrapperTop,
+            centerX: rect.left + rect.width / 2 + window.scrollX - wrapperLeft,
+            centerY: rect.top + rect.height / 2 + window.scrollY - wrapperTop,
+            leftX: rect.left + window.scrollX - wrapperLeft,
+            rightX: rect.right + window.scrollX - wrapperLeft,
+            width: rect.width,
+            index: index,
+          };
+        });
+
+        for (let i = 0; i < position.length - 1; i++) {
+          const current = position[i];
+          const next = position[i + 1];
+
+          const isOdd = i % 2 === 0;
+          const startX = isOdd ? current.rightX : current.leftX;
+          const startY = current.centerY;
+
+          const horizontalEndX = next.centerX;
+          const horizontalEndY = startY;
+
+          const verticalEndX = next.centerX;
+          const verticalEndY = next.top;
+
+          const horizontalLine = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line",
+          );
+          horizontalLine.setAttribute("x1", startX);
+          horizontalLine.setAttribute("y1", startY);
+          horizontalLine.setAttribute("x2", horizontalEndX);
+          horizontalLine.setAttribute("y2", horizontalEndY);
+          horizontalLine.setAttribute("stroke", "white");
+          horizontalLine.setAttribute("stroke-width", "3");
+          horizontalLine.setAttribute("stroke-linecap", "round");
+          svg.appendChild(horizontalLine);
+
+          const verticalLine = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line",
+          );
+          verticalLine.setAttribute("x1", horizontalEndX);
+          verticalLine.setAttribute("y1", horizontalEndY);
+          verticalLine.setAttribute("x2", verticalEndX);
+          verticalLine.setAttribute("y2", verticalEndY);
+          verticalLine.setAttribute("stroke", "white");
+          verticalLine.setAttribute("stroke-width", "3");
+          verticalLine.setAttribute("stroke-linecap", "round");
+          svg.appendChild(verticalLine);
+        }
+
+
+// ===== Line from FIRST memory to top of screen =====
+        if (position.length > 0) {
+          const firstMemory = position[0];
+          
+          // Start from center of first memory going straight up
+          const firstCenterX = firstMemory.centerX;
+          const firstStartY = firstMemory.top;
+          
+          // Calculate the actual distance to the top of the screen
+          // The wrapper has margin-top: 5%, plus navbar height (90px)
+          const wrapperOffsetTop = wrapper.offsetTop; // Gets the actual offset from top including margins
+          const topY = -wrapperOffsetTop;
+          
+          // Draw VERTICAL line from first memory center UP to top of screen
+          const firstVerticalLine = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+          firstVerticalLine.setAttribute("x1", firstCenterX);
+          firstVerticalLine.setAttribute("y1", firstStartY);
+          firstVerticalLine.setAttribute("x2", firstCenterX);
+          firstVerticalLine.setAttribute("y2", topY);
+          firstVerticalLine.setAttribute("stroke", "white");
+          firstVerticalLine.setAttribute("stroke-width", "3");
+          firstVerticalLine.setAttribute("stroke-linecap", "round");
+          svg.appendChild(firstVerticalLine);
+        }
+        // ===== L-shaped line from LAST memory to bottom =====
+        if (position.length > 0) {
+          const lastMemory = position[position.length - 1];
+          const isLastOdd = (position.length - 1) % 2 === 0;
+
+          // Start from the side of the last memory (left or right edge)
+          const lastStartX = isLastOdd ? lastMemory.rightX : lastMemory.leftX;
+          const lastStartY = lastMemory.centerY;
+
+          // Get the element ABOVE this one to align with its center
+          let horizontalEndX;
+          if (position.length >= 2) {
+            // If there's an element above, align with its center
+            const elementAbove = position[position.length - 2];
+            horizontalEndX = elementAbove.centerX;
+          } else {
+            // If this is the first/only element, use its own center
+            horizontalEndX = lastMemory.centerX;
+          }
+
+          // Bottom of the screen
+          const bottomY = wrapper.scrollHeight;
+
+          // 1. Draw HORIZONTAL line from last memory edge to align with element above
+          const lastHorizontalLine = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+          lastHorizontalLine.setAttribute("x1", lastStartX);
+          lastHorizontalLine.setAttribute("y1", lastStartY);
+          lastHorizontalLine.setAttribute("x2", horizontalEndX);
+          lastHorizontalLine.setAttribute("y2", lastStartY);
+          lastHorizontalLine.setAttribute("stroke", "white");
+          lastHorizontalLine.setAttribute("stroke-width", "3");
+          lastHorizontalLine.setAttribute("stroke-linecap", "round");
+          svg.appendChild(lastHorizontalLine);
+
+          // 2. Draw VERTICAL line from that point down to bottom
+          const lastVerticalLine = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+          lastVerticalLine.setAttribute("x1", horizontalEndX);
+          lastVerticalLine.setAttribute("y1", lastStartY);
+          lastVerticalLine.setAttribute("x2", horizontalEndX);
+          lastVerticalLine.setAttribute("y2", bottomY);
+          lastVerticalLine.setAttribute("stroke", "white");
+          lastVerticalLine.setAttribute("stroke-width", "3");
+          lastVerticalLine.setAttribute("stroke-linecap", "round");
+          svg.appendChild(lastVerticalLine);
+        }
+
+      }
+
+      // ============ EVENT LISTENERS ============
+
+      // Add memory button click
+      addMemoryBtn.addEventListener("click", function () {
+        popupOfInp.style.display = "block";
+        shadow.style.display = "block";
+        document.body.style.overflow = "hidden";
+      });
+
+      // Back button on add memory popup
+      backbtnInpWindow.addEventListener("click", function () {
+        popupOfInp.style.display = "none";
+        shadow.style.display = "none";
+        document.body.style.overflow = "visible";
+      });
+
+      // Back button on view memory popup
+      document.getElementById("backBnt").addEventListener("click", function () {
+        shadow.style.display = "none";
+        popUpWindow.style.display = "none";
+        document.body.style.overflow = "visible";
+        btnClicked = false;
+      });
+
+      // Click on memory to view details
+      document
+        .getElementById("timelineWrapper")
+        .addEventListener("click", async function (e) {
+          const memory = e.target.closest(".floatMemory");
+
+          if (memory && !btnClicked) {
+            const section = memory.closest(".sectionOfMemory");
+            const memoryId = section
+              ? section.getAttribute("data-memory-id")
+              : null;
+
+            if (memoryId) {
+              // Load from database
+              try {
+                const doc = await db.collection("memories").doc(memoryId).get();
+                if (doc.exists) {
+                  const data = doc.data();
+                  currentMemoryId = memoryId;
+
+                  document.getElementById("titleOfPopUp").textContent =
+                    data.title;
+                  document.getElementById("popupCity").textContent =
+                    data.city || "N/A";
+                  document.getElementById("popupPlace").textContent =
+                    data.place || "N/A";
+                  document.getElementById("popupCountry").textContent = data.country || "N/A";
+                  document.getElementById("popupDate").textContent =
+                    data.date || "N/A";
+                  document.getElementById("popupDescription").textContent =
+                    data.description || "No description";
+                  document.querySelector(".slika").src =
+                    data.imageUrl || "/sliki/default-placeholder.jpg";
+
+                  document.body.style.overflow = "hidden";
+                  shadow.style.display = "block";
+                  popUpWindow.style.display = "flex";
+                  btnClicked = true;
+                }
+              } catch (error) {
+                console.error("Error loading memory:", error);
+              }
+            } else {
+              // For memories without database ID (existing static ones)
+              let imageTimeline = memory
+                .querySelector(".imageTimeline")
+                .getAttribute("src");
+              document
+                .querySelector(".slika")
+                .setAttribute("src", imageTimeline);
+              document.body.style.overflow = "hidden";
+              shadow.style.display = "block";
+              popUpWindow.style.display = "flex";
+              btnClicked = true;
+            }
+          }
+        });
+
+      // Date picker
+      document
+        .getElementById("dateInput")
+        .addEventListener("click", function () {
+          this.showPicker();
+        });
+
+      // ============ PAGE LOAD ============
+
+      window.addEventListener("load", async function () {
+        loader.style.display = "none";
+        await loadMemoriesFromDatabase();
+        drawLines();
+      });
+
+      // Window resize and scroll
+      let resizeTimeout;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(drawLines, 100);
+      });
+      window.addEventListener("scroll", () => {
+        requestAnimationFrame(drawLines);
+      });    
+
+
+
+
+      // ================== CLOUDINARY BACKGROUND IMAGE OPTIMIZATION ==================
+function setOptimizedBackgrounds() {
+  const memories = document.querySelectorAll(".floatMemory");
+
+  memories.forEach(memory => {
+    const img = memory.querySelector(".imageTimeline");
+    if (!img) return;
+
+    // Get the current src (replace with your Cloudinary base URL if needed)
+    let originalSrc = img.getAttribute("src");
+
+    // Replace the img with a div background
+    const bgDiv = document.createElement("div");
+    bgDiv.className = "optimizedMemoryBg";
+
+    // Cloudinary optimized URL (f_auto = automatic format, q_auto = automatic quality)
+    // Replace <your-cloud-name> with your Cloudinary account name
+    const cloudinaryURL = originalSrc.includes("res.cloudinary.com")
+      ? originalSrc
+      : `https://res.cloudinary.com/<your-cloud-name>/image/upload/f_auto,q_auto/${originalSrc}`;
+
+    bgDiv.style.backgroundImage = `url('${cloudinaryURL}')`;
+    bgDiv.style.backgroundRepeat = "repeat"; // keep your repeated background
+    bgDiv.style.backgroundSize = "contain"; // no cropping
+    bgDiv.style.width = img.width + "px";
+    bgDiv.style.height = img.height + "px";
+
+    // Replace image with optimized div
+    img.parentNode.replaceChild(bgDiv, img);
+  });
+}
+
+// Call this function after DOM is loaded and memories are added
+window.addEventListener("load", setOptimizedBackgrounds);
+    </script>
+  </body>
+</html>
