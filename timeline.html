@@ -668,6 +668,44 @@ document
       window.addEventListener("scroll", () => {
         requestAnimationFrame(drawLines);
       });    
+
+
+
+
+      // ================== CLOUDINARY BACKGROUND IMAGE OPTIMIZATION ==================
+function setOptimizedBackgrounds() {
+  const memories = document.querySelectorAll(".floatMemory");
+
+  memories.forEach(memory => {
+    const img = memory.querySelector(".imageTimeline");
+    if (!img) return;
+
+    // Get the current src (replace with your Cloudinary base URL if needed)
+    let originalSrc = img.getAttribute("src");
+
+    // Replace the img with a div background
+    const bgDiv = document.createElement("div");
+    bgDiv.className = "optimizedMemoryBg";
+
+    // Cloudinary optimized URL (f_auto = automatic format, q_auto = automatic quality)
+    // Replace <your-cloud-name> with your Cloudinary account name
+    const cloudinaryURL = originalSrc.includes("res.cloudinary.com")
+      ? originalSrc
+      : `https://res.cloudinary.com/<your-cloud-name>/image/upload/f_auto,q_auto/${originalSrc}`;
+
+    bgDiv.style.backgroundImage = `url('${cloudinaryURL}')`;
+    bgDiv.style.backgroundRepeat = "repeat"; // keep your repeated background
+    bgDiv.style.backgroundSize = "contain"; // no cropping
+    bgDiv.style.width = img.width + "px";
+    bgDiv.style.height = img.height + "px";
+
+    // Replace image with optimized div
+    img.parentNode.replaceChild(bgDiv, img);
+  });
+}
+
+// Call this function after DOM is loaded and memories are added
+window.addEventListener("load", setOptimizedBackgrounds);
     </script>
   </body>
 </html>
