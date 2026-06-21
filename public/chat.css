@@ -675,6 +675,7 @@ body {
   color: #4fc3f7;
 }
 
+
 /* ─── IMAGE PREVIEW BAR ─── */
 #img-preview-bar {
   display: none;
@@ -2384,6 +2385,7 @@ img[data-lazy-src] {
   }
 }
 
+
 /* ─── INPUT-MODE SEPARATION AND FOCUS FEEDBACK ─── */
 #camera-focus-indicator.focus-success {
   border-color: #78ff9b;
@@ -2555,6 +2557,7 @@ img[data-lazy-src] {
   padding: 16px;
 }
 
+
 .shared-media-count {
   position: sticky;
   top: -16px;
@@ -2602,6 +2605,7 @@ img[data-lazy-src] {
   transform: scale(1.04);
 }
 
+
 .shared-media-status {
   width: 100%;
   min-height: 74px;
@@ -2641,6 +2645,7 @@ img[data-lazy-src] {
   }
 }
 
+
 @media (max-width: 768px) {
   #chat-header {
     padding-left: 10px;
@@ -2674,7 +2679,9 @@ img[data-lazy-src] {
 
   .chat-feature-overlay {
     align-items: stretch;
-    padding: max(8px, env(safe-area-inset-top)) 8px
+    padding:
+      max(8px, env(safe-area-inset-top))
+      8px
       max(8px, env(safe-area-inset-bottom));
   }
 
@@ -2854,16 +2861,9 @@ img[data-lazy-src] {
 }
 
 @keyframes sharedMediaHeartBeat {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  35% {
-    transform: scale(1.18);
-  }
-  60% {
-    transform: scale(0.96);
-  }
+  0%, 100% { transform: scale(1); }
+  35% { transform: scale(1.18); }
+  60% { transform: scale(0.96); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2880,3 +2880,4 @@ img[data-lazy-src] {
     height: 18px;
   }
 }
+
