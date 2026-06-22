@@ -3242,3 +3242,166 @@ textarea,
     object-fit: contain !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   CAMERA RATIO SELECTOR AND SPACED CONTROL LAYOUT
+   Default keeps the exact current horizontal camera dimensions.
+   ═══════════════════════════════════════════════════════════════ */
+
+#camera-live-wrap {
+  flex-direction: column;
+}
+
+#camera-options-row {
+  width: 100% !important;
+  max-width: 480px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  margin-top: 14px;
+}
+
+#camera-quick-options-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#camera-adjustments-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 9px;
+}
+
+#camera-ratio-wrap {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-family: "Quicksand", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.camera-ratio-label {
+  opacity: 0.82;
+}
+
+#camera-ratio-select {
+  min-width: 92px;
+  height: 30px;
+  padding: 0 28px 0 10px;
+  border: 0;
+  border-radius: 15px;
+  outline: none;
+  background: rgba(15, 15, 15, 0.68);
+  color: #fff;
+  font-family: "Quicksand", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+#camera-ratio-select option {
+  background: #171717;
+  color: #fff;
+}
+
+#camera-adjustments-row #camera-zoom-wrap,
+#camera-adjustments-row #camera-exposure-wrap {
+  width: 100%;
+  min-height: 44px !important;
+  justify-content: center;
+  margin: 0;
+}
+
+#camera-adjustments-row #camera-zoom-slider,
+#camera-adjustments-row #camera-exposure-slider {
+  flex: 1;
+  width: auto;
+  max-width: 280px;
+}
+
+#camera-controls {
+  width: 100%;
+  max-width: 480px;
+  justify-content: center;
+  gap: clamp(34px, 11vw, 58px) !important;
+  margin-top: 17px !important;
+  padding-bottom: 4px;
+}
+
+/* Only selected ratios receive a fixed frame. Default has no ratio class and
+   continues using the exact original width/height rules already in the file. */
+#camera-stage.camera-ratio-active {
+  max-width: 480px !important;
+  max-height: 65vh !important;
+  flex: 0 0 auto;
+  overflow: hidden;
+  background: #080808 !important;
+  aspect-ratio: var(--camera-selected-ratio) !important;
+}
+
+#camera-stage.camera-ratio-active #camera-feed {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: var(--camera-selected-ratio) !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  border-radius: inherit !important;
+  box-shadow: none !important;
+}
+
+/* The custom pointer cursor also applies to the new ratio control. */
+#camera-ratio-wrap,
+#camera-ratio-select {
+  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--p.png"), pointer !important;
+}
+
+@media (min-width: 700px) {
+  #camera-adjustments-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  #camera-options-row {
+    gap: 9px !important;
+    margin-top: 13px;
+  }
+
+  #camera-quick-options-row {
+    gap: 8px;
+  }
+
+  #camera-ratio-wrap,
+  .cam-option-btn {
+    min-height: 38px !important;
+  }
+
+  #camera-ratio-wrap {
+    padding-left: 10px;
+  }
+
+  #camera-ratio-select {
+    min-width: 84px;
+  }
+
+  #camera-controls {
+    gap: clamp(30px, 12vw, 48px) !important;
+    margin-top: 18px !important;
+  }
+}

@@ -491,6 +491,20 @@ function initChat(WHO) {
   let cameraSinglePointerMoved = false;
   let cameraSinglePointerStart = null;
   let cameraGestureGuardEnabled = false;
+  let cameraRatioSelect = null;
+  let cameraRatioKey = "default";
+
+  // Default deliberately preserves the current original horizontal camera.
+  // Other ratios only apply after the user selects one.
+  const CAMERA_RATIOS = Object.freeze({
+    default: null,
+    "1:1": 1,
+    "4:3": 4 / 3,
+    "16:9": 16 / 9,
+    "9:16": 9 / 16,
+    "8:16": 8 / 16,
+    "3:1": 3,
+  });
 
   // ─── UNSENT IMAGE DRAFTS (IndexedDB) ─────────────────────────────
   function getFileSignature(file) {
@@ -4195,6 +4209,12 @@ function initChat(WHO) {
     const optionsRow = document.createElement("div");
     optionsRow.id = "camera-options-row";
 
+    const quickOptionsRow = document.createElement("div");
+    quickOptionsRow.id = "camera-quick-options-row";
+
+    const adjustmentsRow = document.createElement("div");
+    adjustmentsRow.id = "camera-adjustments-row";
+
     const timerWrap = document.createElement("div");
     timerWrap.id = "camera-timer-wrap";
 
@@ -4222,6 +4242,24 @@ function initChat(WHO) {
     // centering, which would otherwise make position: fixed behave like it is
     // fixed to the wrapper instead of the visible device viewport.
     document.body.appendChild(cameraTimerMenu);
+
+    const cameraRatioWrap = document.createElement("label");
+    cameraRatioWrap.id = "camera-ratio-wrap";
+    cameraRatioWrap.setAttribute("for", "camera-ratio-select");
+    cameraRatioWrap.innerHTML = `
+      <span class="camera-ratio-label">Frame</span>
+      <select id="camera-ratio-select" aria-label="Camera frame ratio">
+        <option value="default">Default</option>
+        <option value="1:1">1:1</option>
+        <option value="4:3">4:3</option>
+        <option value="16:9">16:9</option>
+        <option value="9:16">9:16</option>
+        <option value="8:16">8:16</option>
+        <option value="3:1">3:1</option>
+      </select>
+    `;
+    cameraRatioSelect = cameraRatioWrap.querySelector("#camera-ratio-select");
+    cameraRatioSelect.value = cameraRatioKey;
 
     cameraZoomWrap = document.createElement("label");
     cameraZoomWrap.id = "camera-zoom-wrap";
@@ -4274,10 +4312,16 @@ function initChat(WHO) {
       <span>Flash</span>
     `;
 
-    optionsRow.appendChild(timerWrap);
-    optionsRow.appendChild(cameraZoomWrap);
-    optionsRow.appendChild(cameraExposureWrap);
-    optionsRow.appendChild(cameraTorchBtn);
+    quickOptionsRow.appendChild(timerWrap);
+    quickOptionsRow.appendChild(cameraRatioWrap);
+    quickOptionsRow.appendChild(cameraTorchBtn);
+
+    adjustmentsRow.appendChild(cameraZoomWrap);
+    adjustmentsRow.appendChild(cameraExposureWrap);
+
+    optionsRow.appendChild(quickOptionsRow);
+    optionsRow.appendChild(adjustmentsRow);
+
     cameraLiveWrap.insertBefore(
       optionsRow,
       document.getElementById("camera-controls"),
@@ -4395,6 +4439,18 @@ function initChat(WHO) {
     cameraZoomSlider.addEventListener("input", () => {
       requestCameraZoom(Number(cameraZoomSlider.value));
     });
+
+    cameraRatioSelect.addEventListener("change", () => {
+      const requestedRatio = cameraRatioSelect.value;
+      cameraRatioKey = Object.prototype.hasOwnProperty.call(
+        CAMERA_RATIOS,
+        requestedRatio,
+      )
+        ? requestedRatio
+        : "default";
+      applyCameraRatioLayout();
+    });
+
     cameraExposureSlider.addEventListener("input", applyExposureCompensation);
     cameraTorchBtn.addEventListener("click", toggleCameraTorch);
 
@@ -4795,14 +4851,61 @@ function initChat(WHO) {
     cameraSinglePointerMoved = false;
   }
 
-  function syncCameraStageAspect() {
+  function applyCameraRatioLayout() {
     if (!cameraStage) return;
 
-    // Keep the exact original camera display dimensions.
-    // Zoom, torch, focus and exposure remain available, but they no longer
-    // calculate or shrink the preview based on the viewport/control height.
-    cameraStage.style.removeProperty("width");
-    cameraStage.style.removeProperty("--camera-stream-aspect");
+    const selectedRatio = CAMERA_RATIOS[cameraRatioKey];
+
+    if (!selectedRatio) {
+      // Exact existing/default camera size — do not alter it.
+      cameraStage.classList.remove("camera-ratio-active");
+      cameraStage.style.removeProperty("width");
+      cameraStage.style.removeProperty("height");
+      cameraStage.style.removeProperty("--camera-selected-ratio");
+      cameraFeed.style.removeProperty("width");
+      cameraFeed.style.removeProperty("height");
+      return;
+    }
+
+    cameraStage.classList.add("camera-ratio-active");
+    cameraStage.style.setProperty(
+      "--camera-selected-ratio",
+      String(selectedRatio),
+    );
+
+    // Fit the selected ratio inside the same original 480px / 65vh limits.
+    // This changes only the chosen ratio; Default remains untouched.
+    const viewportHeight =
+      window.visualViewport?.height || window.innerHeight || 800;
+    const availableWidth = Math.min(
+      cameraLiveWrap?.clientWidth || window.innerWidth || 480,
+      480,
+    );
+    const availableHeight = Math.max(120, viewportHeight * 0.65);
+
+    let width = availableWidth;
+    let height = width / selectedRatio;
+
+    if (height > availableHeight) {
+      height = availableHeight;
+      width = height * selectedRatio;
+    }
+
+    cameraStage.style.setProperty(
+      "width",
+      `${Math.max(1, Math.round(width))}px`,
+      "important",
+    );
+    cameraStage.style.setProperty(
+      "height",
+      `${Math.max(1, Math.round(height))}px`,
+      "important",
+    );
+  }
+
+  function syncCameraStageAspect() {
+    if (!cameraStage) return;
+    applyCameraRatioLayout();
   }
 
   function stopMediaStream(stream) {
@@ -5087,8 +5190,30 @@ function initChat(WHO) {
     cameraIsCapturing = true;
     snapBtn.disabled = true;
     const captureId = ++cameraCaptureRequestId;
-    snapCanvas.width = video.videoWidth;
-    snapCanvas.height = video.videoHeight;
+
+    const selectedRatio = CAMERA_RATIOS[cameraRatioKey];
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = video.videoWidth;
+    let sourceHeight = video.videoHeight;
+
+    if (selectedRatio) {
+      const sourceRatio = sourceWidth / sourceHeight;
+
+      if (sourceRatio > selectedRatio) {
+        const croppedWidth = sourceHeight * selectedRatio;
+        sourceX = (sourceWidth - croppedWidth) / 2;
+        sourceWidth = croppedWidth;
+      } else if (sourceRatio < selectedRatio) {
+        const croppedHeight = sourceWidth / selectedRatio;
+        sourceY = (sourceHeight - croppedHeight) / 2;
+        sourceHeight = croppedHeight;
+      }
+    }
+
+    snapCanvas.width = Math.max(1, Math.round(sourceWidth));
+    snapCanvas.height = Math.max(1, Math.round(sourceHeight));
+
     const ctx = snapCanvas.getContext("2d");
     if (!ctx) {
       cameraIsCapturing = false;
@@ -5101,7 +5226,17 @@ function initChat(WHO) {
       ctx.translate(snapCanvas.width, 0);
       ctx.scale(-1, 1);
     }
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(
+      video,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      snapCanvas.width,
+      snapCanvas.height,
+    );
     ctx.restore();
 
     // The frame is now in the canvas, so the camera can be released while the
@@ -5219,6 +5354,7 @@ function initChat(WHO) {
     enableCameraGestureGuard();
     cameraLiveWrap.style.display = "flex";
     cameraPreviewWrap.classList.remove("visible");
+    applyCameraRatioLayout();
     capturedBlob = null;
     pushCameraHistoryState();
     await startCameraStream();
