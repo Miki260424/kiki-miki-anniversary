@@ -3150,77 +3150,76 @@ textarea,
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CAMERA LARGE MOBILE FRAME RESTORE
-   Restores the old large camera dimensions without cropping.
+   EXACT ORIGINAL CAMERA SIZE RESTORE
+   Same dimensions as before zoom/exposure/focus were introduced.
    ═══════════════════════════════════════════════════════════════ */
 
-@media (max-width: 768px), (pointer: coarse) {
-  #camera-modal {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    justify-content: flex-start !important;
-    padding:
-      max(8px, env(safe-area-inset-top))
-      4px
-      max(12px, env(safe-area-inset-bottom)) !important;
-  }
-
-  #camera-live-wrap {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    transform: none !important;
-    width: min(calc(100vw - 8px), 480px) !important;
-    max-width: 480px !important;
-    margin: auto !important;
-    padding: 0 !important;
-    gap: 8px !important;
-  }
-
-  #camera-stage {
-    width: 100% !important;
-    max-width: 480px !important;
-    height: auto !important;
-    aspect-ratio: 3 / 4 !important;
-    flex: 0 0 auto !important;
-    background: #080808 !important;
-  }
-
-  #camera-feed,
-  #camera-stage #camera-feed {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: none !important;
-    max-height: none !important;
-    aspect-ratio: 3 / 4 !important;
-    object-fit: contain !important;
-    object-position: center !important;
-  }
-
-  #camera-options-row {
-    width: 100% !important;
-    max-width: 480px !important;
-  }
+#camera-modal,
+#camera-modal.open {
+  justify-content: center !important;
+  align-items: center !important;
 }
 
-/* Keep the natural wide frame when the phone itself is landscape. */
-@media (max-width: 932px) and (orientation: landscape) {
-  #camera-live-wrap {
-    width: min(calc(100vw - 16px), 720px) !important;
-    max-width: 720px !important;
+#camera-live-wrap {
+  width: 100% !important;
+  max-width: 480px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  align-items: center !important;
+}
+
+#camera-stage {
+  width: 100% !important;
+  max-width: 480px !important;
+  height: auto !important;
+  aspect-ratio: auto !important;
+  margin: 0 auto !important;
+  background: transparent !important;
+  border-radius: 20px !important;
+}
+
+#camera-feed,
+#camera-stage #camera-feed {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 480px !important;
+  max-height: 65vh !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  border-radius: 20px !important;
+  box-shadow: 0 0 40px rgba(232, 99, 138, 0.3) !important;
+}
+
+#camera-options-row {
+  width: 100% !important;
+  max-width: 480px !important;
+}
+
+@media (max-width: 600px) {
+  #camera-modal,
+  #camera-modal.open {
+    justify-content: center !important;
+    align-items: center !important;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      8px
+      max(10px, env(safe-area-inset-bottom)) !important;
   }
 
+  #camera-live-wrap,
   #camera-stage {
     width: 100% !important;
-    max-width: 720px !important;
-    aspect-ratio: 4 / 3 !important;
+    max-width: 480px !important;
   }
 
   #camera-feed,
   #camera-stage #camera-feed {
     width: 100% !important;
-    height: 100% !important;
-    aspect-ratio: 4 / 3 !important;
+    height: auto !important;
+    max-width: 480px !important;
+    max-height: 65vh !important;
+    aspect-ratio: auto !important;
     object-fit: contain !important;
   }
 }

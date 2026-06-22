@@ -1160,7 +1160,7 @@ function initChat(WHO) {
     const diff = Math.max(0, Date.now() - date.getTime());
     if (diff < 60_000) return "Last seen just now";
     if (diff < 60 * 60_000) {
-      return `Last seen ${Math.floor(diff / 60_000)}m ago`;
+      return `Last seen ${Math.floor(diff / 60_000)}min ago`;
     }
     if (diff < 24 * 60 * 60_000) {
       return `Last seen ${Math.floor(diff / (60 * 60_000))}h ago`;
@@ -4740,23 +4740,13 @@ function initChat(WHO) {
   }
 
   function syncCameraStageAspect() {
-    if (!cameraStage || !cameraFeed.videoWidth || !cameraFeed.videoHeight) return;
-    const aspect = cameraFeed.videoWidth / cameraFeed.videoHeight;
-    const viewport = window.visualViewport;
-    const viewportWidth = viewport?.width || window.innerWidth;
-    const viewportHeight = viewport?.height || window.innerHeight;
-    const mobile = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
-    const reservedHeight = mobile ? 165 : 190;
-    const maxWidth = Math.min(720, Math.max(240, viewportWidth - (mobile ? 8 : 24)));
-    const maxHeight = Math.max(220, viewportHeight - reservedHeight);
-    const fittedWidth = Math.min(maxWidth, maxHeight * aspect);
+    if (!cameraStage) return;
 
-    cameraStage.style.setProperty("--camera-stream-aspect", String(aspect));
-    cameraStage.style.setProperty(
-      "width",
-      `${Math.max(220, fittedWidth)}px`,
-      "important",
-    );
+    // Keep the exact original camera display dimensions.
+    // Zoom, torch, focus and exposure remain available, but they no longer
+    // calculate or shrink the preview based on the viewport/control height.
+    cameraStage.style.removeProperty("width");
+    cameraStage.style.removeProperty("--camera-stream-aspect");
   }
 
   function stopMediaStream(stream) {
@@ -4795,16 +4785,12 @@ function initChat(WHO) {
 
     let requestedStream = null;
     try {
-      const portraitCamera = window.matchMedia("(orientation: portrait)").matches;
       requestedStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: facingMode },
-          // Ask for a portrait 3:4 stream on phones so the live view can use
-          // much more of the screen. Landscape devices keep the natural 4:3
-          // frame. object-fit: contain still guarantees that nothing is cropped.
-          width: { ideal: portraitCamera ? 960 : 1280 },
-          height: { ideal: portraitCamera ? 1280 : 960 },
-          aspectRatio: { ideal: portraitCamera ? 3 / 4 : 4 / 3 },
+          width: { ideal: 1280 },
+          height: { ideal: 960 },
+          aspectRatio: { ideal: 4 / 3 },
         },
         audio: false,
       });
