@@ -2773,7 +2773,7 @@ html.camera-gesture-lock #camera-stage {
   box-shadow: 0 0 40px rgba(232, 99, 138, 0.3);
   transform: scale(var(--camera-software-zoom));
   transform-origin: center center;
-  transition: transform 0.2s;
+  transition: none;
 }
 
 
@@ -3319,9 +3319,18 @@ html.camera-gesture-lock #camera-stage {
   transition: none !important;
 }
 
+
 #camera-feed.front-camera-corrected {
   transform:
     scaleX(-1)
     scale(var(--camera-software-zoom)) !important;
   transform-origin: center center !important;
+}
+
+
+#camera-feed,
+#camera-stage #camera-feed,
+#camera-feed.front-camera-corrected {
+  transition: none !important;
+  animation: none !important;
 }

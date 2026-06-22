@@ -5086,15 +5086,14 @@ function initChat(WHO) {
       }
 
       cameraStream = requestedStream;
-      cameraFeed.srcObject = requestedStream;
 
-      // Some mobile browsers mirror the user-facing preview automatically.
-      // Counter-flip only the front-camera preview so it appears natural.
-      // The rear camera and saved canvas image remain untouched.
+      // Set the final orientation before attaching the stream so opening or
+      // switching cameras never shows a visible left-right flip.
       cameraFeed.classList.toggle(
         "front-camera-corrected",
         facingMode === "user",
       );
+      cameraFeed.srcObject = requestedStream;
 
       try {
         await cameraFeed.play();
@@ -5449,6 +5448,15 @@ function initChat(WHO) {
       return;
     }
 
+    ctx.save();
+
+    if (cameraFeed.classList.contains("front-camera-corrected")) {
+      // Apply the same horizontal correction used by the live preview so the
+      // captured front-camera photo is not reversed after it is taken.
+      ctx.translate(snapCanvas.width, 0);
+      ctx.scale(-1, 1);
+    }
+
     ctx.drawImage(
       video,
       sourceX,
@@ -5460,6 +5468,8 @@ function initChat(WHO) {
       snapCanvas.width,
       snapCanvas.height,
     );
+
+    ctx.restore();
 
     // The frame is now in the canvas, so the camera can be released while the
     // JPEG is encoded and while the user reviews the photo.
