@@ -292,6 +292,23 @@ function initChat(WHO) {
   const lbPrev = document.getElementById("lb-prev");
   const lbNext = document.getElementById("lb-next");
   const typingIndicator = document.getElementById("typing-bubble");
+
+  function placeTypingIndicatorAfterLastMessage(scrollWhenVisible = false) {
+    if (!typingIndicator || !msgContainer) return;
+
+    // The typing bubble belongs to the scrollable message list. Re-appending
+    // an existing node moves it to the end without cloning listeners/state.
+    if (
+      typingIndicator.parentElement !== msgContainer ||
+      typingIndicator.nextElementSibling
+    ) {
+      msgContainer.appendChild(typingIndicator);
+    }
+
+    if (scrollWhenVisible && isAtBottom) {
+      requestAnimationFrame(() => scrollToBottom(true));
+    }
+  }
   const uploadProgress = document.getElementById("upload-progress");
   const uploadProgressBar = document.getElementById("upload-progress-bar");
   const loader = document.getElementById("loader");
@@ -1160,7 +1177,7 @@ function initChat(WHO) {
     const diff = Math.max(0, Date.now() - date.getTime());
     if (diff < 60_000) return "Last seen just now";
     if (diff < 60 * 60_000) {
-      return `Last seen ${Math.floor(diff / 60_000)}min ago`;
+      return `Last seen ${Math.floor(diff / 60_000)}m ago`;
     }
     if (diff < 24 * 60 * 60_000) {
       return `Last seen ${Math.floor(diff / (60 * 60_000))}h ago`;
@@ -1494,7 +1511,12 @@ function initChat(WHO) {
           <span class="typing-dots"><span></span><span></span><span></span></span>
         </div>
       </div>`;
+
+          // Render it as the final item inside the message list, directly
+          // below the newest message instead of above the composer controls.
+          placeTypingIndicatorAfterLastMessage(false);
           typingIndicator.classList.add("visible");
+          placeTypingIndicatorAfterLastMessage(true);
         } else {
           typingIndicator.classList.remove("visible");
           typingIndicator.innerHTML = "";
@@ -2329,6 +2351,9 @@ function initChat(WHO) {
     });
     observeLazyImages(frag);
     msgContainer.appendChild(frag);
+    if (typingIndicator.classList.contains("visible")) {
+      placeTypingIndicatorAfterLastMessage(false);
+    }
 
     _pendingFirstBatch = [];
     _firstBatchTimer = null;
@@ -2363,6 +2388,10 @@ function initChat(WHO) {
 
     const row = msgContainer.lastElementChild;
     if (id) msgRowMap.set(id, row);
+
+    if (typingIndicator.classList.contains("visible")) {
+      placeTypingIndicatorAfterLastMessage(false);
+    }
 
     if (isAtBottom) {
       requestAnimationFrame(() => {
@@ -2844,6 +2873,7 @@ function initChat(WHO) {
       btn.textContent = emoji;
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
+        closeActiveImageActionPopover({ closeReaction: false });
         saveReaction(msgId, emoji);
         btn.classList.add("pop");
         setTimeout(closeReactionBar, 160);
@@ -2856,6 +2886,7 @@ function initChat(WHO) {
     plusBtn.textContent = "＋";
     plusBtn.addEventListener("click", (e) => {
       e.stopPropagation();
+      closeActiveImageActionPopover({ closeReaction: false });
       closeReactionBar();
       openReactionPicker(msgId, row);
     });
@@ -3064,7 +3095,9 @@ function initChat(WHO) {
 
   document.addEventListener("click", (e) => {
     if (activeReactionBar && !activeReactionBar.contains(e.target)) {
-      closeReactionBar();
+      if (!document.querySelector(".img-action-popover")?.contains(e.target)) {
+        closeMobileMessageMenus();
+      }
     }
   });
 
@@ -3848,6 +3881,20 @@ function initChat(WHO) {
 
   let _activeImageActionPopoverClose = null;
 
+  function closeActiveImageActionPopover(options = {}) {
+    if (typeof _activeImageActionPopoverClose === "function") {
+      _activeImageActionPopoverClose(options);
+    }
+  }
+
+  function closeMobileMessageMenus() {
+    // The reaction capsule and image action menu form one temporary mobile UI.
+    // Close the popover first without recursively closing the capsule, then
+    // close the capsule itself. Both cleanup functions safely share scroll lock.
+    closeActiveImageActionPopover({ closeReaction: false });
+    closeReactionBar();
+  }
+
   function openImageActionMenu(
     imgUrl,
     imgEl,
@@ -3876,7 +3923,7 @@ function initChat(WHO) {
 
     let collisionRecheckTimers = [];
 
-    const closePopover = () => {
+    const closePopover = ({ closeReaction = false } = {}) => {
       collisionRecheckTimers.forEach((timer) => clearTimeout(timer));
       collisionRecheckTimers = [];
       popover.remove();
@@ -3887,6 +3934,7 @@ function initChat(WHO) {
         _activeImageActionPopoverClose = null;
       }
       unlockScroll();
+      if (closeReaction) closeReactionBar();
     };
     _activeImageActionPopoverClose = closePopover;
 
@@ -3901,7 +3949,7 @@ function initChat(WHO) {
       icon: "💾",
       label: "Save Image",
       fn: async () => {
-        closePopover();
+        closePopover({ closeReaction: true });
         await saveImageToDevice(imgUrl);
       },
     });
@@ -3911,7 +3959,7 @@ function initChat(WHO) {
         icon: "📥",
         label: "Save All",
         fn: async () => {
-          closePopover();
+          closePopover({ closeReaction: true });
           let saved = 0;
           for (const url of messageUrls) {
             try {
@@ -3938,7 +3986,7 @@ function initChat(WHO) {
         } catch (_) {
           showMiniNotif("Could not save blur setting");
         } finally {
-          closePopover();
+          closePopover({ closeReaction: true });
         }
       },
     });
@@ -3953,7 +4001,7 @@ function initChat(WHO) {
           } catch (_) {
             showMiniNotif("Could not save blur setting");
           } finally {
-            closePopover();
+            closePopover({ closeReaction: true });
           }
         },
       });
@@ -4108,9 +4156,17 @@ function initChat(WHO) {
     ];
 
     closeOnOutside = (event) => {
-      if (!popover.contains(event.target)) {
-        closePopover();
+      if (popover.contains(event.target)) return;
+
+      // A tap on the reaction capsule is an intentional reaction action.
+      // Close only the image menu now; the reaction handler closes the capsule.
+      if (activeReactionBar?.contains(event.target)) {
+        closePopover({ closeReaction: false });
+        return;
       }
+
+      // A tap anywhere else dismisses the complete mobile message UI.
+      closePopover({ closeReaction: true });
     };
     setTimeout(() => {
       document.addEventListener("pointerdown", closeOnOutside, true);

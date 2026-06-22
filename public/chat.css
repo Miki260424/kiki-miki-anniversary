@@ -181,27 +181,45 @@ body {
 
 /* ─── TYPING BUBBLE ─── */
 #typing-bubble {
-  position: absolute;
-  bottom: 0;
-  left: 16px;
-  z-index: 60;
+  display: none;
+  position: relative;
+  inset: auto;
+  width: fit-content;
+  max-width: 100%;
+  flex-shrink: 0;
+  z-index: 1;
   pointer-events: none;
   opacity: 0;
   transform: translateY(6px);
-  transition:
-    opacity 0.2s ease,
-    transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  margin: 0;
 }
+
 #typing-bubble.visible {
+  display: block;
   opacity: 1;
   transform: translateY(0);
+  animation: typingBubbleIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+    both;
 }
+
+@keyframes typingBubbleIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .typing-bubble-row {
   display: flex;
   align-items: flex-end;
   gap: 6px;
-  padding-bottom: 10px;
+  padding: 2px 0 8px;
 }
+
 .typing-bubble-avatar {
   width: 28px;
   height: 28px;
@@ -214,6 +232,7 @@ body {
   font-size: 13px;
   flex-shrink: 0;
 }
+
 .typing-bubble-pill {
   background: #fff;
   border: 1px solid rgba(232, 99, 138, 0.18);
