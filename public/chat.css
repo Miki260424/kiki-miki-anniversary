@@ -3148,3 +3148,79 @@ textarea,
 [contenteditable="true"] {
   cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--p.png"), text !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   CAMERA LARGE MOBILE FRAME RESTORE
+   Restores the old large camera dimensions without cropping.
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px), (pointer: coarse) {
+  #camera-modal {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    justify-content: flex-start !important;
+    padding:
+      max(8px, env(safe-area-inset-top))
+      4px
+      max(12px, env(safe-area-inset-bottom)) !important;
+  }
+
+  #camera-live-wrap {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    width: min(calc(100vw - 8px), 480px) !important;
+    max-width: 480px !important;
+    margin: auto !important;
+    padding: 0 !important;
+    gap: 8px !important;
+  }
+
+  #camera-stage {
+    width: 100% !important;
+    max-width: 480px !important;
+    height: auto !important;
+    aspect-ratio: 3 / 4 !important;
+    flex: 0 0 auto !important;
+    background: #080808 !important;
+  }
+
+  #camera-feed,
+  #camera-stage #camera-feed {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: 3 / 4 !important;
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+
+  #camera-options-row {
+    width: 100% !important;
+    max-width: 480px !important;
+  }
+}
+
+/* Keep the natural wide frame when the phone itself is landscape. */
+@media (max-width: 932px) and (orientation: landscape) {
+  #camera-live-wrap {
+    width: min(calc(100vw - 16px), 720px) !important;
+    max-width: 720px !important;
+  }
+
+  #camera-stage {
+    width: 100% !important;
+    max-width: 720px !important;
+    aspect-ratio: 4 / 3 !important;
+  }
+
+  #camera-feed,
+  #camera-stage #camera-feed {
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: 4 / 3 !important;
+    object-fit: contain !important;
+  }
+}
