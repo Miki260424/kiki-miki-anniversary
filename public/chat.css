@@ -3318,3 +3318,10 @@ html.camera-gesture-lock #camera-stage {
 .img-action-popover.closing {
   transition: none !important;
 }
+
+#camera-feed.front-camera-corrected {
+  transform:
+    scaleX(-1)
+    scale(var(--camera-software-zoom)) !important;
+  transform-origin: center center !important;
+}

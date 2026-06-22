@@ -5087,7 +5087,14 @@ function initChat(WHO) {
 
       cameraStream = requestedStream;
       cameraFeed.srcObject = requestedStream;
-      cameraFeed.classList.remove("mirrored");
+
+      // Some mobile browsers mirror the user-facing preview automatically.
+      // Counter-flip only the front-camera preview so it appears natural.
+      // The rear camera and saved canvas image remain untouched.
+      cameraFeed.classList.toggle(
+        "front-camera-corrected",
+        facingMode === "user",
+      );
 
       try {
         await cameraFeed.play();
@@ -5210,6 +5217,11 @@ function initChat(WHO) {
     x = Math.max(0, Math.min(1, x));
     y = Math.max(0, Math.min(1, y));
 
+    // The front preview is visually counter-flipped, so map the tap back to
+    // the camera sensor coordinate system before applying focus.
+    if (cameraFeed.classList.contains("front-camera-corrected")) {
+      x = 1 - x;
+    }
 
     const displayX =
       stageRect.width > 0
@@ -5588,6 +5600,7 @@ function initChat(WHO) {
       queueSelectedFilesDraftSave();
     }
     cameraPreviewImg.removeAttribute("src");
+    cameraFeed.classList.remove("front-camera-corrected");
     cameraModal.classList.remove("open");
     disableCameraGestureGuard();
     cameraZoomRange = null;
