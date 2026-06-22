@@ -481,6 +481,7 @@ function initChat(WHO) {
   let cameraZoomCurrent = 1;
   let cameraZoomQueuedValue = null;
   let cameraZoomApplyInFlight = false;
+  let cameraZoomUsesSoftware = false;
   let cameraTorchBtn = null;
   let cameraTorchOn = false;
   let cameraTorchSupported = false;
@@ -4539,8 +4540,11 @@ function initChat(WHO) {
   }
 
   async function applyAutomaticCameraControls(track) {
-    if (!track || typeof track.getCapabilities !== "function") return;
-    const capabilities = track.getCapabilities();
+    if (!track) return;
+    const capabilities =
+      typeof track.getCapabilities === "function"
+        ? track.getCapabilities()
+        : {};
     const advanced = {};
 
     if (capabilities.focusMode?.includes("continuous")) {
@@ -4607,9 +4611,14 @@ function initChat(WHO) {
     cameraZoomValue.textContent = formatCameraZoom(clamped);
   }
 
+  function applySoftwareCameraZoom(value) {
+    const zoom = Math.max(1, Number(value) || 1);
+    cameraFeed?.style.setProperty("--camera-software-zoom", String(zoom));
+  }
+
   function configureCameraZoom(track, capabilities) {
     const zoom = capabilities?.zoom;
-    const supported =
+    const hardwareSupported =
       zoom &&
       Number.isFinite(zoom.min) &&
       Number.isFinite(zoom.max) &&
@@ -4617,28 +4626,59 @@ function initChat(WHO) {
 
     cameraZoomQueuedValue = null;
     cameraZoomApplyInFlight = false;
+    cameraZoomUsesSoftware = false;
+    cameraZoomWrap?.classList.remove("software");
+    cameraFeed?.style.setProperty("--camera-software-zoom", "1");
 
-    if (!supported) {
-      cameraZoomRange = null;
-      cameraZoomWrap?.classList.remove("supported");
+    if (!hardwareSupported) {
+      // Laptop webcams commonly do not expose hardware zoom. Keep the control
+      // available and use a centered software crop that is also applied to the
+      // saved image.
+      const min = 1;
+      const max = 3;
+      const step = 0.1;
+
+      cameraZoomUsesSoftware = true;
+      cameraZoomRange = { min, max, step };
+      cameraZoomSlider.min = String(min);
+      cameraZoomSlider.max = String(max);
+      cameraZoomSlider.step = String(step);
+      cameraZoomMinLabel.textContent = formatCameraZoom(min);
+      cameraZoomMaxLabel.textContent = formatCameraZoom(max);
+      cameraZoomWrap?.classList.add("supported", "software");
+      cameraZoomWrap.title = "Digital zoom for this camera";
+      syncCameraZoomUI(1);
+      applySoftwareCameraZoom(1);
       return;
     }
 
     const min = Math.max(0.1, Number(zoom.min));
     const max = Math.min(10, Number(zoom.max));
+
     if (max <= min) {
-      cameraZoomRange = null;
-      cameraZoomWrap?.classList.remove("supported");
+      cameraZoomUsesSoftware = true;
+      cameraZoomRange = { min: 1, max: 3, step: 0.1 };
+      cameraZoomSlider.min = "1";
+      cameraZoomSlider.max = "3";
+      cameraZoomSlider.step = "0.1";
+      cameraZoomMinLabel.textContent = "1×";
+      cameraZoomMaxLabel.textContent = "3×";
+      cameraZoomWrap?.classList.add("supported", "software");
+      cameraZoomWrap.title = "Digital zoom for this camera";
+      syncCameraZoomUI(1);
+      applySoftwareCameraZoom(1);
       return;
     }
 
     const step = Number(zoom.step) > 0 ? Number(zoom.step) : 0.1;
-    const settings = typeof track.getSettings === "function"
-      ? track.getSettings()
-      : {};
+    const settings =
+      typeof track.getSettings === "function" ? track.getSettings() : {};
     const initial = Math.min(
       max,
-      Math.max(min, Number.isFinite(settings.zoom) ? settings.zoom : Math.max(1, min)),
+      Math.max(
+        min,
+        Number.isFinite(settings.zoom) ? settings.zoom : Math.max(1, min),
+      ),
     );
 
     cameraZoomRange = { min, max, step };
@@ -4647,14 +4687,24 @@ function initChat(WHO) {
     cameraZoomSlider.step = String(step);
     cameraZoomMinLabel.textContent = formatCameraZoom(min);
     cameraZoomMaxLabel.textContent = formatCameraZoom(max);
-    cameraZoomWrap.classList.add("supported");
+    cameraZoomWrap?.classList.add("supported");
+    cameraZoomWrap.title = "Camera zoom";
     syncCameraZoomUI(initial);
   }
 
   function requestCameraZoom(value) {
     if (!cameraZoomRange || !cameraStream) return;
-    cameraZoomQueuedValue = clampCameraZoom(value);
-    syncCameraZoomUI(cameraZoomQueuedValue);
+
+    const requested = clampCameraZoom(value);
+    syncCameraZoomUI(requested);
+
+    if (cameraZoomUsesSoftware) {
+      cameraZoomQueuedValue = null;
+      applySoftwareCameraZoom(requested);
+      return;
+    }
+
+    cameraZoomQueuedValue = requested;
     flushCameraZoomQueue();
   }
 
@@ -4933,7 +4983,10 @@ function initChat(WHO) {
     clearTimeout(cameraFocusResetTimer);
     cameraZoomRange = null;
     cameraZoomQueuedValue = null;
-    cameraZoomWrap?.classList.remove("supported");
+    cameraZoomUsesSoftware = false;
+    cameraZoomCurrent = 1;
+    cameraFeed?.style.setProperty("--camera-software-zoom", "1");
+    cameraZoomWrap?.classList.remove("supported", "software");
     cameraTorchSupported = false;
     cameraTorchOn = false;
     cameraTorchBtn?.classList.remove("supported", "on");
@@ -5197,16 +5250,25 @@ function initChat(WHO) {
     let sourceWidth = video.videoWidth;
     let sourceHeight = video.videoHeight;
 
+    if (cameraZoomUsesSoftware && cameraZoomCurrent > 1) {
+      const zoomedWidth = sourceWidth / cameraZoomCurrent;
+      const zoomedHeight = sourceHeight / cameraZoomCurrent;
+      sourceX += (sourceWidth - zoomedWidth) / 2;
+      sourceY += (sourceHeight - zoomedHeight) / 2;
+      sourceWidth = zoomedWidth;
+      sourceHeight = zoomedHeight;
+    }
+
     if (selectedRatio) {
       const sourceRatio = sourceWidth / sourceHeight;
 
       if (sourceRatio > selectedRatio) {
         const croppedWidth = sourceHeight * selectedRatio;
-        sourceX = (sourceWidth - croppedWidth) / 2;
+        sourceX += (sourceWidth - croppedWidth) / 2;
         sourceWidth = croppedWidth;
       } else if (sourceRatio < selectedRatio) {
         const croppedHeight = sourceWidth / selectedRatio;
-        sourceY = (sourceHeight - croppedHeight) / 2;
+        sourceY += (sourceHeight - croppedHeight) / 2;
         sourceHeight = croppedHeight;
       }
     }
@@ -5382,7 +5444,10 @@ function initChat(WHO) {
     disableCameraGestureGuard();
     cameraZoomRange = null;
     cameraZoomQueuedValue = null;
-    cameraZoomWrap?.classList.remove("supported");
+    cameraZoomUsesSoftware = false;
+    cameraZoomCurrent = 1;
+    cameraFeed?.style.setProperty("--camera-software-zoom", "1");
+    cameraZoomWrap?.classList.remove("supported", "software");
     cameraTorchSupported = false;
     cameraTorchOn = false;
     cameraTorchBtn?.classList.remove("supported", "on");

@@ -3407,36 +3407,35 @@ textarea,
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   COMPACT SIDE-BY-SIDE CAMERA SLIDERS
-   Layout-only change. Camera dimensions and ratio logic are untouched.
+   RESPONSIVE SIDE-BY-SIDE CAMERA SLIDERS
+   Wider on phones; visible laptop zoom with a software fallback.
    ═══════════════════════════════════════════════════════════════ */
 
 #camera-adjustments-row {
-  width: min(100%, 350px) !important;
-  max-width: 350px !important;
+  width: min(100%, 440px) !important;
+  max-width: 440px !important;
   margin: 0 auto !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   flex-wrap: nowrap !important;
-  gap: 9px !important;
+  gap: 10px !important;
 }
 
 #camera-adjustments-row #camera-zoom-wrap,
 #camera-adjustments-row #camera-exposure-wrap {
-  width: auto !important;
+  width: calc(50% - 5px) !important;
   min-width: 0 !important;
-  max-width: 170px !important;
-  min-height: 40px !important;
+  max-width: 215px !important;
+  min-height: 42px !important;
   flex: 1 1 0 !important;
   justify-content: center !important;
   gap: 6px !important;
-  padding: 5px 8px !important;
+  padding: 5px 9px !important;
   margin: 0 !important;
-  border-radius: 20px !important;
+  border-radius: 21px !important;
 }
 
-/* The live value is enough in the compact zoom control. */
 #camera-adjustments-row #camera-zoom-min,
 #camera-adjustments-row #camera-zoom-max {
   display: none !important;
@@ -3444,39 +3443,89 @@ textarea,
 
 #camera-adjustments-row #camera-zoom-slider,
 #camera-adjustments-row #camera-exposure-slider {
-  flex: 0 1 auto !important;
-  width: clamp(62px, 17vw, 88px) !important;
-  max-width: 88px !important;
-  min-width: 52px !important;
+  flex: 1 1 auto !important;
+  width: 120px !important;
+  min-width: 76px !important;
+  max-width: 145px !important;
 }
 
 #camera-adjustments-row #camera-zoom-value {
-  min-width: 28px !important;
-  font-size: 0.74rem !important;
+  min-width: 31px !important;
+  font-size: 0.76rem !important;
 }
 
 #camera-adjustments-row #camera-exposure-value {
-  min-width: 22px !important;
-  font-size: 0.74rem !important;
+  min-width: 25px !important;
+  font-size: 0.76rem !important;
 }
 
-@media (max-width: 380px) {
+#camera-zoom-wrap.software::before {
+  content: "Digital";
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Software zoom enlarges the preview without changing the camera frame size. */
+#camera-feed {
+  --camera-software-zoom: 1;
+  transform: scale(var(--camera-software-zoom)) !important;
+  transform-origin: center center !important;
+}
+
+#camera-feed.mirrored {
+  transform:
+    scaleX(-1)
+    scale(var(--camera-software-zoom)) !important;
+}
+
+/* Keep the scaled preview clipped inside the existing camera frame. */
+#camera-stage {
+  overflow: hidden !important;
+}
+
+@media (max-width: 600px) {
   #camera-adjustments-row {
-    width: min(100%, 310px) !important;
-    gap: 6px !important;
+    width: calc(100% - 4px) !important;
+    max-width: 430px !important;
+    gap: 7px !important;
   }
 
   #camera-adjustments-row #camera-zoom-wrap,
   #camera-adjustments-row #camera-exposure-wrap {
-    max-width: 152px !important;
-    padding: 5px 6px !important;
-    gap: 4px !important;
+    width: calc(50% - 3.5px) !important;
+    max-width: none !important;
+    min-height: 44px !important;
+    padding: 5px 7px !important;
+    gap: 5px !important;
   }
 
   #camera-adjustments-row #camera-zoom-slider,
   #camera-adjustments-row #camera-exposure-slider {
-    width: clamp(52px, 15vw, 70px) !important;
-    max-width: 70px !important;
-    min-width: 48px !important;
+    width: auto !important;
+    min-width: 82px !important;
+    max-width: none !important;
+  }
+
+  #camera-zoom-wrap.software::before {
+    display: none;
+  }
+}
+
+@media (max-width: 365px) {
+  #camera-adjustments-row {
+    gap: 5px !important;
+  }
+
+  #camera-adjustments-row #camera-zoom-wrap,
+  #camera-adjustments-row #camera-exposure-wrap {
+    padding-inline: 5px !important;
+    gap: 3px !important;
+  }
+
+  #camera-adjustments-row #camera-zoom-slider,
+  #camera-adjustments-row #camera-exposure-slider {
+    min-width: 68px !important;
   }
 }
