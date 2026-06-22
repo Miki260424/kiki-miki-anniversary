@@ -3399,3 +3399,42 @@ html.camera-gesture-lock #camera-stage {
   #camera-feed.front-camera-corrected {
   transform: translate(-50%, -50%) scaleX(-1) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   HORIZONTAL RATIO VIEWPORT SAFETY
+   Keeps 4:3, 16:9 and 3:1 frames centered and inside the phone screen.
+   ═══════════════════════════════════════════════════════════════ */
+
+#camera-live-wrap {
+  width: min(480px, calc(100vw - 16px)) !important;
+  max-width: min(480px, calc(100vw - 16px)) !important;
+  box-sizing: border-box !important;
+  align-self: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+#camera-stage,
+#camera-stage.camera-ratio-active {
+  width: auto;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  align-self: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  flex-shrink: 1 !important;
+}
+
+#camera-stage.camera-ratio-active #camera-feed {
+  width: 100% !important;
+  max-width: 100% !important;
+  left: auto;
+  right: auto;
+}
+
+@supports (width: 100dvw) {
+  #camera-live-wrap {
+    width: min(480px, calc(100dvw - 16px)) !important;
+    max-width: min(480px, calc(100dvw - 16px)) !important;
+  }
+}

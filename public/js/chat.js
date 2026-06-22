@@ -5134,16 +5134,47 @@ function initChat(WHO) {
       String(selectedRatio),
     );
 
-    const viewportHeight =
-      window.visualViewport?.height || window.innerHeight || 800;
-
-    const liveWrapWidth =
-      cameraLiveWrap?.getBoundingClientRect().width ||
-      cameraLiveWrap?.clientWidth ||
+    const viewport = window.visualViewport;
+    const viewportWidth =
+      viewport?.width ||
+      document.documentElement.clientWidth ||
       window.innerWidth ||
-      480;
+      320;
+    const viewportHeight =
+      viewport?.height ||
+      document.documentElement.clientHeight ||
+      window.innerHeight ||
+      800;
 
-    const availableWidth = Math.max(1, Math.min(liveWrapWidth, 480));
+    const modalRect = cameraModal?.getBoundingClientRect();
+    const modalStyles = cameraModal
+      ? window.getComputedStyle(cameraModal)
+      : null;
+    const modalHorizontalPadding =
+      (Number.parseFloat(modalStyles?.paddingLeft) || 0) +
+      (Number.parseFloat(modalStyles?.paddingRight) || 0);
+    const modalInnerWidth =
+      modalRect?.width > 0
+        ? modalRect.width - modalHorizontalPadding
+        : viewportWidth - 16;
+
+    const liveWrapRect = cameraLiveWrap?.getBoundingClientRect();
+    const liveWrapWidth =
+      liveWrapRect?.width ||
+      cameraLiveWrap?.clientWidth ||
+      modalInnerWidth;
+
+    // Never trust a stale 480px flex measurement on a narrower phone.
+    // Keep a small safety gap so rounded corners and shadows remain visible.
+    const availableWidth = Math.max(
+      1,
+      Math.min(
+        480,
+        liveWrapWidth,
+        modalInnerWidth,
+        viewportWidth - 20,
+      ),
+    );
     const availableHeight = Math.max(120, viewportHeight * 0.65);
 
     let width = availableWidth;
@@ -5154,20 +5185,52 @@ function initChat(WHO) {
       width = height * selectedRatio;
     }
 
-    cameraStage.style.setProperty(
-      "width",
-      `${Math.max(1, Math.round(width))}px`,
-      "important",
-    );
-    cameraStage.style.setProperty(
-      "height",
-      `${Math.max(1, Math.round(height))}px`,
-      "important",
-    );
+    // Clamp a second time because height-based sizing can produce a width
+    // larger than the visible viewport for very horizontal ratios.
+    if (width > availableWidth) {
+      width = availableWidth;
+      height = width / selectedRatio;
+    }
+
+    width = Math.max(1, Math.floor(width));
+    height = Math.max(1, Math.floor(height));
+
+    cameraStage.style.setProperty("width", `${width}px`, "important");
+    cameraStage.style.setProperty("height", `${height}px`, "important");
+    cameraStage.style.setProperty("max-width", "100%", "important");
 
     cameraSoftwareZoomBaseSize = null;
     centerCameraStage();
-    requestAnimationFrame(centerCameraStage);
+
+    requestAnimationFrame(() => {
+      centerCameraStage();
+
+      // Re-check after the browser commits the layout. Some mobile browsers
+      // report the old flex width during the same frame as a ratio change.
+      const committedViewportWidth =
+        window.visualViewport?.width ||
+        document.documentElement.clientWidth ||
+        window.innerWidth ||
+        width;
+      const safeCommittedWidth = Math.max(1, committedViewportWidth - 20);
+      const committedRect = cameraStage.getBoundingClientRect();
+
+      if (committedRect.width > safeCommittedWidth) {
+        const correctedWidth = Math.floor(safeCommittedWidth);
+        const correctedHeight = Math.floor(correctedWidth / selectedRatio);
+        cameraStage.style.setProperty(
+          "width",
+          `${correctedWidth}px`,
+          "important",
+        );
+        cameraStage.style.setProperty(
+          "height",
+          `${Math.max(1, correctedHeight)}px`,
+          "important",
+        );
+        centerCameraStage();
+      }
+    });
   }
 
   function syncCameraStageAspect() {
