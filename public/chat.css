@@ -3405,3 +3405,78 @@ textarea,
     margin-top: 18px !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPACT SIDE-BY-SIDE CAMERA SLIDERS
+   Layout-only change. Camera dimensions and ratio logic are untouched.
+   ═══════════════════════════════════════════════════════════════ */
+
+#camera-adjustments-row {
+  width: min(100%, 350px) !important;
+  max-width: 350px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: nowrap !important;
+  gap: 9px !important;
+}
+
+#camera-adjustments-row #camera-zoom-wrap,
+#camera-adjustments-row #camera-exposure-wrap {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 170px !important;
+  min-height: 40px !important;
+  flex: 1 1 0 !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 5px 8px !important;
+  margin: 0 !important;
+  border-radius: 20px !important;
+}
+
+/* The live value is enough in the compact zoom control. */
+#camera-adjustments-row #camera-zoom-min,
+#camera-adjustments-row #camera-zoom-max {
+  display: none !important;
+}
+
+#camera-adjustments-row #camera-zoom-slider,
+#camera-adjustments-row #camera-exposure-slider {
+  flex: 0 1 auto !important;
+  width: clamp(62px, 17vw, 88px) !important;
+  max-width: 88px !important;
+  min-width: 52px !important;
+}
+
+#camera-adjustments-row #camera-zoom-value {
+  min-width: 28px !important;
+  font-size: 0.74rem !important;
+}
+
+#camera-adjustments-row #camera-exposure-value {
+  min-width: 22px !important;
+  font-size: 0.74rem !important;
+}
+
+@media (max-width: 380px) {
+  #camera-adjustments-row {
+    width: min(100%, 310px) !important;
+    gap: 6px !important;
+  }
+
+  #camera-adjustments-row #camera-zoom-wrap,
+  #camera-adjustments-row #camera-exposure-wrap {
+    max-width: 152px !important;
+    padding: 5px 6px !important;
+    gap: 4px !important;
+  }
+
+  #camera-adjustments-row #camera-zoom-slider,
+  #camera-adjustments-row #camera-exposure-slider {
+    width: clamp(52px, 15vw, 70px) !important;
+    max-width: 70px !important;
+    min-width: 48px !important;
+  }
+}
