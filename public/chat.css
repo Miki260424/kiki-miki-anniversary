@@ -3075,3 +3075,76 @@ html.camera-gesture-lock #camera-stage {
     gap: 22px !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   CUSTOM CURSOR FALLBACKS
+   Ensures every element uses the anniversary cursors consistently.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Regular cursor everywhere by default. */
+html,
+body,
+body * {
+  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--c.png"), auto;
+}
+
+/* Pointer cursor for every clickable or interactive control. */
+a,
+button,
+label[for],
+summary,
+select,
+option,
+[role="button"],
+[onclick],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"],
+input[type="file"],
+.input-icon-btn,
+.cam-control-btn,
+.cam-option-btn,
+.cam-action-btn,
+.emoji-btn,
+.reaction-bar-btn,
+.reaction-pill,
+.reaction-picker-quick-slot,
+.reaction-picker-emoji,
+.reaction-picker-close,
+.msg-actions-trigger,
+.msg-action-item,
+.img-action-popover-btn,
+.add-img-menu-btn,
+.grid-img,
+.shared-media-item,
+.chat-feature-close,
+.shared-media-status,
+.separate-blur-card,
+.separate-blur-close,
+.separate-blur-secondary,
+.separate-blur-apply,
+#send-btn,
+#snap-btn,
+#scroll-to-bottom,
+#lightbox-close,
+.lb-nav-btn,
+#clear-all-btn,
+#add-more-btn,
+#notif-allow-btn,
+#notif-dismiss-btn {
+  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--p.png"), pointer !important;
+}
+
+/* Keep text editing intuitive while still using the custom cursor image. */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+[contenteditable="true"] {
+  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--p.png"), text !important;
+}
