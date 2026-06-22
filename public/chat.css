@@ -3319,6 +3319,11 @@ html.camera-gesture-lock #camera-stage {
   transition: none !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   FRONT CAMERA ORIENTATION CORRECTION
+   Counteracts browsers that mirror the selfie preview automatically.
+   Rear camera, dimensions, ratios and captured image are unchanged.
+   ═══════════════════════════════════════════════════════════════ */
 
 #camera-feed.front-camera-corrected {
   transform:
@@ -3327,6 +3332,10 @@ html.camera-gesture-lock #camera-stage {
   transform-origin: center center !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   FRONT CAMERA PHOTO ORIENTATION AND NO-FLIP FIX
+   Saved selfie matches preview; opening/switching has no flip animation.
+   ═══════════════════════════════════════════════════════════════ */
 
 #camera-feed,
 #camera-stage #camera-feed,

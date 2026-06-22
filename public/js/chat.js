@@ -79,7 +79,12 @@ function initChat(WHO) {
     blurRef.onSnapshot(
       (snap) => {
         _blurredImages = new Set(snap.exists ? snap.data().urls || [] : []);
-        refreshBlurredImagesInDOM();
+
+        // Message rendering reads _blurredImages directly. Refresh only when
+        // image elements already exist in the DOM.
+        if (document.querySelector(".grid-img[data-img-url]")) {
+          refreshBlurredImagesInDOM();
+        }
       },
       (error) => console.warn("Blur-state listener failed:", error),
     ),
@@ -485,6 +490,8 @@ function initChat(WHO) {
   let cameraSinglePointerMoved = false;
   let cameraSinglePointerStart = null;
   let cameraGestureGuardEnabled = false;
+  let cameraEnhancementAbortController = null;
+  let cameraGestureHadMultiplePointers = false;
   let cameraRatioSelect = null;
   let cameraRatioKey = "default";
 
@@ -498,6 +505,24 @@ function initChat(WHO) {
     "9:16": 9 / 16,
     "8:16": 8 / 16,
     "3:1": 3,
+  });
+
+  trackCleanup(() => {
+    cameraEnhancementAbortController?.abort();
+    cameraEnhancementAbortController = null;
+
+    clearTimeout(cameraFocusResetTimer);
+    cameraFocusResetTimer = null;
+
+    revokePreviewObjectUrls();
+
+    if (cameraPreviewObjectUrl) {
+      URL.revokeObjectURL(cameraPreviewObjectUrl);
+      cameraPreviewObjectUrl = null;
+    }
+
+    cameraTimerMenu?.remove();
+    cameraTimerMenu = null;
   });
 
   // ─── UNSENT IMAGE DRAFTS (IndexedDB) ─────────────────────────────
@@ -4264,6 +4289,10 @@ function initChat(WHO) {
   function ensureCameraEnhancementUI() {
     if (cameraStage) return;
 
+    cameraEnhancementAbortController?.abort();
+    cameraEnhancementAbortController = new AbortController();
+    const cameraUiSignal = cameraEnhancementAbortController.signal;
+
     cameraStage = document.createElement("div");
     cameraStage.id = "camera-stage";
     cameraFeed.parentNode.insertBefore(cameraStage, cameraFeed);
@@ -4480,7 +4509,7 @@ function initChat(WHO) {
 
       cameraTimerMenu.classList.add("visible");
       requestAnimationFrame(positionCameraTimerMenu);
-    });
+    }, { signal: cameraUiSignal });
 
     cameraTimerMenu
       .querySelectorAll(".camera-timer-choice")
@@ -4488,7 +4517,7 @@ function initChat(WHO) {
         button.addEventListener("click", () => {
           setCameraTimer(Number(button.dataset.seconds));
           closeCameraTimerMenu();
-        });
+        }, { signal: cameraUiSignal });
       });
 
     cameraTimerMenu
@@ -4501,15 +4530,31 @@ function initChat(WHO) {
         input.value = String(seconds);
         setCameraTimer(seconds);
         closeCameraTimerMenu();
-      });
+      }, { signal: cameraUiSignal });
 
-    cameraStage.addEventListener("pointerdown", handleCameraPointerDown);
-    cameraStage.addEventListener("pointermove", handleCameraPointerMove);
-    cameraStage.addEventListener("pointerup", handleCameraPointerEnd);
-    cameraStage.addEventListener("pointercancel", handleCameraPointerEnd);
+    cameraStage.addEventListener(
+      "pointerdown",
+      handleCameraPointerDown,
+      { signal: cameraUiSignal },
+    );
+    cameraStage.addEventListener(
+      "pointermove",
+      handleCameraPointerMove,
+      { signal: cameraUiSignal },
+    );
+    cameraStage.addEventListener(
+      "pointerup",
+      handleCameraPointerEnd,
+      { signal: cameraUiSignal },
+    );
+    cameraStage.addEventListener(
+      "pointercancel",
+      handleCameraPointerEnd,
+      { signal: cameraUiSignal },
+    );
     cameraZoomSlider.addEventListener("input", () => {
       requestCameraZoom(Number(cameraZoomSlider.value));
-    });
+    }, { signal: cameraUiSignal });
 
     cameraRatioSelect.addEventListener("change", () => {
       const requestedRatio = cameraRatioSelect.value;
@@ -4520,10 +4565,18 @@ function initChat(WHO) {
         ? requestedRatio
         : "default";
       applyCameraRatioLayout();
-    });
+    }, { signal: cameraUiSignal });
 
-    cameraExposureSlider.addEventListener("input", applyExposureCompensation);
-    cameraTorchBtn.addEventListener("click", toggleCameraTorch);
+    cameraExposureSlider.addEventListener(
+      "input",
+      applyExposureCompensation,
+      { signal: cameraUiSignal },
+    );
+    cameraTorchBtn.addEventListener(
+      "click",
+      toggleCameraTorch,
+      { signal: cameraUiSignal },
+    );
 
     document.addEventListener("click", (event) => {
       if (
@@ -4533,24 +4586,32 @@ function initChat(WHO) {
       ) {
         closeCameraTimerMenu();
       }
-    });
+    }, { signal: cameraUiSignal });
 
-    window.addEventListener("resize", positionCameraTimerMenu, { passive: true });
+    window.addEventListener(
+      "resize",
+      positionCameraTimerMenu,
+      { passive: true, signal: cameraUiSignal },
+    );
     window.visualViewport?.addEventListener(
       "resize",
       positionCameraTimerMenu,
-      { passive: true },
+      { passive: true, signal: cameraUiSignal },
     );
     window.visualViewport?.addEventListener(
       "scroll",
       positionCameraTimerMenu,
-      { passive: true },
+      { passive: true, signal: cameraUiSignal },
     );
-    window.addEventListener("resize", syncCameraStageAspect, { passive: true });
+    window.addEventListener(
+      "resize",
+      syncCameraStageAspect,
+      { passive: true, signal: cameraUiSignal },
+    );
     window.visualViewport?.addEventListener(
       "resize",
       syncCameraStageAspect,
-      { passive: true },
+      { passive: true, signal: cameraUiSignal },
     );
   }
 
@@ -4865,7 +4926,8 @@ function initChat(WHO) {
     if (cameraPointers.size === 1) {
       cameraSinglePointerMoved = false;
       cameraSinglePointerStart = { x: event.clientX, y: event.clientY };
-    } else if (cameraPointers.size === 2) {
+    } else if (cameraPointers.size >= 2) {
+      cameraGestureHadMultiplePointers = true;
       cameraPinchActive = true;
       cameraPinchStartDistance = getPointerDistance();
       cameraPinchStartZoom = cameraZoomCurrent;
@@ -4907,7 +4969,9 @@ function initChat(WHO) {
 
   function handleCameraPointerEnd(event) {
     const wasSingleTap =
+      event.type === "pointerup" &&
       cameraPointers.size === 1 &&
+      !cameraGestureHadMultiplePointers &&
       !cameraPinchActive &&
       !cameraSinglePointerMoved;
 
@@ -4922,9 +4986,11 @@ function initChat(WHO) {
     }
 
     if (wasSingleTap) focusCameraAtPointer(event);
+
     if (cameraPointers.size === 0) {
       cameraSinglePointerStart = null;
       cameraSinglePointerMoved = false;
+      cameraGestureHadMultiplePointers = false;
     }
   }
 
@@ -4969,6 +5035,7 @@ function initChat(WHO) {
     cameraPinchStartDistance = 0;
     cameraSinglePointerStart = null;
     cameraSinglePointerMoved = false;
+    cameraGestureHadMultiplePointers = false;
   }
 
   function applyCameraRatioLayout() {
@@ -5051,6 +5118,7 @@ function initChat(WHO) {
     cancelCameraCountdown();
     cameraFocusUnsupportedNotified = false;
     clearTimeout(cameraFocusResetTimer);
+    cameraFocusResetTimer = null;
     cameraZoomRange = null;
     cameraZoomQueuedValue = null;
     cameraZoomUsesSoftware = false;
@@ -5438,6 +5506,17 @@ function initChat(WHO) {
       }
     }
 
+    const shouldMirrorCapturedFrame =
+      cameraFeed.classList.contains("front-camera-corrected");
+
+    if (shouldMirrorCapturedFrame) {
+      sourceX = video.videoWidth - sourceX - sourceWidth;
+      sourceX = Math.max(
+        0,
+        Math.min(video.videoWidth - sourceWidth, sourceX),
+      );
+    }
+
     snapCanvas.width = Math.max(1, Math.round(sourceWidth));
     snapCanvas.height = Math.max(1, Math.round(sourceHeight));
 
@@ -5450,7 +5529,7 @@ function initChat(WHO) {
 
     ctx.save();
 
-    if (cameraFeed.classList.contains("front-camera-corrected")) {
+    if (shouldMirrorCapturedFrame) {
       // Apply the same horizontal correction used by the live preview so the
       // captured front-camera photo is not reversed after it is taken.
       ctx.translate(snapCanvas.width, 0);
@@ -5544,13 +5623,18 @@ function initChat(WHO) {
 
   usePhotoBtn.addEventListener("click", () => {
     if (!capturedBlob) return;
+
     const file =
       pendingCameraFile ||
       new File([capturedBlob], `photo_${Date.now()}.jpg`, {
         type: "image/jpeg",
         lastModified: Date.now(),
       });
+
+    // Release camera-owned references before passing the File to selection.
+    capturedBlob = null;
     pendingCameraFile = null;
+
     addFilesToSelection([file]);
     closeCamera(true, false);
   });
@@ -5599,6 +5683,7 @@ function initChat(WHO) {
     snapBtn.disabled = false;
     cancelCameraCountdown();
     clearTimeout(cameraFocusResetTimer);
+    cameraFocusResetTimer = null;
     stopMediaStream(cameraStream);
     if (cameraPreviewObjectUrl) {
       URL.revokeObjectURL(cameraPreviewObjectUrl);
