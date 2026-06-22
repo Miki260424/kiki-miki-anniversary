@@ -374,61 +374,42 @@ function initChat(WHO) {
   const retakeBtn = document.getElementById("retake-btn");
   const usePhotoBtn = document.getElementById("use-photo-btn");
 
-  // ─── ILLUSTRATED COMPOSER ICONS ──────────────────────────────────
-  // Match the colorful line-art style used by the Shared Media icon.
-  function installIllustratedComposerIcons() {
+  // ─── COMPOSER EMOJIS ─────────────────────────────────────────────
+  // Keep the original emoji buttons. Camera features remain unchanged.
+  function restoreComposerEmojis() {
     const attachmentBtn = document.querySelector('label[for="file-input"]');
 
     if (cameraBtn) {
-      cameraBtn.classList.add("illustrated-input-btn");
+      cameraBtn.classList.remove("illustrated-input-btn");
       cameraBtn.setAttribute("aria-label", "Open camera");
       cameraBtn.title = "Camera";
-      cameraBtn.innerHTML = `
-        <svg class="composer-art-icon composer-camera-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path class="composer-icon-line composer-camera-icon__body" d="M4.25 7.8h3.1l1.2-2.1h6.9l1.2 2.1h3.1a1.75 1.75 0 0 1 1.75 1.75v8.2a1.75 1.75 0 0 1-1.75 1.75H4.25a1.75 1.75 0 0 1-1.75-1.75v-8.2A1.75 1.75 0 0 1 4.25 7.8Z"/>
-          <circle class="composer-camera-icon__lens" cx="12" cy="13.55" r="3.35"/>
-          <circle class="composer-camera-icon__shine" cx="13.15" cy="12.35" r=".8"/>
-          <path class="composer-camera-icon__heart" d="M18.05 5.25c-.66-.86-2.08-.44-2.08.67 0 1.06 2.08 2.36 2.08 2.36s2.08-1.3 2.08-2.36c0-1.11-1.42-1.53-2.08-.67Z"/>
-        </svg>`;
+      cameraBtn.textContent = "📷";
     }
 
     if (attachmentBtn) {
-      attachmentBtn.classList.add("illustrated-input-btn");
+      attachmentBtn.classList.remove("illustrated-input-btn");
       attachmentBtn.setAttribute("aria-label", "Attach photos");
       attachmentBtn.title = "Attach photos";
-      const attachmentIcon = `
-        <svg class="composer-art-icon composer-attach-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path class="composer-icon-line composer-attach-icon__clip" d="M8.15 12.75 14.8 6.1a3.15 3.15 0 0 1 4.45 4.45l-8.3 8.3a4.6 4.6 0 0 1-6.5-6.5l8-8"/>
-          <path class="composer-icon-line composer-attach-icon__inner" d="m9.6 15.3 7.15-7.15"/>
-          <circle class="composer-attach-icon__dot" cx="5.25" cy="18.3" r="1.35"/>
-        </svg>`;
 
-      // Preserve the file input if this project keeps it inside the label.
+      // Preserve the hidden file input if it is inside the label.
       if (attachmentBtn.contains(fileInput)) {
         fileInput.remove();
-        attachmentBtn.innerHTML = attachmentIcon;
+        attachmentBtn.textContent = "📎";
         attachmentBtn.appendChild(fileInput);
       } else {
-        attachmentBtn.innerHTML = attachmentIcon;
+        attachmentBtn.textContent = "📎";
       }
     }
 
     if (emojiToggleBtn) {
-      emojiToggleBtn.classList.add("illustrated-input-btn");
+      emojiToggleBtn.classList.remove("illustrated-input-btn");
       emojiToggleBtn.setAttribute("aria-label", "Open emojis");
       emojiToggleBtn.title = "Emojis";
-      emojiToggleBtn.innerHTML = `
-        <svg class="composer-art-icon composer-emoji-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <circle class="composer-icon-line composer-emoji-icon__face" cx="12" cy="12" r="8.75"/>
-          <circle class="composer-emoji-icon__eye composer-emoji-icon__eye--left" cx="8.7" cy="10.1" r="1"/>
-          <circle class="composer-emoji-icon__eye composer-emoji-icon__eye--right" cx="15.3" cy="10.1" r="1"/>
-          <path class="composer-icon-line composer-emoji-icon__smile" d="M8.3 14.15c.9 1.35 2.15 2.05 3.7 2.05s2.8-.7 3.7-2.05"/>
-          <path class="composer-emoji-icon__heart" d="M18.15 5.05c-.62-.8-1.94-.41-1.94.62 0 .99 1.94 2.2 1.94 2.2s1.94-1.21 1.94-2.2c0-1.03-1.32-1.42-1.94-.62Z"/>
-        </svg>`;
+      emojiToggleBtn.textContent = "😊";
     }
   }
 
-  installIllustratedComposerIcons();
+  restoreComposerEmojis();
 
   // ─── STATE ───────────────────────────────────────────────────────
   const MAX_SELECTED_IMAGES = 30;
