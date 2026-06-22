@@ -374,6 +374,62 @@ function initChat(WHO) {
   const retakeBtn = document.getElementById("retake-btn");
   const usePhotoBtn = document.getElementById("use-photo-btn");
 
+  // ─── ILLUSTRATED COMPOSER ICONS ──────────────────────────────────
+  // Match the colorful line-art style used by the Shared Media icon.
+  function installIllustratedComposerIcons() {
+    const attachmentBtn = document.querySelector('label[for="file-input"]');
+
+    if (cameraBtn) {
+      cameraBtn.classList.add("illustrated-input-btn");
+      cameraBtn.setAttribute("aria-label", "Open camera");
+      cameraBtn.title = "Camera";
+      cameraBtn.innerHTML = `
+        <svg class="composer-art-icon composer-camera-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path class="composer-icon-line composer-camera-icon__body" d="M4.25 7.8h3.1l1.2-2.1h6.9l1.2 2.1h3.1a1.75 1.75 0 0 1 1.75 1.75v8.2a1.75 1.75 0 0 1-1.75 1.75H4.25a1.75 1.75 0 0 1-1.75-1.75v-8.2A1.75 1.75 0 0 1 4.25 7.8Z"/>
+          <circle class="composer-camera-icon__lens" cx="12" cy="13.55" r="3.35"/>
+          <circle class="composer-camera-icon__shine" cx="13.15" cy="12.35" r=".8"/>
+          <path class="composer-camera-icon__heart" d="M18.05 5.25c-.66-.86-2.08-.44-2.08.67 0 1.06 2.08 2.36 2.08 2.36s2.08-1.3 2.08-2.36c0-1.11-1.42-1.53-2.08-.67Z"/>
+        </svg>`;
+    }
+
+    if (attachmentBtn) {
+      attachmentBtn.classList.add("illustrated-input-btn");
+      attachmentBtn.setAttribute("aria-label", "Attach photos");
+      attachmentBtn.title = "Attach photos";
+      const attachmentIcon = `
+        <svg class="composer-art-icon composer-attach-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path class="composer-icon-line composer-attach-icon__clip" d="M8.15 12.75 14.8 6.1a3.15 3.15 0 0 1 4.45 4.45l-8.3 8.3a4.6 4.6 0 0 1-6.5-6.5l8-8"/>
+          <path class="composer-icon-line composer-attach-icon__inner" d="m9.6 15.3 7.15-7.15"/>
+          <circle class="composer-attach-icon__dot" cx="5.25" cy="18.3" r="1.35"/>
+        </svg>`;
+
+      // Preserve the file input if this project keeps it inside the label.
+      if (attachmentBtn.contains(fileInput)) {
+        fileInput.remove();
+        attachmentBtn.innerHTML = attachmentIcon;
+        attachmentBtn.appendChild(fileInput);
+      } else {
+        attachmentBtn.innerHTML = attachmentIcon;
+      }
+    }
+
+    if (emojiToggleBtn) {
+      emojiToggleBtn.classList.add("illustrated-input-btn");
+      emojiToggleBtn.setAttribute("aria-label", "Open emojis");
+      emojiToggleBtn.title = "Emojis";
+      emojiToggleBtn.innerHTML = `
+        <svg class="composer-art-icon composer-emoji-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle class="composer-icon-line composer-emoji-icon__face" cx="12" cy="12" r="8.75"/>
+          <circle class="composer-emoji-icon__eye composer-emoji-icon__eye--left" cx="8.7" cy="10.1" r="1"/>
+          <circle class="composer-emoji-icon__eye composer-emoji-icon__eye--right" cx="15.3" cy="10.1" r="1"/>
+          <path class="composer-icon-line composer-emoji-icon__smile" d="M8.3 14.15c.9 1.35 2.15 2.05 3.7 2.05s2.8-.7 3.7-2.05"/>
+          <path class="composer-emoji-icon__heart" d="M18.15 5.05c-.62-.8-1.94-.41-1.94.62 0 .99 1.94 2.2 1.94 2.2s1.94-1.21 1.94-2.2c0-1.03-1.32-1.42-1.94-.62Z"/>
+        </svg>`;
+    }
+  }
+
+  installIllustratedComposerIcons();
+
   // ─── STATE ───────────────────────────────────────────────────────
   const MAX_SELECTED_IMAGES = 30;
   const DRAFT_DB_NAME = "mk-private-chat-drafts";
@@ -418,6 +474,25 @@ function initChat(WHO) {
   let cameraExposureValue = null;
   let cameraFocusUnsupportedNotified = false;
   let cameraFocusResetTimer = null;
+  let cameraZoomWrap = null;
+  let cameraZoomSlider = null;
+  let cameraZoomValue = null;
+  let cameraZoomMinLabel = null;
+  let cameraZoomMaxLabel = null;
+  let cameraZoomRange = null;
+  let cameraZoomCurrent = 1;
+  let cameraZoomQueuedValue = null;
+  let cameraZoomApplyInFlight = false;
+  let cameraTorchBtn = null;
+  let cameraTorchOn = false;
+  let cameraTorchSupported = false;
+  const cameraPointers = new Map();
+  let cameraPinchStartDistance = 0;
+  let cameraPinchStartZoom = 1;
+  let cameraPinchActive = false;
+  let cameraSinglePointerMoved = false;
+  let cameraSinglePointerStart = null;
+  let cameraGestureGuardEnabled = false;
 
   // ─── UNSENT IMAGE DRAFTS (IndexedDB) ─────────────────────────────
   function getFileSignature(file) {
@@ -4111,11 +4186,33 @@ function initChat(WHO) {
     // fixed to the wrapper instead of the visible device viewport.
     document.body.appendChild(cameraTimerMenu);
 
+    cameraZoomWrap = document.createElement("label");
+    cameraZoomWrap.id = "camera-zoom-wrap";
+    cameraZoomWrap.setAttribute("aria-label", "Camera zoom");
+    cameraZoomWrap.innerHTML = `
+      <span id="camera-zoom-min">0.5×</span>
+      <input
+        id="camera-zoom-slider"
+        type="range"
+        min="0.5"
+        max="10"
+        step="0.1"
+        value="1"
+        aria-label="Camera zoom"
+      />
+      <span id="camera-zoom-max">10×</span>
+      <strong id="camera-zoom-value">1×</strong>
+    `;
+    cameraZoomSlider = cameraZoomWrap.querySelector("#camera-zoom-slider");
+    cameraZoomValue = cameraZoomWrap.querySelector("#camera-zoom-value");
+    cameraZoomMinLabel = cameraZoomWrap.querySelector("#camera-zoom-min");
+    cameraZoomMaxLabel = cameraZoomWrap.querySelector("#camera-zoom-max");
+
     cameraExposureWrap = document.createElement("label");
     cameraExposureWrap.id = "camera-exposure-wrap";
     cameraExposureWrap.innerHTML = `
-      <span>☀️</span>
-      <input id="camera-exposure-slider" type="range" />
+      <span aria-hidden="true">☀️</span>
+      <input id="camera-exposure-slider" type="range" aria-label="Camera exposure" />
       <span id="camera-exposure-value">0</span>
     `;
     cameraExposureSlider = cameraExposureWrap.querySelector(
@@ -4125,8 +4222,25 @@ function initChat(WHO) {
       "#camera-exposure-value",
     );
 
+    cameraTorchBtn = document.createElement("button");
+    cameraTorchBtn.type = "button";
+    cameraTorchBtn.id = "camera-torch-btn";
+    cameraTorchBtn.className = "cam-option-btn";
+    cameraTorchBtn.setAttribute("aria-label", "Turn flashlight on");
+    cameraTorchBtn.title = "Flashlight";
+    cameraTorchBtn.innerHTML = `
+      <svg class="camera-torch-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path class="camera-torch-icon__beam" d="M8.5 2.8h7l-1.1 5.1H9.6L8.5 2.8Z"/>
+        <path class="camera-torch-icon__body" d="M9.6 7.9h4.8v3.15l-1.25 1.6v7.55h-2.3v-7.55l-1.25-1.6V7.9Z"/>
+        <path class="camera-torch-icon__spark" d="m18.2 5.1 1.2-1.2m-1.2 4.3h1.7M5.8 5.1 4.6 3.9m1.2 4.3H4.1"/>
+      </svg>
+      <span>Flash</span>
+    `;
+
     optionsRow.appendChild(timerWrap);
+    optionsRow.appendChild(cameraZoomWrap);
     optionsRow.appendChild(cameraExposureWrap);
+    optionsRow.appendChild(cameraTorchBtn);
     cameraLiveWrap.insertBefore(
       optionsRow,
       document.getElementById("camera-controls"),
@@ -4237,8 +4351,15 @@ function initChat(WHO) {
         closeCameraTimerMenu();
       });
 
-    cameraStage.addEventListener("pointerup", focusCameraAtPointer);
+    cameraStage.addEventListener("pointerdown", handleCameraPointerDown);
+    cameraStage.addEventListener("pointermove", handleCameraPointerMove);
+    cameraStage.addEventListener("pointerup", handleCameraPointerEnd);
+    cameraStage.addEventListener("pointercancel", handleCameraPointerEnd);
+    cameraZoomSlider.addEventListener("input", () => {
+      requestCameraZoom(Number(cameraZoomSlider.value));
+    });
     cameraExposureSlider.addEventListener("input", applyExposureCompensation);
+    cameraTorchBtn.addEventListener("click", toggleCameraTorch);
 
     document.addEventListener("click", (event) => {
       if (
@@ -4259,6 +4380,12 @@ function initChat(WHO) {
     window.visualViewport?.addEventListener(
       "scroll",
       positionCameraTimerMenu,
+      { passive: true },
+    );
+    window.addEventListener("resize", syncCameraStageAspect, { passive: true });
+    window.visualViewport?.addEventListener(
+      "resize",
+      syncCameraStageAspect,
       { passive: true },
     );
   }
@@ -4361,10 +4488,301 @@ function initChat(WHO) {
     } else {
       cameraExposureWrap.classList.remove("supported");
     }
+
+    configureCameraZoom(track, capabilities);
+    configureCameraTorch(track, capabilities);
+  }
+
+  function formatCameraZoom(value) {
+    const rounded = Math.round(value * 10) / 10;
+    return `${Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1)}×`;
+  }
+
+  function clampCameraZoom(value) {
+    if (!cameraZoomRange) return 1;
+    return Math.min(
+      cameraZoomRange.max,
+      Math.max(cameraZoomRange.min, Number(value) || cameraZoomRange.min),
+    );
+  }
+
+  function syncCameraZoomUI(value) {
+    if (!cameraZoomSlider || !cameraZoomValue || !cameraZoomRange) return;
+    const clamped = clampCameraZoom(value);
+    cameraZoomCurrent = clamped;
+    cameraZoomSlider.value = String(clamped);
+    cameraZoomValue.textContent = formatCameraZoom(clamped);
+  }
+
+  function configureCameraZoom(track, capabilities) {
+    const zoom = capabilities?.zoom;
+    const supported =
+      zoom &&
+      Number.isFinite(zoom.min) &&
+      Number.isFinite(zoom.max) &&
+      zoom.max > zoom.min;
+
+    cameraZoomQueuedValue = null;
+    cameraZoomApplyInFlight = false;
+
+    if (!supported) {
+      cameraZoomRange = null;
+      cameraZoomWrap?.classList.remove("supported");
+      return;
+    }
+
+    const min = Math.max(0.1, Number(zoom.min));
+    const max = Math.min(10, Number(zoom.max));
+    if (max <= min) {
+      cameraZoomRange = null;
+      cameraZoomWrap?.classList.remove("supported");
+      return;
+    }
+
+    const step = Number(zoom.step) > 0 ? Number(zoom.step) : 0.1;
+    const settings = typeof track.getSettings === "function"
+      ? track.getSettings()
+      : {};
+    const initial = Math.min(
+      max,
+      Math.max(min, Number.isFinite(settings.zoom) ? settings.zoom : Math.max(1, min)),
+    );
+
+    cameraZoomRange = { min, max, step };
+    cameraZoomSlider.min = String(min);
+    cameraZoomSlider.max = String(max);
+    cameraZoomSlider.step = String(step);
+    cameraZoomMinLabel.textContent = formatCameraZoom(min);
+    cameraZoomMaxLabel.textContent = formatCameraZoom(max);
+    cameraZoomWrap.classList.add("supported");
+    syncCameraZoomUI(initial);
+  }
+
+  function requestCameraZoom(value) {
+    if (!cameraZoomRange || !cameraStream) return;
+    cameraZoomQueuedValue = clampCameraZoom(value);
+    syncCameraZoomUI(cameraZoomQueuedValue);
+    flushCameraZoomQueue();
+  }
+
+  async function flushCameraZoomQueue() {
+    if (cameraZoomApplyInFlight) return;
+    cameraZoomApplyInFlight = true;
+
+    try {
+      while (cameraZoomQueuedValue !== null) {
+        const value = cameraZoomQueuedValue;
+        cameraZoomQueuedValue = null;
+        const track = cameraStream?.getVideoTracks()[0];
+        if (!track || track.readyState !== "live") break;
+
+        try {
+          await track.applyConstraints({ advanced: [{ zoom: value }] });
+          const settings = typeof track.getSettings === "function"
+            ? track.getSettings()
+            : {};
+          syncCameraZoomUI(
+            Number.isFinite(settings.zoom) ? settings.zoom : value,
+          );
+        } catch (error) {
+          console.warn("Camera zoom was not accepted:", error);
+          const settings = typeof track.getSettings === "function"
+            ? track.getSettings()
+            : {};
+          if (Number.isFinite(settings.zoom)) syncCameraZoomUI(settings.zoom);
+          break;
+        }
+      }
+    } finally {
+      cameraZoomApplyInFlight = false;
+    }
+  }
+
+  function configureCameraTorch(track, capabilities) {
+    cameraTorchOn = false;
+    cameraTorchSupported =
+      facingMode === "environment" &&
+      Boolean(capabilities?.torch === true || capabilities?.torch?.includes?.(true));
+
+    cameraTorchBtn?.classList.toggle("supported", cameraTorchSupported);
+    cameraTorchBtn?.classList.remove("on");
+    cameraTorchBtn?.setAttribute("aria-pressed", "false");
+    cameraTorchBtn?.setAttribute("aria-label", "Turn flashlight on");
+    if (cameraTorchBtn) cameraTorchBtn.disabled = !cameraTorchSupported;
+  }
+
+  async function toggleCameraTorch() {
+    if (!cameraTorchSupported || !cameraStream) {
+      showMiniNotif("Flashlight is not available on this camera");
+      return;
+    }
+
+    const track = cameraStream.getVideoTracks()[0];
+    if (!track || track.readyState !== "live") return;
+    const requested = !cameraTorchOn;
+
+    try {
+      await track.applyConstraints({ advanced: [{ torch: requested }] });
+      cameraTorchOn = requested;
+      cameraTorchBtn.classList.toggle("on", cameraTorchOn);
+      cameraTorchBtn.setAttribute("aria-pressed", String(cameraTorchOn));
+      cameraTorchBtn.setAttribute(
+        "aria-label",
+        cameraTorchOn ? "Turn flashlight off" : "Turn flashlight on",
+      );
+    } catch (error) {
+      console.warn("Flashlight was not accepted:", error);
+      showMiniNotif("This browser cannot control the flashlight");
+    }
+  }
+
+  function getPointerDistance() {
+    const points = [...cameraPointers.values()];
+    if (points.length < 2) return 0;
+    return Math.hypot(
+      points[0].x - points[1].x,
+      points[0].y - points[1].y,
+    );
+  }
+
+  function handleCameraPointerDown(event) {
+    if (!cameraModal.classList.contains("open")) return;
+    cameraPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (cameraPointers.size === 1) {
+      cameraSinglePointerMoved = false;
+      cameraSinglePointerStart = { x: event.clientX, y: event.clientY };
+    } else if (cameraPointers.size === 2) {
+      cameraPinchActive = true;
+      cameraPinchStartDistance = getPointerDistance();
+      cameraPinchStartZoom = cameraZoomCurrent;
+      cameraSinglePointerMoved = true;
+    }
+
+    try {
+      cameraStage.setPointerCapture(event.pointerId);
+    } catch (_) {}
+  }
+
+  function handleCameraPointerMove(event) {
+    if (!cameraPointers.has(event.pointerId)) return;
+    cameraPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (
+      cameraPointers.size === 1 &&
+      cameraSinglePointerStart &&
+      Math.hypot(
+        event.clientX - cameraSinglePointerStart.x,
+        event.clientY - cameraSinglePointerStart.y,
+      ) > 8
+    ) {
+      cameraSinglePointerMoved = true;
+    }
+
+    if (
+      cameraPinchActive &&
+      cameraPointers.size >= 2 &&
+      cameraPinchStartDistance > 0
+    ) {
+      event.preventDefault();
+      const distance = getPointerDistance();
+      requestCameraZoom(
+        cameraPinchStartZoom * (distance / cameraPinchStartDistance),
+      );
+    }
+  }
+
+  function handleCameraPointerEnd(event) {
+    const wasSingleTap =
+      cameraPointers.size === 1 &&
+      !cameraPinchActive &&
+      !cameraSinglePointerMoved;
+
+    cameraPointers.delete(event.pointerId);
+    try {
+      cameraStage.releasePointerCapture(event.pointerId);
+    } catch (_) {}
+
+    if (cameraPointers.size < 2) {
+      cameraPinchActive = false;
+      cameraPinchStartDistance = 0;
+    }
+
+    if (wasSingleTap) focusCameraAtPointer(event);
+    if (cameraPointers.size === 0) {
+      cameraSinglePointerStart = null;
+      cameraSinglePointerMoved = false;
+    }
+  }
+
+  function preventCameraPageGesture(event) {
+    if (!cameraModal.classList.contains("open")) return;
+    if (
+      event.type.startsWith("gesture") ||
+      (event.touches && event.touches.length > 1)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  function enableCameraGestureGuard() {
+    if (cameraGestureGuardEnabled) return;
+    cameraGestureGuardEnabled = true;
+    document.documentElement.classList.add("camera-gesture-lock");
+    cameraModal.addEventListener("touchmove", preventCameraPageGesture, {
+      passive: false,
+    });
+    cameraModal.addEventListener("gesturestart", preventCameraPageGesture, {
+      passive: false,
+    });
+    cameraModal.addEventListener("gesturechange", preventCameraPageGesture, {
+      passive: false,
+    });
+    cameraModal.addEventListener("gestureend", preventCameraPageGesture, {
+      passive: false,
+    });
+  }
+
+  function disableCameraGestureGuard() {
+    if (!cameraGestureGuardEnabled) return;
+    cameraGestureGuardEnabled = false;
+    document.documentElement.classList.remove("camera-gesture-lock");
+    cameraModal.removeEventListener("touchmove", preventCameraPageGesture);
+    cameraModal.removeEventListener("gesturestart", preventCameraPageGesture);
+    cameraModal.removeEventListener("gesturechange", preventCameraPageGesture);
+    cameraModal.removeEventListener("gestureend", preventCameraPageGesture);
+    cameraPointers.clear();
+    cameraPinchActive = false;
+    cameraPinchStartDistance = 0;
+    cameraSinglePointerStart = null;
+    cameraSinglePointerMoved = false;
+  }
+
+  function syncCameraStageAspect() {
+    if (!cameraStage || !cameraFeed.videoWidth || !cameraFeed.videoHeight) return;
+    const aspect = cameraFeed.videoWidth / cameraFeed.videoHeight;
+    const viewport = window.visualViewport;
+    const viewportWidth = viewport?.width || window.innerWidth;
+    const viewportHeight = viewport?.height || window.innerHeight;
+    const mobile = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
+    const reservedHeight = mobile ? 165 : 190;
+    const maxWidth = Math.min(720, Math.max(240, viewportWidth - (mobile ? 8 : 24)));
+    const maxHeight = Math.max(220, viewportHeight - reservedHeight);
+    const fittedWidth = Math.min(maxWidth, maxHeight * aspect);
+
+    cameraStage.style.setProperty("--camera-stream-aspect", String(aspect));
+    cameraStage.style.setProperty(
+      "width",
+      `${Math.max(220, fittedWidth)}px`,
+      "important",
+    );
   }
 
   function stopMediaStream(stream) {
     if (!stream) return;
+    cameraTorchOn = false;
+    cameraTorchBtn?.classList.remove("on");
+    cameraTorchBtn?.setAttribute("aria-pressed", "false");
     stream.getTracks().forEach((track) => {
       try {
         track.stop();
@@ -4383,6 +4801,12 @@ function initChat(WHO) {
     cancelCameraCountdown();
     cameraFocusUnsupportedNotified = false;
     clearTimeout(cameraFocusResetTimer);
+    cameraZoomRange = null;
+    cameraZoomQueuedValue = null;
+    cameraZoomWrap?.classList.remove("supported");
+    cameraTorchSupported = false;
+    cameraTorchOn = false;
+    cameraTorchBtn?.classList.remove("supported", "on");
 
     const previousStream = cameraStream;
     cameraStream = null;
@@ -4390,14 +4814,16 @@ function initChat(WHO) {
 
     let requestedStream = null;
     try {
+      const portraitCamera = window.matchMedia("(orientation: portrait)").matches;
       requestedStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: facingMode },
-          // Keep the original 4:3 camera shape. The browser may choose the
-          // closest supported size, but it is no longer forced to widescreen.
-          width: { ideal: 1280 },
-          height: { ideal: 960 },
-          aspectRatio: { ideal: 4 / 3 },
+          // Ask for a portrait 3:4 stream on phones so the live view can use
+          // much more of the screen. Landscape devices keep the natural 4:3
+          // frame. object-fit: contain still guarantees that nothing is cropped.
+          width: { ideal: portraitCamera ? 960 : 1280 },
+          height: { ideal: portraitCamera ? 1280 : 960 },
+          aspectRatio: { ideal: portraitCamera ? 3 / 4 : 4 / 3 },
         },
         audio: false,
       });
@@ -4417,6 +4843,7 @@ function initChat(WHO) {
       try {
         await cameraFeed.play();
         await waitForVideoMetadata(requestId);
+        syncCameraStageAspect();
       } catch (playError) {
         if (requestId !== cameraStreamRequestId) {
           stopMediaStream(requestedStream);
@@ -4766,6 +5193,7 @@ function initChat(WHO) {
     snapBtn.disabled = false;
     ensureCameraEnhancementUI();
     cameraModal.classList.add("open");
+    enableCameraGestureGuard();
     cameraLiveWrap.style.display = "flex";
     cameraPreviewWrap.classList.remove("visible");
     capturedBlob = null;
@@ -4792,6 +5220,13 @@ function initChat(WHO) {
     }
     cameraPreviewImg.removeAttribute("src");
     cameraModal.classList.remove("open");
+    disableCameraGestureGuard();
+    cameraZoomRange = null;
+    cameraZoomQueuedValue = null;
+    cameraZoomWrap?.classList.remove("supported");
+    cameraTorchSupported = false;
+    cameraTorchOn = false;
+    cameraTorchBtn?.classList.remove("supported", "on");
     // The timer popup lives under document.body so it can be positioned
     // against the real viewport. Explicitly hide and reset it when closing
     // the camera modal.

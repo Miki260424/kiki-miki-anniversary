@@ -2881,3 +2881,466 @@ img[data-lazy-src] {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   CAMERA SIZE, REAL ZOOM, PINCH CONTROL, FLASHLIGHT
+   ═══════════════════════════════════════════════════════════════ */
+
+/* The page itself must not pinch-zoom while the camera is open.
+   Pinch gestures are reserved for the live camera zoom control. */
+html.camera-gesture-lock,
+html.camera-gesture-lock body,
+html.camera-gesture-lock #camera-modal,
+html.camera-gesture-lock #camera-live-wrap,
+html.camera-gesture-lock #camera-stage {
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+}
+
+#camera-modal.open {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#camera-live-wrap {
+  width: min(calc(100vw - 24px), 720px) !important;
+  max-width: 720px !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+#camera-stage {
+  max-width: 720px !important;
+  height: auto !important;
+  aspect-ratio: var(--camera-stream-aspect, 4 / 3) !important;
+  margin-inline: auto !important;
+  background: #080808 !important;
+  border-radius: 18px !important;
+  touch-action: none !important;
+}
+
+#camera-feed,
+#camera-stage #camera-feed {
+  width: 100% !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: var(--camera-stream-aspect, 4 / 3) !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  display: block !important;
+}
+
+#camera-options-row {
+  width: min(100%, 720px) !important;
+  max-width: 720px !important;
+  flex-wrap: wrap;
+  gap: 7px !important;
+}
+
+#camera-zoom-wrap {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.13);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#camera-zoom-wrap.supported {
+  display: flex;
+}
+
+#camera-zoom-slider {
+  width: clamp(88px, 24vw, 155px);
+  accent-color: #ff77a8;
+  cursor: pointer;
+}
+
+#camera-zoom-value {
+  min-width: 34px;
+  color: #ffd166;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+#camera-zoom-min,
+#camera-zoom-max {
+  color: rgba(255, 255, 255, 0.76);
+  white-space: nowrap;
+}
+
+#camera-torch-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 74px;
+}
+
+#camera-torch-btn.supported {
+  display: inline-flex;
+}
+
+#camera-torch-btn.on {
+  color: #2a1a00;
+  background: linear-gradient(135deg, #ffe082, #ffd166);
+  border-color: rgba(255, 225, 130, 0.95);
+  box-shadow: 0 0 18px rgba(255, 209, 102, 0.48);
+}
+
+.camera-torch-icon {
+  width: 19px;
+  height: 19px;
+  display: block;
+  overflow: visible;
+}
+
+.camera-torch-icon__beam {
+  fill: #ffd166;
+  stroke: #fff4c2;
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.camera-torch-icon__body,
+.camera-torch-icon__spark {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#camera-torch-btn.on .camera-torch-icon__body,
+#camera-torch-btn.on .camera-torch-icon__spark {
+  stroke: #5a3b00;
+}
+
+#camera-torch-btn.on .camera-torch-icon__beam {
+  fill: #fff7cf;
+  stroke: #5a3b00;
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+  #camera-modal {
+    padding:
+      max(4px, env(safe-area-inset-top))
+      4px
+      max(4px, env(safe-area-inset-bottom)) !important;
+  }
+
+  #camera-live-wrap {
+    width: calc(100vw - 8px) !important;
+    max-width: 720px !important;
+    gap: 6px !important;
+  }
+
+  #camera-stage {
+    max-width: calc(100vw - 8px) !important;
+    border-radius: 14px !important;
+  }
+
+  #camera-options-row {
+    gap: 5px !important;
+  }
+
+  .cam-option-btn,
+  #camera-zoom-wrap,
+  #camera-exposure-wrap {
+    min-height: 36px !important;
+  }
+
+  .cam-option-btn {
+    padding: 6px 10px !important;
+    font-size: 0.76rem !important;
+  }
+
+  #camera-zoom-wrap {
+    padding: 4px 8px;
+    gap: 5px;
+  }
+
+  #camera-zoom-slider {
+    width: clamp(82px, 27vw, 130px);
+  }
+
+  #camera-controls {
+    margin-top: 2px !important;
+    gap: 22px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COLORFUL LINE-ART COMPOSER ICONS
+   ═══════════════════════════════════════════════════════════════ */
+
+.illustrated-input-btn {
+  color: inherit;
+}
+
+.composer-art-icon {
+  width: 23px;
+  height: 23px;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(111, 35, 76, 0.15));
+  transition:
+    transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    filter 0.2s ease;
+}
+
+.composer-icon-line {
+  fill: none;
+  stroke-width: 1.65;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.composer-camera-icon__body {
+  stroke: #a56bff;
+}
+
+.composer-camera-icon__lens {
+  fill: #86d7ff;
+  stroke: #fff7fb;
+  stroke-width: 1.15;
+}
+
+.composer-camera-icon__shine {
+  fill: #fff;
+}
+
+.composer-camera-icon__heart,
+.composer-emoji-icon__heart {
+  fill: #ff4f87;
+  stroke: #fff7fb;
+  stroke-width: 0.5;
+  stroke-linejoin: round;
+}
+
+.composer-attach-icon__clip {
+  stroke: #6fc7ff;
+}
+
+.composer-attach-icon__inner {
+  stroke: #a56bff;
+}
+
+.composer-attach-icon__dot {
+  fill: #ff7fa8;
+  stroke: #fff7fb;
+  stroke-width: 0.7;
+}
+
+.composer-emoji-icon__face {
+  stroke: #f2b632;
+  fill: rgba(255, 209, 102, 0.12);
+}
+
+.composer-emoji-icon__eye {
+  fill: #7d4fc7;
+}
+
+.composer-emoji-icon__smile {
+  stroke: #ff6f9f;
+}
+
+.input-icon-btn:hover .composer-art-icon,
+.input-icon-btn:active .composer-art-icon {
+  transform: translateY(-1px) scale(1.08);
+  filter: drop-shadow(0 3px 5px rgba(111, 35, 76, 0.2));
+}
+
+@media (hover: none) and (pointer: coarse) and (max-width: 768px) {
+  .composer-art-icon {
+    width: 21px;
+    height: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .composer-art-icon {
+    transition: none;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MUTED COMPOSER ICON PALETTE — TRANSPARENT, SOFTER, LESS BRIGHT
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Give the illustrated controls a soft tinted surface instead of white. */
+#camera-btn.illustrated-input-btn,
+label[for="file-input"].illustrated-input-btn,
+#emoji-toggle-btn.illustrated-input-btn {
+  background: rgba(232, 99, 138, 0.07) !important;
+  border: 1px solid rgba(184, 92, 122, 0.12);
+  box-shadow: none;
+}
+
+#camera-btn.illustrated-input-btn:hover,
+#camera-btn.illustrated-input-btn:active,
+label[for="file-input"].illustrated-input-btn:hover,
+label[for="file-input"].illustrated-input-btn:active,
+#emoji-toggle-btn.illustrated-input-btn:hover,
+#emoji-toggle-btn.illustrated-input-btn:active {
+  background: rgba(232, 99, 138, 0.13) !important;
+  border-color: rgba(184, 92, 122, 0.2);
+}
+
+.composer-art-icon {
+  filter: drop-shadow(0 1px 2px rgba(92, 48, 70, 0.12));
+}
+
+/* Camera — dusty mauve body, muted blue lens, no white highlights. */
+.composer-camera-icon__body {
+  stroke: #8f6f8f;
+}
+
+.composer-camera-icon__lens {
+  fill: rgba(103, 132, 157, 0.18);
+  stroke: #6f879c;
+  stroke-width: 1.2;
+}
+
+.composer-camera-icon__shine {
+  fill: #9eb0bf;
+  opacity: 0.65;
+}
+
+/* Hearts — muted rose, no white outline. */
+.composer-camera-icon__heart,
+.composer-emoji-icon__heart {
+  fill: #b85c7a;
+  stroke: #b85c7a;
+  stroke-width: 0.35;
+}
+
+/* Attachment — slate blue and muted mauve. */
+.composer-attach-icon__clip {
+  stroke: #6f879c;
+}
+
+.composer-attach-icon__inner {
+  stroke: #8f6f8f;
+}
+
+.composer-attach-icon__dot {
+  fill: #b85c7a;
+  stroke: #b85c7a;
+  stroke-width: 0.35;
+}
+
+/* Emoji — transparent face with a soft amber outline. */
+.composer-emoji-icon__face {
+  stroke: #a68a55;
+  fill: rgba(166, 138, 85, 0.06);
+}
+
+.composer-emoji-icon__eye {
+  fill: #75627c;
+}
+
+.composer-emoji-icon__smile {
+  stroke: #a25e78;
+}
+
+.input-icon-btn:hover .composer-art-icon,
+.input-icon-btn:active .composer-art-icon {
+  transform: translateY(-1px) scale(1.04);
+  filter: drop-shadow(0 2px 3px rgba(92, 48, 70, 0.15));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BALANCED COMPOSER ICON PALETTE — COLORFUL, NOT NEON
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Transparent at rest; only a soft rose tint appears on interaction. */
+#camera-btn.illustrated-input-btn,
+label[for="file-input"].illustrated-input-btn,
+#emoji-toggle-btn.illustrated-input-btn {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#camera-btn.illustrated-input-btn:hover,
+#camera-btn.illustrated-input-btn:active,
+label[for="file-input"].illustrated-input-btn:hover,
+label[for="file-input"].illustrated-input-btn:active,
+#emoji-toggle-btn.illustrated-input-btn:hover,
+#emoji-toggle-btn.illustrated-input-btn:active {
+  background: rgba(232, 99, 138, 0.11) !important;
+  border-color: transparent !important;
+}
+
+.composer-art-icon {
+  filter: drop-shadow(0 1.5px 2px rgba(94, 45, 79, 0.18));
+}
+
+/* Camera — rose body, clear blue lens, warm golden glint. */
+.composer-camera-icon__body {
+  stroke: #c75588;
+}
+
+.composer-camera-icon__lens {
+  fill: rgba(76, 164, 213, 0.28);
+  stroke: #4a96bf;
+  stroke-width: 1.25;
+}
+
+.composer-camera-icon__shine {
+  fill: #e5a932;
+  opacity: 0.95;
+}
+
+.composer-camera-icon__heart,
+.composer-emoji-icon__heart {
+  fill: #e84d7a;
+  stroke: #c83d68;
+  stroke-width: 0.4;
+}
+
+/* Attachment — blue outer line, violet inner line, coral accent. */
+.composer-attach-icon__clip {
+  stroke: #459cc5;
+}
+
+.composer-attach-icon__inner {
+  stroke: #9a5bb4;
+}
+
+.composer-attach-icon__dot {
+  fill: #ee6e86;
+  stroke: #d94f6d;
+  stroke-width: 0.45;
+}
+
+/* Emoji — warm golden face with violet eyes and a rose smile. */
+.composer-emoji-icon__face {
+  stroke: #d79b26;
+  fill: rgba(244, 183, 62, 0.2);
+}
+
+.composer-emoji-icon__eye {
+  fill: #7450a3;
+}
+
+.composer-emoji-icon__smile {
+  stroke: #d6537c;
+}
+
+.input-icon-btn:hover .composer-art-icon,
+.input-icon-btn:active .composer-art-icon {
+  transform: translateY(-1px) scale(1.06);
+  filter: drop-shadow(0 2px 4px rgba(94, 45, 79, 0.22));
+}
