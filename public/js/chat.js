@@ -515,42 +515,60 @@ function initChat(WHO) {
   }
 
   function normalizePendingUploadCache(cache, files) {
-    if (!cache || cache.signature !== getFilesSignature(files)) return null;
+    if (!cache || !Array.isArray(files)) return null;
 
     const fileSignatures = files.map(getFileSignature);
-    let entries = null;
+    const entriesBySignature = new Map();
 
-    if (Array.isArray(cache.entries) && cache.entries.length === files.length) {
-      entries = cache.entries.map((entry, index) => {
-        if (
-          entry &&
-          entry.fileSignature === fileSignatures[index] &&
-          typeof entry.url === "string" &&
-          entry.url
-        ) {
-          return { fileSignature: entry.fileSignature, url: entry.url };
-        }
-        return null;
+    const addReusableEntry = (entry) => {
+      if (
+        !entry ||
+        typeof entry.fileSignature !== "string" ||
+        typeof entry.url !== "string" ||
+        !entry.url
+      ) {
+        return;
+      }
+
+      if (!entriesBySignature.has(entry.fileSignature)) {
+        entriesBySignature.set(entry.fileSignature, []);
+      }
+      entriesBySignature.get(entry.fileSignature).push({
+        fileSignature: entry.fileSignature,
+        url: entry.url,
       });
+    };
+
+    if (Array.isArray(cache.entries)) {
+      cache.entries.forEach(addReusableEntry);
     } else if (
-      // Backward compatibility with drafts made by the previous full-batch cache.
       Array.isArray(cache.urls) &&
-      cache.urls.length === files.length
+      cache.urls.length === files.length &&
+      cache.signature === getFilesSignature(files)
     ) {
-      entries = cache.urls.map((url, index) =>
-        typeof url === "string" && url
-          ? { fileSignature: fileSignatures[index], url }
-          : null,
-      );
+      // Backward compatibility with the old full-array cache format.
+      cache.urls.forEach((url, index) => {
+        addReusableEntry({ fileSignature: fileSignatures[index], url });
+      });
     }
 
-    if (!entries) return null;
+    const entries = fileSignatures.map((signature) => {
+      const reusable = entriesBySignature.get(signature);
+      return reusable?.length ? reusable.shift() : null;
+    });
 
     return {
-      signature: cache.signature,
+      signature: getFilesSignature(files),
       entries,
       uploadedAt: Number(cache.uploadedAt) || Date.now(),
     };
+  }
+
+  function reconcilePendingUploadCache(files = selectedFiles) {
+    pendingUploadCache = normalizePendingUploadCache(
+      pendingUploadCache,
+      files,
+    );
   }
 
   function invalidatePendingUploadCache() {
@@ -683,22 +701,51 @@ function initChat(WHO) {
   let lastDate = null;
   let lastSender = null;
 
+  const MAX_TRACKED_MESSAGE_STATE = 800;
   const msgRowMap = new Map();
 
-  // ─── GLOBAL IMAGE LIST FOR CROSS-MESSAGE LIGHTBOX NAVIGATION ─────────────
-  // Every time a message with images is rendered, we push its URLs here.
-  // openLightbox() uses this flat list so users can swipe across ALL images.
-  const _allChatImages = []; // { url, msgId }
-  const _allChatImageUrls = new Set();
-  function registerImagesForLightbox(urls, msgId) {
-    urls.forEach((url) => {
-      if (!url || _allChatImageUrls.has(url)) return;
-      _allChatImageUrls.add(url);
-      _allChatImages.push({ url, msgId });
-    });
+  function setBoundedMapValue(map, key, value, limit = MAX_TRACKED_MESSAGE_STATE) {
+    if (map.has(key)) map.delete(key);
+    map.set(key, value);
+
+    while (map.size > limit) {
+      const oldestKey = map.keys().next().value;
+      map.delete(oldestKey);
+    }
   }
-  function globalLightboxIndex(url) {
-    return _allChatImages.findIndex((e) => e.url === url);
+
+  function getMessageRowFromDOM(id) {
+    const escapedId = window.CSS?.escape
+      ? window.CSS.escape(String(id))
+      : String(id).replace(/["\\]/g, "\\$&");
+    return msgContainer.querySelector(`.msg-row[data-id="${escapedId}"]`);
+  }
+
+  function trackMessageRow(id, row) {
+    if (id && row) setBoundedMapValue(msgRowMap, id, row);
+  }
+
+  function getTrackedMessageRow(id) {
+    return msgRowMap.get(id) || getMessageRowFromDOM(id);
+  }
+
+  // ─── GLOBAL IMAGE ORDER FOR CROSS-MESSAGE LIGHTBOX NAVIGATION ──────
+  // Read directly from the message DOM. Older pages are prepended to the DOM,
+  // so this always reflects true chronological order without a growing cache.
+  function getChronologicalChatImageUrls() {
+    const seen = new Set();
+    const urls = [];
+
+    msgContainer
+      .querySelectorAll(".grid-img[data-img-url]")
+      .forEach((img) => {
+        const url = img.dataset.imgUrl;
+        if (!url || seen.has(url)) return;
+        seen.add(url);
+        urls.push(url);
+      });
+
+    return urls;
   }
 
   // ─── REPLY STATE ─────────────────────────────────────────────────
@@ -1185,7 +1232,7 @@ function initChat(WHO) {
     const diff = Math.max(0, Date.now() - date.getTime());
     if (diff < 60_000) return "Last seen just now";
     if (diff < 60 * 60_000) {
-      return `Last seen ${Math.floor(diff / 60_000)}m ago`;
+      return `Last seen ${Math.floor(diff / 60_000)}min ago`;
     }
     if (diff < 24 * 60 * 60_000) {
       return `Last seen ${Math.floor(diff / (60 * 60_000))}h ago`;
@@ -1417,8 +1464,8 @@ function initChat(WHO) {
     );
     const freeSlots = MAX_SELECTED_IMAGES - selectedFiles.length;
     const accepted = validImages.slice(0, Math.max(0, freeSlots));
-    if (accepted.length > 0) invalidatePendingUploadCache();
     selectedFiles = [...selectedFiles, ...accepted];
+    if (accepted.length > 0) reconcilePendingUploadCache(selectedFiles);
 
     if (accepted.length < validImages.length) {
       showMiniNotif(`Maximum ${MAX_SELECTED_IMAGES} photos per message`);
@@ -1454,8 +1501,8 @@ function initChat(WHO) {
       removeBtn.textContent = "✕";
       removeBtn.addEventListener("click", () => {
         if (isSending) return;
-        invalidatePendingUploadCache();
         selectedFiles.splice(idx, 1);
+        reconcilePendingUploadCache(selectedFiles);
         renderPreviewBar();
         queueSelectedFilesDraftSave();
       });
@@ -2355,7 +2402,7 @@ function initChat(WHO) {
     _pendingFirstBatch.forEach(({ msg, id }) => {
       const els = buildMessageElements(msg, id, false);
       els.forEach((el) => frag.appendChild(el));
-      msgRowMap.set(id, frag.lastElementChild);
+      trackMessageRow(id, frag.lastElementChild);
     });
     observeLazyImages(frag);
     msgContainer.appendChild(frag);
@@ -2395,7 +2442,7 @@ function initChat(WHO) {
     msgContainer.appendChild(frag);
 
     const row = msgContainer.lastElementChild;
-    if (id) msgRowMap.set(id, row);
+    if (id) trackMessageRow(id, row);
 
     if (typingIndicator.classList.contains("visible")) {
       placeTypingIndicatorAfterLastMessage(false);
@@ -2499,7 +2546,6 @@ function initChat(WHO) {
         : [];
 
     if (images.length > 0) {
-      registerImagesForLightbox(images, id);
       const gridWrap = document.createElement("div");
       gridWrap.className = "img-grid-wrap";
 
@@ -2728,7 +2774,7 @@ function initChat(WHO) {
 
     if (id) {
       const reactions = rememberReactions(id, msg.reactions || {});
-      _reactionRegistry.set(id, wrap);
+      setBoundedMapValue(_reactionRegistry, id, wrap);
       attachReactions(row, msg, id);
       if (Object.keys(reactions).length > 0) {
         renderReactions(wrap, reactions, id);
@@ -2750,10 +2796,22 @@ function initChat(WHO) {
   const _lastKnownReactions = new Map();
   const _reactionStateByMessage = new Map();
 
+  function getReactionWrap(msgId) {
+    return (
+      _reactionRegistry.get(msgId) ||
+      getTrackedMessageRow(msgId)?.querySelector(".bubble-wrap") ||
+      null
+    );
+  }
+
   function rememberReactions(msgId, reactions) {
     const normalized = { ...(reactions || {}) };
-    _reactionStateByMessage.set(msgId, normalized);
-    _lastKnownReactions.set(msgId, JSON.stringify(normalized));
+    setBoundedMapValue(_reactionStateByMessage, msgId, normalized);
+    setBoundedMapValue(
+      _lastKnownReactions,
+      msgId,
+      JSON.stringify(normalized),
+    );
     return normalized;
   }
 
@@ -2765,7 +2823,21 @@ function initChat(WHO) {
     const mutation = previous
       .catch(() => {})
       .then(async () => {
-        const before = { ...(_reactionStateByMessage.get(msgId) || {}) };
+        let knownReactions = _reactionStateByMessage.get(msgId);
+        if (!knownReactions) {
+          try {
+            const messageSnap = await messagesRef.doc(msgId).get();
+            knownReactions = messageSnap.exists
+              ? messageSnap.data().reactions || {}
+              : {};
+            rememberReactions(msgId, knownReactions);
+          } catch (error) {
+            console.warn("Could not refresh old reaction state:", error);
+            knownReactions = {};
+          }
+        }
+
+        const before = { ...knownReactions };
         const after = { ...before };
         const shouldRemove = after[WHO] === emoji;
 
@@ -2773,7 +2845,7 @@ function initChat(WHO) {
         else after[WHO] = emoji;
 
         rememberReactions(msgId, after);
-        const wrap = _reactionRegistry.get(msgId);
+        const wrap = getReactionWrap(msgId);
         if (wrap) renderReactions(wrap, after, msgId);
 
         try {
@@ -2852,14 +2924,13 @@ function initChat(WHO) {
   }
 
   function closeReactionBar() {
-    if (activeReactionBar) {
-      activeReactionBar.classList.remove("visible");
-      const el = activeReactionBar;
-      setTimeout(() => el.remove(), 200);
-      activeReactionBar = null;
-      reactionBarMsgId = null;
-      unlockScroll();
-    }
+    if (!activeReactionBar) return;
+
+    const bar = activeReactionBar;
+    activeReactionBar = null;
+    reactionBarMsgId = null;
+    bar.remove();
+    unlockScroll();
   }
 
   function openReactionBar(msgId, row) {
@@ -2880,10 +2951,9 @@ function initChat(WHO) {
       btn.textContent = emoji;
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        closeActiveImageActionPopover({ closeReaction: false });
+        closeMobileMessageMenus();
         saveReaction(msgId, emoji);
-        btn.classList.add("pop");
-        setTimeout(closeReactionBar, 160);
+        showHeartBurst(row.querySelector(".bubble") || row, emoji);
       });
       bar.appendChild(btn);
     });
@@ -3570,7 +3640,7 @@ function initChat(WHO) {
 
   // ─── JUMP TO QUOTED MESSAGE ───────────────────────────────────────
   function jumpToMessage(id) {
-    const row = msgRowMap.get(id);
+    const row = getTrackedMessageRow(id);
     if (!row) return;
     row.scrollIntoView({ behavior: "smooth", block: "center" });
     row.classList.add("highlight-flash");
@@ -3646,7 +3716,7 @@ function initChat(WHO) {
       else msgContainer.appendChild(frag);
 
       rowsToRegister.forEach(([messageId, row]) =>
-        msgRowMap.set(messageId, row),
+        trackMessageRow(messageId, row),
       );
 
       lastDate = savedLastDate;
@@ -3721,7 +3791,7 @@ function initChat(WHO) {
           const reactionsJSON = JSON.stringify(reactions);
           if (_lastKnownReactions.get(msgId) !== reactionsJSON) {
             const normalized = rememberReactions(msgId, reactions);
-            const wrap = _reactionRegistry.get(msgId);
+            const wrap = getReactionWrap(msgId);
             if (wrap) renderReactions(wrap, normalized, msgId);
           }
         }
@@ -3752,10 +3822,18 @@ function initChat(WHO) {
       lbImages = [...images];
       lbIndex = Math.max(0, Math.min(startIdx, lbImages.length - 1));
     } else {
-      // Normal message lightbox browses every image currently registered.
-      const globalIdx = globalLightboxIndex(clickedUrl);
-      lbImages = _allChatImages.map((e) => e.url);
-      lbIndex = globalIdx >= 0 ? globalIdx : 0;
+      // Normal message lightbox follows the actual chronological DOM order.
+      lbImages = getChronologicalChatImageUrls();
+      const globalIdx = lbImages.indexOf(clickedUrl);
+
+      // The clicked image should already be in the DOM. Keep a safe fallback
+      // for a just-rendered image whose DOM registration has not completed yet.
+      if (globalIdx >= 0) {
+        lbIndex = globalIdx;
+      } else {
+        lbImages = [...images];
+        lbIndex = Math.max(0, Math.min(startIdx, lbImages.length - 1));
+      }
     }
 
     closeReactionBar();
@@ -3992,12 +4070,11 @@ function initChat(WHO) {
       icon: isBlurred ? "👁️" : "🫣",
       label: isBlurred ? "Unblur" : "Blur",
       fn: async () => {
+        closePopover({ closeReaction: true });
         try {
           await toggleImageBlur(imgUrl);
         } catch (_) {
           showMiniNotif("Could not save blur setting");
-        } finally {
-          closePopover({ closeReaction: true });
         }
       },
     });
@@ -4007,12 +4084,11 @@ function initChat(WHO) {
         icon: allBlurred ? "👁️" : "🫣",
         label: allBlurred ? "Unblur All" : "Blur All",
         fn: async () => {
+          closePopover({ closeReaction: true });
           try {
             await setImagesBlurred(messageUrls, !allBlurred);
           } catch (_) {
             showMiniNotif("Could not save blur setting");
-          } finally {
-            closePopover({ closeReaction: true });
           }
         },
       });
@@ -4179,9 +4255,7 @@ function initChat(WHO) {
       // A tap anywhere else dismisses the complete mobile message UI.
       closePopover({ closeReaction: true });
     };
-    setTimeout(() => {
-      document.addEventListener("pointerdown", closeOnOutside, true);
-    }, 80);
+    document.addEventListener("pointerdown", closeOnOutside, true);
   }
 
   // ─── CAMERA ──────────────────────────────────────────────────────
@@ -5013,7 +5087,7 @@ function initChat(WHO) {
 
       cameraStream = requestedStream;
       cameraFeed.srcObject = requestedStream;
-      cameraFeed.classList.toggle("mirrored", facingMode === "user");
+      cameraFeed.classList.remove("mirrored");
 
       try {
         await cameraFeed.play();
@@ -5136,7 +5210,6 @@ function initChat(WHO) {
     x = Math.max(0, Math.min(1, x));
     y = Math.max(0, Math.min(1, y));
 
-    if (facingMode === "user") x = 1 - x;
 
     const displayX =
       stageRect.width > 0
@@ -5364,11 +5437,6 @@ function initChat(WHO) {
       return;
     }
 
-    ctx.save();
-    if (facingMode === "user") {
-      ctx.translate(snapCanvas.width, 0);
-      ctx.scale(-1, 1);
-    }
     ctx.drawImage(
       video,
       sourceX,
@@ -5380,7 +5448,6 @@ function initChat(WHO) {
       snapCanvas.width,
       snapCanvas.height,
     );
-    ctx.restore();
 
     // The frame is now in the canvas, so the camera can be released while the
     // JPEG is encoded and while the user reviews the photo.
