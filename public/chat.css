@@ -988,115 +988,25 @@ body {
   background: var(--rose-pale);
 }
 
-/* ─── CAMERA MODAL ─── */
-#camera-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.92);
-  z-index: 9000;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-#camera-modal.open {
-  display: flex;
-}
-#camera-feed {
-  width: 100%;
-  max-width: 480px;
-  max-height: 65vh;
-  object-fit: cover;
-  border-radius: 20px;
-  box-shadow: 0 0 40px rgba(232, 99, 138, 0.3);
-  transition: transform 0.2s;
-}
-#camera-feed.mirrored {
-  transform: scaleX(-1);
-}
-#camera-controls {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  margin-top: 24px;
-}
-#snap-btn {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: white;
-  border: 5px solid var(--rose);
-  cursor: pointer;
-  transition:
-    transform 0.15s,
-    box-shadow 0.2s;
-  box-shadow: 0 0 0 6px rgba(232, 99, 138, 0.25);
-}
-#snap-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 0 0 10px rgba(232, 99, 138, 0.2);
-}
-#snap-btn:active {
-  transform: scale(0.94);
-  background: var(--rose-light);
-}
-.cam-control-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1.5px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  color: white;
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.cam-control-btn:hover {
-  background: rgba(255, 255, 255, 0.28);
-}
-#camera-preview-wrap {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-#camera-preview-wrap.visible {
-  display: flex;
-}
-#camera-preview-img {
-  max-width: 100%;
-  max-height: 65vh;
-  border-radius: 20px;
-  box-shadow: 0 0 30px rgba(232, 99, 138, 0.3);
-}
-#camera-preview-btns {
-  display: flex;
-  gap: 16px;
-}
-.cam-action-btn {
-  padding: 10px 24px;
-  border-radius: 30px;
-  border: none;
-  font-family: "Quicksand", sans-serif;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.15s;
-}
-.cam-action-btn:hover {
-  transform: scale(1.05);
-}
-#retake-btn {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-}
-#use-photo-btn {
-  background: var(--rose);
-  color: white;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ─── IMAGE LIGHTBOX ─── */
 #lightbox {
@@ -1744,7 +1654,7 @@ body {
   border: none;
 }
 
-@media (hover: none) and (pointer: coarse) and (max-width: 768px) {
+@media (hover: none) and (pointer: coarse) and (max-width: 1024px) {
   .msg-hover-actions,
   .msg-actions-trigger {
     display: none !important;
@@ -1983,244 +1893,65 @@ img[data-lazy-src] {
   color: var(--rose-dark);
 }
 
-/* ─── CAMERA ENHANCEMENTS: focus, exposure and timer ─── */
-#camera-modal {
-  overflow-y: auto;
-  padding: max(16px, env(safe-area-inset-top)) 12px
-    max(16px, env(safe-area-inset-bottom));
-}
 
-#camera-live-wrap {
-  position: relative;
-  overflow: visible;
-}
 
-#camera-stage {
-  position: relative;
-  width: 100%;
-  max-width: 480px;
-  border-radius: 20px;
-  overflow: hidden;
-  background: #111;
-  touch-action: manipulation;
-}
 
-#camera-stage #camera-feed {
-  width: 100%;
-  max-width: none;
-  max-height: 65vh;
-  display: block;
-  border-radius: 0;
-  box-shadow: none;
-}
 
-#camera-focus-indicator {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 58px;
-  height: 58px;
-  border: 2px solid #fff;
-  border-radius: 12px;
-  transform: translate(-50%, -50%) scale(1.25);
-  opacity: 0;
-  pointer-events: none;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
-}
 
-#camera-focus-indicator.show {
-  animation: cameraFocusPulse 0.9s ease both;
-}
 
-@keyframes cameraFocusPulse {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.35);
-  }
-  20%,
-  70% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.92);
-  }
-}
 
-#camera-countdown {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(5rem, 22vw, 9rem);
-  font-weight: 700;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.18);
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.75);
-  opacity: 0;
-  pointer-events: none;
-}
 
-#camera-countdown.visible {
-  opacity: 1;
-}
 
-#camera-options-row {
-  width: 100%;
-  max-width: 480px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  position: relative;
-}
 
-#camera-timer-wrap {
-  position: relative;
-}
 
-.cam-option-btn {
-  min-height: 40px;
-  padding: 8px 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  font-family: "Quicksand", sans-serif;
-  font-weight: 700;
-  cursor: pointer;
-}
 
-#camera-timer-menu {
-  display: none;
-  position: fixed;
-  z-index: 9105;
-  width: min(300px, calc(100vw - 20px));
-  max-width: calc(100vw - 20px);
-  padding: 10px;
-  border-radius: 16px;
-  background: rgba(20, 20, 20, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
 
-#camera-timer-menu.visible {
-  display: grid;
-}
 
-.camera-timer-choice,
-#camera-custom-set {
-  min-height: 38px;
-  border: 0;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-family: "Quicksand", sans-serif;
-  font-weight: 700;
-  cursor: pointer;
-}
 
-.camera-timer-choice.active {
-  background: var(--rose);
-}
 
-.camera-custom-timer {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-}
 
-#camera-custom-seconds {
-  min-width: 0;
-  height: 40px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  padding: 0 12px;
-  font: inherit;
-  outline: none;
-}
 
-#camera-custom-seconds::placeholder {
-  color: rgba(255, 255, 255, 0.65);
-}
 
-#camera-custom-set {
-  padding: 0 16px;
-  background: var(--rose);
-}
 
-#camera-exposure-wrap {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 6px 10px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  font-size: 0.78rem;
-}
 
-#camera-exposure-wrap.supported {
-  display: flex;
-}
 
-#camera-exposure-slider {
-  width: min(130px, 28vw);
-  accent-color: var(--rose);
-}
 
-#camera-exposure-value {
-  min-width: 28px;
-  text-align: right;
-}
 
-#snap-btn.counting {
-  opacity: 0.7;
-}
 
-#snap-btn:disabled {
-  cursor: default;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Every image is rendered, so large messages stay browsable and blur-able. */
 .img-grid.count-many {
   max-height: none;
 }
 
-@media (max-width: 600px) {
-  #camera-modal {
-    justify-content: center;
-    align-items: center;
-  }
 
-  #camera-live-wrap {
-    max-width: 100% !important;
-    padding: 0 4px !important;
-  }
-
-  #camera-stage #camera-feed {
-    max-height: 62dvh;
-  }
-
-  #camera-options-row {
-    flex-wrap: wrap;
-  }
-
-  #camera-controls {
-    margin-top: 4px;
-  }
-}
 
 /* ─── DESKTOP SEPARATE BLUR PICKER ─── */
 .separate-blur-overlay {
@@ -2404,19 +2135,9 @@ img[data-lazy-src] {
 }
 
 /* ─── INPUT-MODE SEPARATION AND FOCUS FEEDBACK ─── */
-#camera-focus-indicator.focus-success {
-  border-color: #78ff9b;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.35),
-    0 0 18px rgba(120, 255, 155, 0.7);
-}
 
-#camera-focus-indicator.focus-limited {
-  border-color: #ffd166;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.35),
-    0 0 18px rgba(255, 209, 102, 0.65);
-}
+
+
 
 /* The custom image hold menu is a touch/mobile feature only. */
 @media (any-pointer: fine) {
@@ -2425,31 +2146,8 @@ img[data-lazy-src] {
   }
 }
 
-/* Keep the complete camera interface centered on phones. */
-@media (max-width: 768px), (pointer: coarse) {
-  #camera-modal {
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    overflow: hidden !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
 
-  #camera-live-wrap {
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: min(calc(100% - 20px), 480px) !important;
-    max-width: 480px !important;
-    margin: 0 !important;
-    gap: 10px !important;
-  }
 
-  #camera-stage #camera-feed {
-    max-height: min(52dvh, calc(100dvh - 220px)) !important;
-  }
-}
 
 /* ─── HEADER ACTIONS, PRESENCE, SHARED MEDIA ─── */
 .header-info {
@@ -2754,73 +2452,16 @@ img[data-lazy-src] {
   }
 }
 
-/* ─── CAMERA: FULL FRAME, NATURAL ASPECT RATIO ───
-   Camera-only override. The live view and captured preview show the complete
-   frame instead of filling/cropping a square or fixed box. */
-#camera-stage {
-  width: fit-content;
-  max-width: 100%;
-  height: auto;
-  aspect-ratio: auto;
-  margin-inline: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-}
 
-#camera-feed,
-#camera-stage #camera-feed {
-  width: auto !important;
-  height: auto !important;
-  max-width: min(100%, 480px) !important;
-  max-height: min(65dvh, calc(100dvh - 210px)) !important;
-  aspect-ratio: auto !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  flex: 0 1 auto;
-}
 
-#camera-preview-wrap {
-  max-width: min(100%, 480px);
-}
 
-#camera-preview-img {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: min(65dvh, calc(100dvh - 130px));
-  aspect-ratio: auto;
-  object-fit: contain;
-  object-position: center;
-}
 
-@media (max-width: 768px), (pointer: coarse) {
-  #camera-stage {
-    width: fit-content !important;
-    max-width: 100% !important;
-    height: auto !important;
-  }
 
-  #camera-feed,
-  #camera-stage #camera-feed {
-    width: auto !important;
-    height: auto !important;
-    max-width: 100% !important;
-    max-height: min(55dvh, calc(100dvh - 220px)) !important;
-    aspect-ratio: auto !important;
-    object-fit: contain !important;
-  }
 
-  #camera-preview-img {
-    width: auto !important;
-    height: auto !important;
-    max-width: 100% !important;
-    max-height: min(62dvh, calc(100dvh - 135px)) !important;
-    aspect-ratio: auto !important;
-    object-fit: contain !important;
-  }
-}
+
+
+
+
 
 /* Custom romantic Shared Media icon */
 .shared-media-heart-icon {
@@ -2900,12 +2541,169 @@ img[data-lazy-src] {
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ═══════════════════════════════════════════════════════════════
-   CAMERA SIZE, REAL ZOOM, PINCH CONTROL, FLASHLIGHT
+   CUSTOM CURSOR FALLBACKS
+   Ensures every element uses the anniversary cursors consistently.
    ═══════════════════════════════════════════════════════════════ */
 
-/* The page itself must not pinch-zoom while the camera is open.
-   Pinch gestures are reserved for the live camera zoom control. */
+/* Regular cursor everywhere by default. */
+html,
+body,
+body * {
+  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--c.png"), auto;
+}
+
+/* Pointer cursor for every clickable or interactive control. */
+a,
+button,
+label[for],
+summary,
+select,
+option,
+[role="button"],
+[onclick],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"],
+input[type="file"],
+.input-icon-btn,
+.emoji-btn,
+.reaction-bar-btn,
+.reaction-pill,
+.reaction-picker-quick-slot,
+.reaction-picker-emoji,
+.reaction-picker-close,
+.msg-actions-trigger,
+.msg-action-item,
+.img-action-popover-btn,
+.add-img-menu-btn,
+.grid-img,
+.shared-media-item,
+.chat-feature-close,
+.shared-media-status,
+.separate-blur-card,
+.separate-blur-close,
+.separate-blur-secondary,
+.separate-blur-apply,
+#send-btn,
+#scroll-to-bottom,
+#lightbox-close,
+.lb-nav-btn,
+#clear-all-btn,
+#add-more-btn,
+#notif-allow-btn,
+#notif-dismiss-btn{
+  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--p.png"), pointer !important;
+}
+
+/* Keep text editing intuitive while still using the custom cursor image. */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+textarea,
+[contenteditable="true"] {
+  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--p.png"), text !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Only selected ratios receive a fixed frame. Default has no ratio class and
+   continues using the exact original width/height rules already in the file. */
+
+
+
+
+/* The custom pointer cursor also applies to the new ratio control. */
+
+/* ═══════════════════════════════════════════════════════════════
+   CAMERA — AUTHORITATIVE CONSOLIDATED STYLES
+   Default framing remains 480px maximum width and 65vh maximum height.
+   ═══════════════════════════════════════════════════════════════ */
+
 html.camera-gesture-lock,
 html.camera-gesture-lock body,
 html.camera-gesture-lock #camera-modal,
@@ -2915,85 +2713,365 @@ html.camera-gesture-lock #camera-stage {
   overscroll-behavior: none !important;
 }
 
-#camera-modal.open {
+#camera-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: max(10px, env(safe-area-inset-top)) 8px
+    max(10px, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.92);
   -webkit-user-select: none;
   user-select: none;
 }
 
+#camera-modal.open {
+  display: flex;
+}
+
 #camera-live-wrap {
-  width: min(calc(100vw - 24px), 720px) !important;
-  max-width: 720px !important;
-  align-items: center !important;
-  gap: 8px !important;
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  overflow: visible;
 }
 
 #camera-stage {
-  max-width: 720px !important;
-  height: auto !important;
-  aspect-ratio: var(--camera-stream-aspect, 4 / 3) !important;
-  margin-inline: auto !important;
-  background: #080808 !important;
-  border-radius: 18px !important;
-  touch-action: none !important;
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 20px;
+  background: transparent;
+  touch-action: none;
 }
 
 #camera-feed,
 #camera-stage #camera-feed {
-  width: 100% !important;
-  height: auto !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: var(--camera-stream-aspect, 4 / 3) !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  display: block !important;
+  --camera-software-zoom: 1;
+  width: 100%;
+  height: auto;
+  max-width: 480px;
+  max-height: 65vh;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 20px;
+  box-shadow: 0 0 40px rgba(232, 99, 138, 0.3);
+  transform: scale(var(--camera-software-zoom));
+  transform-origin: center center;
+  transition: transform 0.2s;
+}
+
+#camera-feed.mirrored {
+  transform: scaleX(-1) scale(var(--camera-software-zoom));
+}
+
+#camera-stage.camera-ratio-active {
+  max-width: 480px;
+  max-height: 65vh;
+  flex: 0 0 auto;
+  aspect-ratio: var(--camera-selected-ratio);
+  background: #080808;
+}
+
+#camera-stage.camera-ratio-active #camera-feed {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: var(--camera-selected-ratio);
+  object-fit: cover;
+  object-position: center;
+  border-radius: inherit;
+  box-shadow: none;
+}
+
+#camera-focus-indicator {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 58px;
+  height: 58px;
+  border: 2px solid #fff;
+  border-radius: 12px;
+  transform: translate(-50%, -50%) scale(1.25);
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+#camera-focus-indicator.show {
+  animation: cameraFocusPulse 0.9s ease both;
+}
+
+#camera-focus-indicator.focus-success {
+  border-color: #78ff9b;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 0 18px rgba(120, 255, 155, 0.7);
+}
+
+#camera-focus-indicator.focus-limited {
+  border-color: #ffd166;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 0 18px rgba(255, 209, 102, 0.65);
+}
+
+@keyframes cameraFocusPulse {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+  20%,
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+}
+
+#camera-countdown {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(5rem, 22vw, 9rem);
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.18);
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.75);
+  opacity: 0;
+  pointer-events: none;
+}
+
+#camera-countdown.visible {
+  opacity: 1;
 }
 
 #camera-options-row {
-  width: min(100%, 720px) !important;
-  max-width: 720px !important;
-  flex-wrap: wrap;
-  gap: 7px !important;
+  width: 100%;
+  max-width: 480px;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  position: relative;
 }
 
-#camera-zoom-wrap {
-  display: none;
+#camera-quick-options-row {
+  width: 100%;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#camera-adjustments-row {
+  width: min(100%, 440px);
+  max-width: 440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+.cam-option-btn,
+#camera-ratio-wrap,
+#camera-zoom-wrap,
+#camera-exposure-wrap {
   min-height: 40px;
-  padding: 6px 10px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  background: rgba(255, 255, 255, 0.13);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 21px;
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
-  font-size: 0.7rem;
+  font-family: "Quicksand", sans-serif;
   font-weight: 700;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
-#camera-zoom-wrap.supported {
+.cam-option-btn {
+  padding: 8px 14px;
+}
+
+#camera-timer-wrap {
+  position: relative;
+}
+
+#camera-timer-menu {
+  display: none;
+  position: fixed;
+  z-index: 9105;
+  width: min(300px, calc(100vw - 20px));
+  max-width: calc(100vw - 20px);
+  padding: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  background: rgba(20, 20, 20, 0.96);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  -webkit-overflow-scrolling: touch;
+}
+
+#camera-timer-menu.visible {
+  display: grid;
+}
+
+.camera-timer-choice,
+#camera-custom-set {
+  min-height: 38px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-family: "Quicksand", sans-serif;
+  font-weight: 700;
+}
+
+.camera-timer-choice.active,
+#camera-custom-set {
+  background: var(--rose);
+}
+
+.camera-custom-timer {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+#camera-custom-seconds {
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font: inherit;
+}
+
+#camera-custom-seconds::placeholder {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+#camera-custom-set {
+  padding: 0 16px;
+}
+
+#camera-ratio-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px 6px 12px;
+  font-size: 0.78rem;
+}
+
+.camera-ratio-label {
+  opacity: 0.82;
+}
+
+#camera-ratio-select {
+  min-width: 92px;
+  height: 30px;
+  padding: 0 28px 0 10px;
+  border: 0;
+  border-radius: 15px;
+  outline: none;
+  background: rgba(15, 15, 15, 0.68);
+  color: #fff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+#camera-ratio-select option {
+  background: #171717;
+  color: #fff;
+}
+
+#camera-zoom-wrap,
+#camera-exposure-wrap {
+  display: none;
+  width: calc(50% - 5px);
+  min-width: 0;
+  max-width: 215px;
+  min-height: 42px;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 9px;
+  font-size: 0.78rem;
+}
+
+#camera-zoom-wrap.supported,
+#camera-exposure-wrap.supported {
   display: flex;
-}
-
-#camera-zoom-slider {
-  width: clamp(88px, 24vw, 155px);
-  accent-color: #ff77a8;
-  cursor: pointer;
-}
-
-#camera-zoom-value {
-  min-width: 34px;
-  color: #ffd166;
-  font-size: 0.8rem;
-  text-align: center;
 }
 
 #camera-zoom-min,
 #camera-zoom-max {
-  color: rgba(255, 255, 255, 0.76);
-  white-space: nowrap;
+  display: none;
+}
+
+#camera-zoom-slider,
+#camera-exposure-slider {
+  flex: 1 1 auto;
+  width: 120px;
+  min-width: 76px;
+  max-width: 145px;
+  accent-color: #ff77a8;
+}
+
+#camera-zoom-value {
+  min-width: 31px;
+  color: #ffd166;
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+#camera-exposure-value {
+  min-width: 25px;
+  font-size: 0.76rem;
+  text-align: right;
+}
+
+#camera-zoom-wrap.software::before {
+  content: "Digital";
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.62rem;
+  font-weight: 700;
 }
 
 #camera-torch-btn {
@@ -3048,338 +3126,128 @@ html.camera-gesture-lock #camera-stage {
   stroke: #5a3b00;
 }
 
-@media (max-width: 768px), (pointer: coarse) {
-  #camera-modal {
-    padding: max(4px, env(safe-area-inset-top)) 4px
-      max(4px, env(safe-area-inset-bottom)) !important;
-  }
-
-  #camera-live-wrap {
-    width: calc(100vw - 8px) !important;
-    max-width: 720px !important;
-    gap: 6px !important;
-  }
-
-  #camera-stage {
-    max-width: calc(100vw - 8px) !important;
-    border-radius: 14px !important;
-  }
-
-  #camera-options-row {
-    gap: 5px !important;
-  }
-
-  .cam-option-btn,
-  #camera-zoom-wrap,
-  #camera-exposure-wrap {
-    min-height: 36px !important;
-  }
-
-  .cam-option-btn {
-    padding: 6px 10px !important;
-    font-size: 0.76rem !important;
-  }
-
-  #camera-zoom-wrap {
-    padding: 4px 8px;
-    gap: 5px;
-  }
-
-  #camera-zoom-slider {
-    width: clamp(82px, 27vw, 130px);
-  }
-
-  #camera-controls {
-    margin-top: 2px !important;
-    gap: 22px !important;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CUSTOM CURSOR FALLBACKS
-   Ensures every element uses the anniversary cursors consistently.
-   ═══════════════════════════════════════════════════════════════ */
-
-/* Regular cursor everywhere by default. */
-html,
-body,
-body * {
-  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--c.png"), auto;
-}
-
-/* Pointer cursor for every clickable or interactive control. */
-a,
-button,
-label[for],
-summary,
-select,
-option,
-[role="button"],
-[onclick],
-input[type="button"],
-input[type="submit"],
-input[type="reset"],
-input[type="checkbox"],
-input[type="radio"],
-input[type="range"],
-input[type="file"],
-.input-icon-btn,
-.cam-control-btn,
-.cam-option-btn,
-.cam-action-btn,
-.emoji-btn,
-.reaction-bar-btn,
-.reaction-pill,
-.reaction-picker-quick-slot,
-.reaction-picker-emoji,
-.reaction-picker-close,
-.msg-actions-trigger,
-.msg-action-item,
-.img-action-popover-btn,
-.add-img-menu-btn,
-.grid-img,
-.shared-media-item,
-.chat-feature-close,
-.shared-media-status,
-.separate-blur-card,
-.separate-blur-close,
-.separate-blur-secondary,
-.separate-blur-apply,
-#send-btn,
-#snap-btn,
-#scroll-to-bottom,
-#lightbox-close,
-.lb-nav-btn,
-#clear-all-btn,
-#add-more-btn,
-#notif-allow-btn,
-#notif-dismiss-btn {
-  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--p.png"), pointer !important;
-}
-
-/* Keep text editing intuitive while still using the custom cursor image. */
-input[type="text"],
-input[type="search"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-textarea,
-[contenteditable="true"] {
-  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--p.png"), text !important;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   EXACT ORIGINAL CAMERA SIZE RESTORE
-   Same dimensions as before zoom/exposure/focus were introduced.
-   ═══════════════════════════════════════════════════════════════ */
-
-#camera-modal,
-#camera-modal.open {
-  justify-content: center !important;
-  align-items: center !important;
-}
-
-#camera-live-wrap {
-  width: 100% !important;
-  max-width: 480px !important;
-  margin: 0 auto !important;
-  padding: 0 !important;
-  align-items: center !important;
-}
-
-#camera-stage {
-  width: 100% !important;
-  max-width: 480px !important;
-  height: auto !important;
-  aspect-ratio: auto !important;
-  margin: 0 auto !important;
-  background: transparent !important;
-  border-radius: 20px !important;
-}
-
-#camera-feed,
-#camera-stage #camera-feed {
-  width: 100% !important;
-  height: auto !important;
-  max-width: 480px !important;
-  max-height: 65vh !important;
-  aspect-ratio: auto !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  border-radius: 20px !important;
-  box-shadow: 0 0 40px rgba(232, 99, 138, 0.3) !important;
-}
-
-#camera-options-row {
-  width: 100% !important;
-  max-width: 480px !important;
-}
-
-@media (max-width: 600px) {
-  #camera-modal,
-  #camera-modal.open {
-    justify-content: center !important;
-    align-items: center !important;
-    padding:
-      max(10px, env(safe-area-inset-top))
-      8px
-      max(10px, env(safe-area-inset-bottom)) !important;
-  }
-
-  #camera-live-wrap,
-  #camera-stage {
-    width: 100% !important;
-    max-width: 480px !important;
-  }
-
-  #camera-feed,
-  #camera-stage #camera-feed {
-    width: 100% !important;
-    height: auto !important;
-    max-width: 480px !important;
-    max-height: 65vh !important;
-    aspect-ratio: auto !important;
-    object-fit: contain !important;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CAMERA RATIO SELECTOR AND SPACED CONTROL LAYOUT
-   Default keeps the exact current horizontal camera dimensions.
-   ═══════════════════════════════════════════════════════════════ */
-
-#camera-live-wrap {
-  flex-direction: column;
-}
-
-#camera-options-row {
-  width: 100% !important;
-  max-width: 480px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  gap: 10px !important;
-  margin-top: 14px;
-}
-
-#camera-quick-options-row {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-#camera-adjustments-row {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 9px;
-}
-
-#camera-ratio-wrap {
-  min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 8px 6px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  font-family: "Quicksand", sans-serif;
-  font-size: 0.78rem;
-  font-weight: 700;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.camera-ratio-label {
-  opacity: 0.82;
-}
-
-#camera-ratio-select {
-  min-width: 92px;
-  height: 30px;
-  padding: 0 28px 0 10px;
-  border: 0;
-  border-radius: 15px;
-  outline: none;
-  background: rgba(15, 15, 15, 0.68);
-  color: #fff;
-  font-family: "Quicksand", sans-serif;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-#camera-ratio-select option {
-  background: #171717;
-  color: #fff;
-}
-
-#camera-adjustments-row #camera-zoom-wrap,
-#camera-adjustments-row #camera-exposure-wrap {
-  width: 100%;
-  min-height: 44px !important;
-  justify-content: center;
-  margin: 0;
-}
-
-#camera-adjustments-row #camera-zoom-slider,
-#camera-adjustments-row #camera-exposure-slider {
-  flex: 1;
-  width: auto;
-  max-width: 280px;
-}
-
 #camera-controls {
   width: 100%;
   max-width: 480px;
-  justify-content: center;
-  gap: clamp(34px, 11vw, 58px) !important;
-  margin-top: 17px !important;
+  margin-top: 17px;
   padding-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(34px, 11vw, 58px);
 }
 
-/* Only selected ratios receive a fixed frame. Default has no ratio class and
-   continues using the exact original width/height rules already in the file. */
-#camera-stage.camera-ratio-active {
-  max-width: 480px !important;
-  max-height: 65vh !important;
-  flex: 0 0 auto;
-  overflow: hidden;
-  background: #080808 !important;
-  aspect-ratio: var(--camera-selected-ratio) !important;
+#snap-btn {
+  width: 70px;
+  height: 70px;
+  border: 5px solid var(--rose);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 6px rgba(232, 99, 138, 0.25);
+  transition:
+    transform 0.15s,
+    box-shadow 0.2s;
 }
 
-#camera-stage.camera-ratio-active #camera-feed {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-  aspect-ratio: var(--camera-selected-ratio) !important;
-  object-fit: cover !important;
-  object-position: center !important;
-  border-radius: inherit !important;
-  box-shadow: none !important;
+#snap-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 10px rgba(232, 99, 138, 0.2);
 }
 
-/* The custom pointer cursor also applies to the new ratio control. */
+#snap-btn:active {
+  transform: scale(0.94);
+  background: var(--rose-light);
+}
+
+#snap-btn.counting {
+  opacity: 0.7;
+}
+
+#snap-btn:disabled {
+  cursor: default !important;
+}
+
+.cam-control-btn {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 20px;
+  transition: background 0.2s;
+}
+
+.cam-control-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+#camera-preview-wrap {
+  display: none;
+  max-width: min(100%, 480px);
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+#camera-preview-wrap.visible {
+  display: flex;
+}
+
+#camera-preview-img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 65vh;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(232, 99, 138, 0.3);
+}
+
+#camera-preview-btns {
+  display: flex;
+  gap: 16px;
+}
+
+.cam-action-btn {
+  padding: 10px 24px;
+  border: 0;
+  border-radius: 30px;
+  font-family: "Quicksand", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: transform 0.15s;
+}
+
+.cam-action-btn:hover {
+  transform: scale(1.05);
+}
+
+#retake-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+#use-photo-btn {
+  background: var(--rose);
+  color: #fff;
+}
+
+#camera-modal button,
+#camera-modal select,
+#camera-modal input[type="range"],
 #camera-ratio-wrap,
-#camera-ratio-select {
+.camera-timer-choice {
   cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--p.png"), pointer !important;
-}
-
-@media (min-width: 700px) {
-  #camera-adjustments-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 600px) {
   #camera-options-row {
-    gap: 9px !important;
+    gap: 9px;
     margin-top: 13px;
   }
 
@@ -3389,7 +3257,7 @@ textarea,
 
   #camera-ratio-wrap,
   .cam-option-btn {
-    min-height: 38px !important;
+    min-height: 38px;
   }
 
   #camera-ratio-wrap {
@@ -3400,132 +3268,52 @@ textarea,
     min-width: 84px;
   }
 
-  #camera-controls {
-    gap: clamp(30px, 12vw, 48px) !important;
-    margin-top: 18px !important;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE SIDE-BY-SIDE CAMERA SLIDERS
-   Wider on phones; visible laptop zoom with a software fallback.
-   ═══════════════════════════════════════════════════════════════ */
-
-#camera-adjustments-row {
-  width: min(100%, 440px) !important;
-  max-width: 440px !important;
-  margin: 0 auto !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-wrap: nowrap !important;
-  gap: 10px !important;
-}
-
-#camera-adjustments-row #camera-zoom-wrap,
-#camera-adjustments-row #camera-exposure-wrap {
-  width: calc(50% - 5px) !important;
-  min-width: 0 !important;
-  max-width: 215px !important;
-  min-height: 42px !important;
-  flex: 1 1 0 !important;
-  justify-content: center !important;
-  gap: 6px !important;
-  padding: 5px 9px !important;
-  margin: 0 !important;
-  border-radius: 21px !important;
-}
-
-#camera-adjustments-row #camera-zoom-min,
-#camera-adjustments-row #camera-zoom-max {
-  display: none !important;
-}
-
-#camera-adjustments-row #camera-zoom-slider,
-#camera-adjustments-row #camera-exposure-slider {
-  flex: 1 1 auto !important;
-  width: 120px !important;
-  min-width: 76px !important;
-  max-width: 145px !important;
-}
-
-#camera-adjustments-row #camera-zoom-value {
-  min-width: 31px !important;
-  font-size: 0.76rem !important;
-}
-
-#camera-adjustments-row #camera-exposure-value {
-  min-width: 25px !important;
-  font-size: 0.76rem !important;
-}
-
-#camera-zoom-wrap.software::before {
-  content: "Digital";
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-/* Software zoom enlarges the preview without changing the camera frame size. */
-#camera-feed {
-  --camera-software-zoom: 1;
-  transform: scale(var(--camera-software-zoom)) !important;
-  transform-origin: center center !important;
-}
-
-#camera-feed.mirrored {
-  transform:
-    scaleX(-1)
-    scale(var(--camera-software-zoom)) !important;
-}
-
-/* Keep the scaled preview clipped inside the existing camera frame. */
-#camera-stage {
-  overflow: hidden !important;
-}
-
-@media (max-width: 600px) {
   #camera-adjustments-row {
-    width: calc(100% - 4px) !important;
-    max-width: 430px !important;
-    gap: 7px !important;
+    width: calc(100% - 4px);
+    max-width: 430px;
+    gap: 7px;
   }
 
-  #camera-adjustments-row #camera-zoom-wrap,
-  #camera-adjustments-row #camera-exposure-wrap {
-    width: calc(50% - 3.5px) !important;
-    max-width: none !important;
-    min-height: 44px !important;
-    padding: 5px 7px !important;
-    gap: 5px !important;
+  #camera-zoom-wrap,
+  #camera-exposure-wrap {
+    width: calc(50% - 3.5px);
+    max-width: none;
+    min-height: 44px;
+    padding: 5px 7px;
+    gap: 5px;
   }
 
-  #camera-adjustments-row #camera-zoom-slider,
-  #camera-adjustments-row #camera-exposure-slider {
-    width: auto !important;
-    min-width: 82px !important;
-    max-width: none !important;
+  #camera-zoom-slider,
+  #camera-exposure-slider {
+    width: auto;
+    min-width: 82px;
+    max-width: none;
   }
 
   #camera-zoom-wrap.software::before {
     display: none;
   }
+
+  #camera-controls {
+    gap: clamp(30px, 12vw, 48px);
+    margin-top: 18px;
+  }
 }
 
 @media (max-width: 365px) {
   #camera-adjustments-row {
-    gap: 5px !important;
+    gap: 5px;
   }
 
-  #camera-adjustments-row #camera-zoom-wrap,
-  #camera-adjustments-row #camera-exposure-wrap {
-    padding-inline: 5px !important;
-    gap: 3px !important;
+  #camera-zoom-wrap,
+  #camera-exposure-wrap {
+    padding-inline: 5px;
+    gap: 3px;
   }
 
-  #camera-adjustments-row #camera-zoom-slider,
-  #camera-adjustments-row #camera-exposure-slider {
-    min-width: 68px !important;
+  #camera-zoom-slider,
+  #camera-exposure-slider {
+    min-width: 68px;
   }
 }
+

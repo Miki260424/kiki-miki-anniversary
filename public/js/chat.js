@@ -91,17 +91,10 @@ function initChat(WHO) {
 
   // Cache MediaQueryList objects once. Their .matches values update
   // automatically when the viewport or active input devices change.
-  const MOBILE_UI_QUERY = window.matchMedia(
-    "(hover: none) and (pointer: coarse) and (max-width: 768px)",
-  );
   const TOUCH_ONLY_UI_QUERY = window.matchMedia(
     "(hover: none) and (pointer: coarse) and (max-width: 1024px)",
   );
   const FINE_POINTER_QUERY = window.matchMedia("(any-pointer: fine)");
-
-  function isMobileUI() {
-    return MOBILE_UI_QUERY.matches && !FINE_POINTER_QUERY.matches;
-  }
 
   function isTouchOnlyUI() {
     return TOUCH_ONLY_UI_QUERY.matches && !FINE_POINTER_QUERY.matches;
@@ -2595,7 +2588,6 @@ function initChat(WHO) {
               openImageActionMenu(
                 imgUrl,
                 gridImg,
-                gridImg,
                 isSent,
                 images,
               );
@@ -3137,6 +3129,8 @@ function initChat(WHO) {
     bubble.addEventListener(
       "touchstart",
       (e) => {
+        if (!isTouchOnlyUI()) return;
+
         // On mobile, holding any part of the message — text or image —
         // should open the reaction capsule. Image holds may also open the
         // image-actions menu from the image-specific handler.
@@ -3161,6 +3155,8 @@ function initChat(WHO) {
     bubble.addEventListener(
       "touchmove",
       (e) => {
+        if (!isTouchOnlyUI()) return;
+
         const t = e.touches[0];
         const dx = Math.abs(t.clientX - _startX);
         const dy = Math.abs(t.clientY - _startY);
@@ -3176,6 +3172,7 @@ function initChat(WHO) {
     bubble.addEventListener(
       "touchcancel",
       () => {
+        if (!isTouchOnlyUI()) return;
         clearTimeout(_lp);
         _lp = null;
         _lpFired = false;
@@ -3186,6 +3183,7 @@ function initChat(WHO) {
     bubble.addEventListener(
       "touchend",
       (e) => {
+        if (!isTouchOnlyUI()) return;
         clearTimeout(_lp);
         _lp = null;
 
@@ -3279,7 +3277,7 @@ function initChat(WHO) {
   function attachHoverActions(row, msg, msgId) {
     // Mobile uses hold-on-image for image actions. The three-dot
     // message menu is reserved for larger/fine-pointer devices.
-    if (isMobileUI()) return;
+    if (isTouchOnlyUI()) return;
 
     const isSent = row.classList.contains("sent");
 
@@ -3705,7 +3703,6 @@ function initChat(WHO) {
 
         if (change.type === "added") {
           noteIncomingMessage(msg);
-          upsertSharedMediaItems(msgId, msg);
           renderMessage(msg, msgId, true);
 
           if (msg.sender !== WHO) {
@@ -3912,7 +3909,6 @@ function initChat(WHO) {
 
   function openImageActionMenu(
     imgUrl,
-    imgEl,
     anchorEl,
     isSentMsg,
     allImageUrls = [imgUrl],
@@ -3997,7 +3993,7 @@ function initChat(WHO) {
       label: isBlurred ? "Unblur" : "Blur",
       fn: async () => {
         try {
-          await toggleImageBlur(imgUrl, imgEl);
+          await toggleImageBlur(imgUrl);
         } catch (_) {
           showMiniNotif("Could not save blur setting");
         } finally {
@@ -5058,21 +5054,104 @@ function initChat(WHO) {
   }
 
   function getVideoFocusPoint(event) {
-    const rect = cameraFeed.getBoundingClientRect();
-    const localX = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
-    const localY = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
+    const videoRect = cameraFeed.getBoundingClientRect();
+    const stageRect = cameraStage?.getBoundingClientRect() || videoRect;
+    const videoWidth = Number(cameraFeed.videoWidth) || 0;
+    const videoHeight = Number(cameraFeed.videoHeight) || 0;
 
-    // The preview now shows the complete frame without object-fit cropping,
-    // so the tapped point maps directly to normalized camera coordinates.
-    let x = rect.width > 0 ? localX / rect.width : 0.5;
-    const y = rect.height > 0 ? localY / rect.height : 0.5;
+    if (
+      videoRect.width <= 0 ||
+      videoRect.height <= 0 ||
+      videoWidth <= 0 ||
+      videoHeight <= 0
+    ) {
+      return null;
+    }
+
+    const localX = event.clientX - videoRect.left;
+    const localY = event.clientY - videoRect.top;
+
+    // The pointer listener is attached to the stage, so first reject taps
+    // outside the video element itself.
+    if (
+      localX < 0 ||
+      localY < 0 ||
+      localX > videoRect.width ||
+      localY > videoRect.height
+    ) {
+      return null;
+    }
+
+    const objectFit = getComputedStyle(cameraFeed).objectFit || "fill";
+    const videoAspect = videoWidth / videoHeight;
+    const boxAspect = videoRect.width / videoRect.height;
+
+    let renderedWidth = videoRect.width;
+    let renderedHeight = videoRect.height;
+
+    if (objectFit === "contain" || objectFit === "scale-down") {
+      if (videoAspect > boxAspect) {
+        renderedWidth = videoRect.width;
+        renderedHeight = renderedWidth / videoAspect;
+      } else {
+        renderedHeight = videoRect.height;
+        renderedWidth = renderedHeight * videoAspect;
+      }
+    } else if (objectFit === "cover") {
+      if (videoAspect > boxAspect) {
+        renderedHeight = videoRect.height;
+        renderedWidth = renderedHeight * videoAspect;
+      } else {
+        renderedWidth = videoRect.width;
+        renderedHeight = renderedWidth / videoAspect;
+      }
+    } else if (objectFit === "none") {
+      renderedWidth = videoWidth;
+      renderedHeight = videoHeight;
+    }
+
+    // Camera CSS uses centered object-position. Positive offsets represent
+    // letterbox bars; negative offsets represent centered cover-cropping.
+    const renderedLeft = (videoRect.width - renderedWidth) / 2;
+    const renderedTop = (videoRect.height - renderedHeight) / 2;
+
+    if (
+      objectFit === "contain" ||
+      objectFit === "scale-down" ||
+      objectFit === "none"
+    ) {
+      const tappedLetterbox =
+        localX < renderedLeft ||
+        localX > renderedLeft + renderedWidth ||
+        localY < renderedTop ||
+        localY > renderedTop + renderedHeight;
+
+      // Do not send a fake focus coordinate for taps in black bars.
+      if (tappedLetterbox) return null;
+    }
+
+    let x = (localX - renderedLeft) / renderedWidth;
+    let y = (localY - renderedTop) / renderedHeight;
+
+    x = Math.max(0, Math.min(1, x));
+    y = Math.max(0, Math.min(1, y));
+
     if (facingMode === "user") x = 1 - x;
 
+    const displayX =
+      stageRect.width > 0
+        ? ((event.clientX - stageRect.left) / stageRect.width) * 100
+        : 50;
+    const displayY =
+      stageRect.height > 0
+        ? ((event.clientY - stageRect.top) / stageRect.height) * 100
+        : 50;
+
     return {
-      x: Math.max(0, Math.min(1, x)),
-      y: Math.max(0, Math.min(1, y)),
-      displayX: Math.max(0, Math.min(100, (localX / rect.width) * 100)),
-      displayY: Math.max(0, Math.min(100, (localY / rect.height) * 100)),
+      x,
+      y,
+      displayX: Math.max(0, Math.min(100, displayX)),
+      displayY: Math.max(0, Math.min(100, displayY)),
     };
   }
 
@@ -5093,6 +5172,8 @@ function initChat(WHO) {
     if (!track || track.readyState !== "live") return;
 
     const point = getVideoFocusPoint(event);
+    if (!point) return;
+
     cameraFocusIndicator.style.left = `${point.displayX}%`;
     cameraFocusIndicator.style.top = `${point.displayY}%`;
     cameraFocusIndicator.classList.remove(
