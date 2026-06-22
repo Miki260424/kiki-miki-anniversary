@@ -2771,7 +2771,7 @@ html.camera-gesture-lock #camera-stage {
   object-position: center;
   border-radius: 20px;
   box-shadow: 0 0 40px rgba(232, 99, 138, 0.3);
-  transform: scale(var(--camera-software-zoom));
+  transform: none;
   transform-origin: center center;
   transition: none;
 }
@@ -3326,9 +3326,7 @@ html.camera-gesture-lock #camera-stage {
    ═══════════════════════════════════════════════════════════════ */
 
 #camera-feed.front-camera-corrected {
-  transform:
-    scaleX(-1)
-    scale(var(--camera-software-zoom)) !important;
+  transform: scaleX(-1) !important;
   transform-origin: center center !important;
 }
 
@@ -3342,4 +3340,62 @@ html.camera-gesture-lock #camera-stage {
 #camera-feed.front-camera-corrected {
   transition: none !important;
   animation: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CENTERED RATIO FRAMES AND SHARPER SOFTWARE ZOOM
+   Keeps selected frames centered and avoids transform-scaled preview blur.
+   ═══════════════════════════════════════════════════════════════ */
+
+#camera-live-wrap {
+  align-items: center !important;
+}
+
+#camera-stage,
+#camera-stage.camera-ratio-active {
+  align-self: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  left: auto !important;
+  right: auto !important;
+  place-self: center !important;
+}
+
+#camera-stage.camera-ratio-active {
+  display: grid !important;
+  place-items: center !important;
+}
+
+#camera-stage.camera-ratio-active #camera-feed {
+  object-position: 50% 50% !important;
+}
+
+/* Digital zoom uses a larger video element clipped by the unchanged stage,
+   rather than scale() on an already composited preview. */
+#camera-stage.camera-software-zoom-active {
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+}
+
+#camera-stage.camera-software-zoom-active #camera-feed {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: calc(100% * var(--camera-software-zoom)) !important;
+  height: calc(100% * var(--camera-software-zoom)) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: 50% 50% !important;
+  transform: translate(-50%, -50%) !important;
+  transform-origin: center center !important;
+  will-change: width, height;
+}
+
+#camera-stage.camera-software-zoom-active
+  #camera-feed.front-camera-corrected {
+  transform: translate(-50%, -50%) scaleX(-1) !important;
 }

@@ -480,6 +480,7 @@ function initChat(WHO) {
   let cameraZoomQueuedValue = null;
   let cameraZoomApplyInFlight = false;
   let cameraZoomUsesSoftware = false;
+  let cameraSoftwareZoomBaseSize = null;
   let cameraTorchBtn = null;
   let cameraTorchOn = false;
   let cameraTorchSupported = false;
@@ -4564,7 +4565,15 @@ function initChat(WHO) {
       )
         ? requestedRatio
         : "default";
+
+      clearSoftwareCameraZoomLayout({ restoreRatio: false });
       applyCameraRatioLayout();
+
+      if (cameraZoomUsesSoftware && cameraZoomCurrent > 1) {
+        requestAnimationFrame(() => {
+          applySoftwareCameraZoom(cameraZoomCurrent);
+        });
+      }
     }, { signal: cameraUiSignal });
 
     cameraExposureSlider.addEventListener(
@@ -4742,9 +4751,61 @@ function initChat(WHO) {
     cameraZoomValue.textContent = formatCameraZoom(clamped);
   }
 
+  function clearSoftwareCameraZoomLayout({ restoreRatio = true } = {}) {
+    cameraStage?.classList.remove("camera-software-zoom-active");
+    cameraFeed?.style.removeProperty("--camera-software-zoom");
+    cameraSoftwareZoomBaseSize = null;
+
+    if (restoreRatio) {
+      applyCameraRatioLayout();
+    }
+  }
+
   function applySoftwareCameraZoom(value) {
+    if (!cameraStage || !cameraFeed) return;
+
     const zoom = Math.max(1, Number(value) || 1);
-    cameraFeed?.style.setProperty("--camera-software-zoom", String(zoom));
+
+    if (zoom <= 1.001) {
+      clearSoftwareCameraZoomLayout();
+      return;
+    }
+
+    // Freeze the exact current frame dimensions once, then enlarge the video
+    // inside that unchanged frame. This avoids transform-scaling blur and
+    // keeps the crop centered.
+    if (!cameraSoftwareZoomBaseSize) {
+      const stageRect = cameraStage.getBoundingClientRect();
+      const feedRect = cameraFeed.getBoundingClientRect();
+
+      const baseWidth = Math.max(
+        1,
+        Math.round(stageRect.width || feedRect.width),
+      );
+      const baseHeight = Math.max(
+        1,
+        Math.round(stageRect.height || feedRect.height),
+      );
+
+      cameraSoftwareZoomBaseSize = {
+        width: baseWidth,
+        height: baseHeight,
+      };
+
+      cameraStage.style.setProperty(
+        "width",
+        `${baseWidth}px`,
+        "important",
+      );
+      cameraStage.style.setProperty(
+        "height",
+        `${baseHeight}px`,
+        "important",
+      );
+    }
+
+    cameraStage.classList.add("camera-software-zoom-active");
+    cameraFeed.style.setProperty("--camera-software-zoom", String(zoom));
   }
 
   function configureCameraZoom(track, capabilities) {
@@ -4759,7 +4820,7 @@ function initChat(WHO) {
     cameraZoomApplyInFlight = false;
     cameraZoomUsesSoftware = false;
     cameraZoomWrap?.classList.remove("software");
-    cameraFeed?.style.setProperty("--camera-software-zoom", "1");
+    clearSoftwareCameraZoomLayout({ restoreRatio: true });
 
     if (!hardwareSupported) {
       // Laptop webcams commonly do not expose hardware zoom. Keep the control
@@ -5038,19 +5099,32 @@ function initChat(WHO) {
     cameraGestureHadMultiplePointers = false;
   }
 
+  function centerCameraStage() {
+    if (!cameraStage || !cameraLiveWrap) return;
+
+    cameraLiveWrap.style.setProperty("align-items", "center", "important");
+    cameraStage.style.setProperty("align-self", "center", "important");
+    cameraStage.style.setProperty("margin-left", "auto", "important");
+    cameraStage.style.setProperty("margin-right", "auto", "important");
+    cameraStage.style.setProperty("left", "auto", "important");
+    cameraStage.style.setProperty("right", "auto", "important");
+  }
+
   function applyCameraRatioLayout() {
     if (!cameraStage) return;
 
     const selectedRatio = CAMERA_RATIOS[cameraRatioKey];
+    centerCameraStage();
 
     if (!selectedRatio) {
-      // Exact existing/default camera size — do not alter it.
       cameraStage.classList.remove("camera-ratio-active");
       cameraStage.style.removeProperty("width");
       cameraStage.style.removeProperty("height");
       cameraStage.style.removeProperty("--camera-selected-ratio");
       cameraFeed.style.removeProperty("width");
       cameraFeed.style.removeProperty("height");
+      cameraSoftwareZoomBaseSize = null;
+      centerCameraStage();
       return;
     }
 
@@ -5060,14 +5134,16 @@ function initChat(WHO) {
       String(selectedRatio),
     );
 
-    // Fit the selected ratio inside the same original 480px / 65vh limits.
-    // This changes only the chosen ratio; Default remains untouched.
     const viewportHeight =
       window.visualViewport?.height || window.innerHeight || 800;
-    const availableWidth = Math.min(
-      cameraLiveWrap?.clientWidth || window.innerWidth || 480,
-      480,
-    );
+
+    const liveWrapWidth =
+      cameraLiveWrap?.getBoundingClientRect().width ||
+      cameraLiveWrap?.clientWidth ||
+      window.innerWidth ||
+      480;
+
+    const availableWidth = Math.max(1, Math.min(liveWrapWidth, 480));
     const availableHeight = Math.max(120, viewportHeight * 0.65);
 
     let width = availableWidth;
@@ -5088,6 +5164,10 @@ function initChat(WHO) {
       `${Math.max(1, Math.round(height))}px`,
       "important",
     );
+
+    cameraSoftwareZoomBaseSize = null;
+    centerCameraStage();
+    requestAnimationFrame(centerCameraStage);
   }
 
   function syncCameraStageAspect() {
@@ -5123,7 +5203,7 @@ function initChat(WHO) {
     cameraZoomQueuedValue = null;
     cameraZoomUsesSoftware = false;
     cameraZoomCurrent = 1;
-    cameraFeed?.style.setProperty("--camera-software-zoom", "1");
+    clearSoftwareCameraZoomLayout({ restoreRatio: true });
     cameraZoomWrap?.classList.remove("supported", "software");
     cameraTorchSupported = false;
     cameraTorchOn = false;
@@ -5138,9 +5218,12 @@ function initChat(WHO) {
       requestedStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: facingMode },
-          width: { ideal: 1280 },
-          height: { ideal: 960 },
+          // Higher source resolution improves crop and digital-zoom
+          // detail while the displayed camera dimensions stay unchanged.
+          width: { ideal: 1920 },
+          height: { ideal: 1440 },
           aspectRatio: { ideal: 4 / 3 },
+          frameRate: { ideal: 30, max: 60 },
         },
         audio: false,
       });
@@ -5702,7 +5785,7 @@ function initChat(WHO) {
     cameraZoomQueuedValue = null;
     cameraZoomUsesSoftware = false;
     cameraZoomCurrent = 1;
-    cameraFeed?.style.setProperty("--camera-software-zoom", "1");
+    clearSoftwareCameraZoomLayout({ restoreRatio: true });
     cameraZoomWrap?.classList.remove("supported", "software");
     cameraTorchSupported = false;
     cameraTorchOn = false;
