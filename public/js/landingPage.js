@@ -14,33 +14,43 @@ const TimeTogether = {
   second: 30,
 };
 function countTime() {
+
+  const now = new Date();
+
   let time = {
-    year: new Date().getFullYear() - TimeTogether.year,
-    month: new Date().getMonth() + 1 - TimeTogether.month,
-    day: new Date().getDate() - TimeTogether.day,
-    hour: new Date().getHours() - TimeTogether.hour,
-    minute: new Date().getMinutes() - TimeTogether.minute,
-    second: new Date().getSeconds() - TimeTogether.second,
+    year: now.getFullYear() - TimeTogether.year,
+    month: now.getMonth() + 1 - TimeTogether.month,
+    day: now.getDate() - TimeTogether.day,
+    hour: now.getHours() - TimeTogether.hour,
+    minute: now.getMinutes() - TimeTogether.minute,
+    second: now.getSeconds() - TimeTogether.second,
   };
+
   if (time.second < 0) {
     time.minute--;
     time.second += 60;
   }
+
   if (time.minute < 0) {
     time.hour--;
     time.minute += 60;
   }
+
   if (time.hour < 0) {
     time.day--;
     time.hour += 24;
   }
+
   if (time.day < 0) {
     time.month--;
-    let borrowedMonth = time.month;
-    if (borrowedMonth < 0) {
-      borrowedMonth += 12;
+
+    let borrowedMonth = now.getMonth();
+    let borrowedYear = now.getFullYear();
+    if(borrowedMonth === 0){
+      borrowedMonth = 12;
+      borrowedYear--;
     }
-    borrowedMonth += 1;
+
 
     switch (borrowedMonth) {
       case 1:
@@ -60,8 +70,8 @@ function countTime() {
         break;
       case 2:
         if (
-          (time.year % 4 === 0 && time.year % 100 !== 0) ||
-          time.year % 400 === 0
+          (borrowedYear % 4 === 0 && borrowedYear % 100 !== 0) ||
+          borrowedYear % 400 === 0
         ) {
           time.day += 29;
         } else {
