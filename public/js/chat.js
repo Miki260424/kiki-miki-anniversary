@@ -5606,8 +5606,134 @@ function initChat(WHO) {
     captureCurrentFrame();
   }
 
+  async function captureTripCurrentFrame(video) {
+    const tripCamera =
+      window.KikiMikiTripCamera;
+
+    const tripCameraUI =
+      window.KikiMikiTripCameraUI;
+
+    const liveTrack =
+      cameraStream?.getVideoTracks()[0];
+
+    if (
+      cameraIsCapturing ||
+      !liveTrack ||
+      liveTrack.readyState !== "live" ||
+      !video.videoWidth ||
+      !video.videoHeight
+    ) {
+      return;
+    }
+
+    if (
+      !tripCamera?.canCaptureTripPhoto?.()
+    ) {
+      tripCameraUI?.showSaveMessage(
+        "Select a trip and city, or restore a storage connection.",
+      );
+
+      tripCameraUI?.setCaptureBusy(false);
+
+      return;
+    }
+
+    cameraIsCapturing = true;
+    snapBtn.disabled = true;
+
+    tripCameraUI?.setCaptureBusy(true);
+    tripCameraUI?.showCaptureFlash();
+
+    const captureId =
+      ++cameraCaptureRequestId;
+
+    const shouldMirrorCapturedFrame =
+      cameraFeed.classList.contains(
+        "front-camera-corrected",
+      );
+
+    try {
+      const blob =
+        await tripCamera.captureFullFrame(
+          video,
+          shouldMirrorCapturedFrame,
+        );
+
+      if (
+        captureId !== cameraCaptureRequestId ||
+        !cameraModal.classList.contains(
+          "open",
+        )
+      ) {
+        return;
+      }
+
+      /*
+       * Start the safe queue immediately while Trip mode is
+       * still active. The camera remains open and no preview
+       * screen is shown.
+       */
+      const savePromise =
+        tripCamera.enqueueCapturedBlob(blob);
+
+      cameraIsCapturing = false;
+      snapBtn.disabled = false;
+
+      tripCameraUI?.setCaptureBusy(false);
+
+      tripCameraUI?.showSaveMessage(
+        "Photo captured · saving safely…",
+      );
+
+      savePromise
+        .then(() => {
+          tripCameraUI?.showSaveMessage(
+            "Trip photo queued safely",
+          );
+        })
+        .catch((error) => {
+          console.error(
+            "Trip photo could not be queued:",
+            error,
+          );
+
+          tripCameraUI?.showSaveMessage(
+            error?.message ||
+              "Could not save the Trip photo",
+          );
+        });
+    } catch (error) {
+      if (
+        captureId === cameraCaptureRequestId
+      ) {
+        cameraIsCapturing = false;
+        snapBtn.disabled = false;
+
+        tripCameraUI?.setCaptureBusy(false);
+      }
+
+      console.error(
+        "Trip photo capture failed:",
+        error,
+      );
+
+      showMiniNotif(
+        error?.message ||
+          "Could not capture the Trip photo",
+      );
+    }
+  }
+
   function captureCurrentFrame() {
     const video = cameraFeed;
+
+    if (
+      window.KikiMikiTripCamera
+        ?.getMode?.() === "trip"
+    ) {
+      captureTripCurrentFrame(video);
+      return;
+    }
     const liveTrack = cameraStream?.getVideoTracks()[0];
     if (
       cameraIsCapturing ||
