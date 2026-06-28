@@ -1,51 +1,56 @@
 /* =========================================================
-   KIKI MIKI — TRIP CAMERA
-   All classes are prefixed to avoid changing Chat camera CSS.
+   KIKI MIKI — TRIP CAMERA 2.0
+   Clean camera overlay. No photo previews or middle-screen
+   connection banners are created by this stylesheet.
    ========================================================= */
 
 .trip-camera-ui-root {
   position: absolute;
   inset: 0;
-  z-index: 40;
+  z-index: 70;
   pointer-events: none;
   font-family: "Quicksand", sans-serif;
 }
 
-/* ---------- CHAT / TRIP MODE SWITCH ---------- */
+.trip-camera-ui-root[hidden] {
+  display: none !important;
+}
+
+/* ---------- CHAT / TRIP SWITCH ---------- */
 
 .trip-camera-mode-switch {
   position: absolute;
-  top: max(12px, env(safe-area-inset-top));
+  top: max(10px, env(safe-area-inset-top));
   left: 50%;
-  transform: translateX(-50%);
+  z-index: 4;
   display: flex;
-  align-items: center;
   gap: 4px;
+  transform: translateX(-50%);
   padding: 4px;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 18px;
-  background: rgba(18, 18, 24, 0.72);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgba(18, 18, 24, 0.74);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   pointer-events: auto;
 }
 
 .trip-camera-mode-button {
-  min-width: 72px;
+  min-width: 70px;
   border: 0;
   border-radius: 14px;
-  padding: 8px 15px;
+  padding: 8px 14px;
   background: transparent;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.72);
   font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 800;
   cursor: pointer;
   transition:
-    background 160ms ease,
-    color 160ms ease,
-    transform 160ms ease;
+    transform 150ms ease,
+    color 150ms ease,
+    background 150ms ease;
 }
 
 .trip-camera-mode-button:active {
@@ -53,209 +58,170 @@
 }
 
 .trip-camera-mode-button.active {
-  background: linear-gradient(135deg, #ee6f98, #cc3366);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(204, 51, 102, 0.38);
+  background: linear-gradient(135deg, #ef719a, #cc3366);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(204, 51, 102, 0.38);
 }
 
-/* ---------- SMALL TOP-CORNER BUTTONS ---------- */
+/* ---------- COMPACT TOP DESTINATION ---------- */
 
-.trip-camera-corner-actions {
+.trip-camera-selection-button {
   position: absolute;
-  top: max(13px, env(safe-area-inset-top));
-  right: 14px;
+  top: calc(max(10px, env(safe-area-inset-top)) + 52px);
+  left: 50%;
+  z-index: 4;
+  width: min(240px, calc(100% - 120px));
+  min-height: 42px;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  padding: 7px 11px 7px 13px;
+  background: rgba(18, 18, 24, 0.76);
+  color: #fff;
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.27);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  cursor: pointer;
   pointer-events: auto;
 }
 
+.trip-camera-selection-button[hidden] {
+  display: none;
+}
+
+.trip-camera-selection-button:active {
+  transform: translateX(-50%) scale(0.98);
+}
+
+.trip-camera-selection-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  line-height: 1.15;
+}
+
+.trip-camera-selection-text strong,
+.trip-camera-selection-text small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-camera-selection-text strong {
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.trip-camera-selection-text small {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.trip-camera-selection-chevron {
+  flex: 0 0 auto;
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.82;
+}
+
+/* ---------- CONNECTION + ACTIVITY BUTTONS ---------- */
+
+.trip-camera-corner-actions {
+  position: absolute;
+  top: calc(max(10px, env(safe-area-inset-top)) + 54px);
+  left: 12px;
+  right: 12px;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
 .trip-camera-corner-button {
-  width: 38px;
-  height: 38px;
+  position: relative;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.27);
   border-radius: 50%;
-  background: rgba(18, 18, 24, 0.72);
-  color: #ffffff;
+  background: rgba(18, 18, 24, 0.76);
+  color: #fff;
   font: inherit;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 900;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   cursor: pointer;
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  transition:
-    transform 150ms ease,
-    background 150ms ease;
-}
-
-.trip-camera-corner-button:active {
-  transform: scale(0.92);
+  pointer-events: auto;
+  transition: transform 150ms ease;
 }
 
 .trip-camera-corner-button[hidden] {
   display: none;
 }
 
-/* ---------- TRIP SELECTORS ---------- */
+.trip-camera-corner-button:active {
+  transform: scale(0.92);
+}
 
-.trip-camera-trip-controls {
+.trip-camera-device-icon {
+  transform: translateY(-1px);
+  font-size: 0.92rem;
+}
+
+.trip-camera-connection-dot {
   position: absolute;
-  top: calc(max(12px, env(safe-area-inset-top)) + 54px);
-  left: 12px;
-  right: 12px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
-  gap: 8px;
-  padding: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 17px;
-  background: rgba(18, 18, 24, 0.72);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  pointer-events: auto;
-}
-
-.trip-camera-trip-controls[hidden] {
-  display: none;
-}
-
-.trip-camera-field {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.trip-camera-field-label {
-  padding-left: 3px;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.trip-camera-select {
-  width: 100%;
-  min-width: 0;
-  height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 11px;
-  padding: 0 30px 0 10px;
-  background-color: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font: inherit;
-  font-size: 0.76rem;
-  font-weight: 650;
-  outline: none;
-}
-
-.trip-camera-select:focus {
-  border-color: rgba(255, 145, 181, 0.95);
-  box-shadow: 0 0 0 3px rgba(232, 99, 138, 0.18);
-}
-
-.trip-camera-select option {
-  background: #26212a;
-  color: #ffffff;
-}
-
-/* ---------- DESTINATION STATUS ---------- */
-
-.trip-camera-destination-status {
-  position: absolute;
-  left: 50%;
-  bottom: 100px;
-  transform: translateX(-50%);
-  max-width: calc(100% - 32px);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 12px;
-  border-radius: 16px;
-  background: rgba(18, 18, 24, 0.74);
-  color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-align: center;
-  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  pointer-events: none;
-}
-
-.trip-camera-destination-status[hidden] {
-  display: none;
-}
-
-.trip-camera-status-dot {
-  width: 8px;
-  height: 8px;
-  flex: 0 0 8px;
+  right: 0;
+  bottom: 1px;
+  width: 11px;
+  height: 11px;
+  border: 2px solid rgba(18, 18, 24, 0.95);
   border-radius: 50%;
-  background: #a5a5a5;
-  box-shadow: 0 0 0 3px rgba(165, 165, 165, 0.16);
-}
-
-.trip-camera-destination-status.laptop .trip-camera-status-dot {
-  background: #50d890;
-  box-shadow: 0 0 0 3px rgba(80, 216, 144, 0.18);
-}
-
-.trip-camera-destination-status.cloudinary .trip-camera-status-dot {
-  background: #ffc857;
-  box-shadow: 0 0 0 3px rgba(255, 200, 87, 0.18);
-}
-
-.trip-camera-destination-status.offline .trip-camera-status-dot {
   background: #ff5f6d;
-  box-shadow: 0 0 0 3px rgba(255, 95, 109, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 95, 109, 0.2);
 }
 
-/* ---------- DISABLED TRIP SHUTTER ---------- */
+.trip-camera-connection-button[data-connection="laptop"]
+  .trip-camera-connection-dot {
+  background: #50d890;
+  box-shadow: 0 0 0 2px rgba(80, 216, 144, 0.22);
+}
+
+.trip-camera-connection-button[data-connection="cloudinary"]
+  .trip-camera-connection-dot {
+  background: #ffc857;
+  box-shadow: 0 0 0 2px rgba(255, 200, 87, 0.22);
+}
+
+/* ---------- SHUTTER ---------- */
 
 #snap-btn.trip-camera-shutter-disabled {
-  opacity: 0.42;
+  opacity: 0.4;
   cursor: not-allowed;
-  filter: grayscale(0.75);
+  filter: grayscale(0.8);
   pointer-events: none;
 }
 
-.trip-camera-shutter-warning {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 145px;
-  padding: 9px 12px;
-  border: 1px solid rgba(255, 103, 117, 0.38);
-  border-radius: 14px;
-  background: rgba(92, 19, 31, 0.84);
-  color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1.35;
-  text-align: center;
-  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  pointer-events: none;
-}
-
-.trip-camera-shutter-warning[hidden] {
-  display: none;
-}
-
-/* ---------- CAPTURE FLASH ---------- */
+/* ---------- CAPTURE FEEDBACK ---------- */
 
 .trip-camera-capture-flash {
   position: absolute;
   inset: 0;
   z-index: 80;
-  background: #ffffff;
+  background: #fff;
   opacity: 0;
   pointer-events: none;
 }
@@ -268,33 +234,33 @@
   0% {
     opacity: 0;
   }
-
-  35% {
+  36% {
     opacity: 0.72;
   }
-
   100% {
     opacity: 0;
   }
 }
 
-/* ---------- SAVED / QUEUED MESSAGE ---------- */
-
 .trip-camera-save-message {
   position: absolute;
   left: 50%;
-  bottom: 150px;
+  bottom: max(128px, calc(env(safe-area-inset-bottom) + 112px));
   z-index: 90;
+  max-width: calc(100% - 36px);
   transform: translate(-50%, 8px);
-  max-width: calc(100% - 32px);
-  padding: 9px 15px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 18px;
-  background: rgba(18, 18, 24, 0.86);
-  color: #ffffff;
-  font-size: 0.76rem;
-  font-weight: 700;
+  background: rgba(18, 18, 24, 0.84);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
   text-align: center;
   opacity: 0;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   pointer-events: none;
   transition:
     opacity 180ms ease,
@@ -307,7 +273,7 @@
 }
 
 /* =========================================================
-   DETAILS / ACTIVITY WINDOW
+   PANELS
    ========================================================= */
 
 .trip-camera-overlay {
@@ -319,14 +285,14 @@
   justify-content: center;
   padding: max(18px, env(safe-area-inset-top)) 14px
     max(18px, env(safe-area-inset-bottom));
-  background: rgba(18, 11, 17, 0.58);
+  background: rgba(18, 11, 17, 0.6);
   opacity: 0;
   visibility: hidden;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
   transition:
     opacity 180ms ease,
     visibility 180ms ease;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
 }
 
 .trip-camera-overlay.visible {
@@ -340,12 +306,15 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(232, 99, 138, 0.2);
-  border-radius: 26px;
-  background: linear-gradient(145deg, #ffffff, #fff3f6);
-  box-shadow: 0 24px 70px rgba(82, 22, 47, 0.32);
-  transform: translateY(16px) scale(0.98);
-  transition: transform 190ms ease;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 25px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 210, 224, 0.75), transparent 34%),
+    linear-gradient(180deg, #fffafb, #fff3f7);
+  color: #45242f;
+  box-shadow: 0 24px 70px rgba(42, 16, 26, 0.34);
+  transform: translateY(12px) scale(0.985);
+  transition: transform 180ms ease;
 }
 
 .trip-camera-overlay.visible .trip-camera-panel {
@@ -354,11 +323,11 @@
 
 .trip-camera-panel-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 17px 18px;
-  border-bottom: 1px solid rgba(204, 51, 102, 0.12);
+  gap: 14px;
+  padding: 20px 20px 15px;
+  border-bottom: 1px solid rgba(204, 51, 102, 0.11);
 }
 
 .trip-camera-panel-heading {
@@ -367,184 +336,191 @@
 
 .trip-camera-panel-heading h2 {
   margin: 0;
-  color: #34252d;
+  color: #7d2948;
   font-size: 1.08rem;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .trip-camera-panel-heading p {
-  margin: 3px 0 0;
-  color: #8b737f;
-  font-size: 0.72rem;
-  line-height: 1.35;
+  margin: 5px 0 0;
+  color: #8d6673;
+  font-size: 0.73rem;
+  font-weight: 650;
+  line-height: 1.4;
 }
 
 .trip-camera-panel-close {
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
   border: 0;
   border-radius: 50%;
   background: rgba(204, 51, 102, 0.09);
-  color: #b92e5b;
+  color: #9d3158;
   font: inherit;
-  font-size: 1rem;
-  font-weight: 800;
+  font-weight: 900;
   cursor: pointer;
 }
 
 .trip-camera-panel-body {
   overflow-y: auto;
+  padding: 16px 20px 21px;
   overscroll-behavior: contain;
-  padding: 16px;
 }
 
-/* ---------- STATUS SUMMARY ---------- */
+/* ---------- CONNECTION PANEL ---------- */
 
 .trip-camera-main-status {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 12px;
   margin-bottom: 14px;
-  padding: 15px;
-  border: 1px solid rgba(204, 51, 102, 0.13);
-  border-radius: 19px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 6px 18px rgba(150, 55, 88, 0.08);
+  padding: 14px;
+  border: 1px solid rgba(255, 95, 109, 0.19);
+  border-radius: 18px;
+  background: rgba(255, 95, 109, 0.075);
 }
 
-.trip-camera-main-status-icon {
-  width: 45px;
-  height: 45px;
-  flex: 0 0 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 15px;
-  background: rgba(232, 99, 138, 0.12);
-  font-size: 1.35rem;
+.trip-camera-main-status.laptop {
+  border-color: rgba(40, 170, 105, 0.22);
+  background: rgba(80, 216, 144, 0.1);
+}
+
+.trip-camera-main-status.cloudinary {
+  border-color: rgba(212, 154, 34, 0.24);
+  background: rgba(255, 200, 87, 0.13);
+}
+
+.trip-camera-main-status-dot {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  border-radius: 50%;
+  background: #ff5f6d;
+  box-shadow: 0 0 0 5px rgba(255, 95, 109, 0.13);
+}
+
+.trip-camera-main-status.laptop .trip-camera-main-status-dot {
+  background: #35bd78;
+  box-shadow: 0 0 0 5px rgba(53, 189, 120, 0.13);
+}
+
+.trip-camera-main-status.cloudinary .trip-camera-main-status-dot {
+  background: #e6aa2f;
+  box-shadow: 0 0 0 5px rgba(230, 170, 47, 0.14);
 }
 
 .trip-camera-main-status-text {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .trip-camera-main-status-text strong {
-  display: block;
-  color: #34252d;
-  font-size: 0.9rem;
+  color: #5f273b;
+  font-size: 0.88rem;
+  font-weight: 900;
 }
 
 .trip-camera-main-status-text span {
-  display: block;
-  margin-top: 3px;
-  color: #8b737f;
-  font-size: 0.72rem;
-  line-height: 1.35;
+  color: #80606b;
+  font-size: 0.71rem;
+  font-weight: 650;
+  line-height: 1.4;
 }
-
-/* ---------- INFORMATION CARDS ---------- */
 
 .trip-camera-card-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 9px;
 }
 
 .trip-camera-info-card {
   min-width: 0;
-  padding: 13px;
-  border: 1px solid rgba(204, 51, 102, 0.12);
-  border-radius: 17px;
-  background: rgba(255, 255, 255, 0.82);
+  padding: 12px;
+  border: 1px solid rgba(204, 51, 102, 0.11);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 5px 15px rgba(113, 41, 67, 0.055);
+}
+
+.trip-camera-info-card-label,
+.trip-camera-info-card-value {
+  display: block;
 }
 
 .trip-camera-info-card-label {
-  color: #9a7a88;
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+  color: #a17b87;
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .trip-camera-info-card-value {
-  display: block;
-  margin-top: 5px;
-  color: #34252d;
-  font-size: 0.91rem;
-  font-weight: 800;
   overflow-wrap: anywhere;
+  color: #653047;
+  font-size: 0.75rem;
+  font-weight: 900;
+  line-height: 1.35;
 }
 
 .trip-camera-section-title {
-  margin: 20px 2px 9px;
-  color: #5d3f4c;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
+  margin: 18px 1px 9px;
+  color: #7e3651;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.045em;
   text-transform: uppercase;
 }
 
-/* ---------- ACTIVITY COUNTERS ---------- */
-
-.trip-camera-counter-list {
-  display: grid;
-  gap: 8px;
-}
-
-.trip-camera-counter-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 11px 13px;
-  border: 1px solid rgba(204, 51, 102, 0.1);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.trip-camera-counter-label {
-  color: #6f5360;
-  font-size: 0.77rem;
-  font-weight: 700;
-}
-
-.trip-camera-counter-value {
-  min-width: 34px;
-  padding: 4px 9px;
-  border-radius: 12px;
-  background: rgba(232, 99, 138, 0.11);
-  color: #b92e5b;
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-align: center;
-}
-
-/* ---------- TRIP MANAGEMENT ---------- */
+/* ---------- FORMS ---------- */
 
 .trip-camera-form {
-  display: grid;
-  gap: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trip-camera-dialog-label {
+  margin: 1px 2px -4px;
+  color: #86616e;
+  font-size: 0.68rem;
+  font-weight: 850;
 }
 
 .trip-camera-input,
 .trip-camera-dialog-select {
   width: 100%;
   min-height: 44px;
-  border: 1.5px solid rgba(204, 51, 102, 0.2);
+  box-sizing: border-box;
+  border: 1px solid rgba(204, 51, 102, 0.18);
   border-radius: 14px;
-  padding: 10px 12px;
-  background: #ffffff;
-  color: #34252d;
+  padding: 0 13px;
+  background: rgba(255, 255, 255, 0.84);
+  color: #56283a;
   font: inherit;
-  font-size: 0.84rem;
+  font-size: 0.79rem;
+  font-weight: 700;
   outline: none;
 }
 
 .trip-camera-input:focus,
 .trip-camera-dialog-select:focus {
-  border-color: #e8638a;
-  box-shadow: 0 0 0 3px rgba(232, 99, 138, 0.13);
+  border-color: rgba(204, 51, 102, 0.58);
+  box-shadow: 0 0 0 3px rgba(204, 51, 102, 0.1);
+}
+
+.trip-camera-dialog-select:disabled {
+  opacity: 0.58;
+}
+
+.trip-camera-button-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
 }
 
 .trip-camera-primary-button,
@@ -554,28 +530,28 @@
   border-radius: 14px;
   padding: 10px 14px;
   font: inherit;
-  font-size: 0.8rem;
-  font-weight: 800;
+  font-size: 0.76rem;
+  font-weight: 900;
   cursor: pointer;
 }
 
 .trip-camera-primary-button {
   border: 0;
-  background: linear-gradient(135deg, #ee6f98, #cc3366);
-  color: #ffffff;
-  box-shadow: 0 6px 16px rgba(204, 51, 102, 0.24);
+  background: linear-gradient(135deg, #ef719a, #cc3366);
+  color: #fff;
+  box-shadow: 0 7px 17px rgba(204, 51, 102, 0.22);
 }
 
 .trip-camera-secondary-button {
-  border: 1px solid rgba(204, 51, 102, 0.18);
-  background: #ffffff;
-  color: #b92e5b;
+  border: 1px solid rgba(204, 51, 102, 0.19);
+  background: rgba(255, 255, 255, 0.8);
+  color: #8a3152;
 }
 
 .trip-camera-danger-button {
-  border: 1px solid rgba(210, 60, 79, 0.2);
-  background: rgba(210, 60, 79, 0.08);
-  color: #c6344d;
+  border: 1px solid rgba(191, 62, 78, 0.22);
+  background: rgba(255, 95, 109, 0.1);
+  color: #a72d45;
 }
 
 .trip-camera-primary-button:disabled,
@@ -585,88 +561,95 @@
   cursor: not-allowed;
 }
 
-.trip-camera-button-row {
+.trip-camera-empty-message {
+  padding: 10px 12px;
+  border-radius: 13px;
+  background: rgba(204, 51, 102, 0.055);
+  color: #8b6874;
+  font-size: 0.71rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* ---------- ACTIVITY ---------- */
+
+.trip-camera-counter-list {
   display: flex;
-  gap: 9px;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.trip-camera-button-row > button {
-  flex: 1;
-}
-
-/* ---------- EMPTY / ERROR MESSAGES ---------- */
-
-.trip-camera-empty-message,
-.trip-camera-error-message {
-  padding: 14px;
+.trip-camera-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid rgba(204, 51, 102, 0.1);
   border-radius: 14px;
-  font-size: 0.76rem;
-  line-height: 1.45;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.trip-camera-counter-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trip-camera-counter-label {
+  color: #6b354a;
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.trip-camera-counter-hint {
+  color: #9a7783;
+  font-size: 0.61rem;
+  font-weight: 650;
+}
+
+.trip-camera-counter-value {
+  min-width: 34px;
+  padding: 5px 8px;
+  border-radius: 12px;
+  background: rgba(204, 51, 102, 0.09);
+  color: #a12e58;
+  font-size: 0.82rem;
+  font-weight: 900;
   text-align: center;
 }
 
-.trip-camera-empty-message {
-  background: rgba(232, 99, 138, 0.08);
-  color: #765863;
-}
-
-.trip-camera-error-message {
-  border: 1px solid rgba(210, 60, 79, 0.16);
-  background: rgba(210, 60, 79, 0.08);
-  color: #bd3149;
-}
-
-/* ---------- MOBILE ---------- */
-
-@media (max-width: 560px) {
-  .trip-camera-mode-switch {
-    left: 12px;
-    transform: none;
+@media (max-width: 420px) {
+  .trip-camera-selection-button {
+    width: calc(100% - 126px);
   }
 
-  .trip-camera-mode-button {
-    min-width: 62px;
-    padding: 7px 11px;
-    font-size: 0.75rem;
-  }
-
-  .trip-camera-corner-actions {
-    right: 10px;
-  }
-
-  .trip-camera-corner-button {
-    width: 36px;
-    height: 36px;
-  }
-
-  .trip-camera-trip-controls {
-    top: calc(max(12px, env(safe-area-inset-top)) + 51px);
-    grid-template-columns: 1fr;
-    gap: 7px;
-  }
-
-  .trip-camera-panel {
-    width: 100%;
-    max-height: 91vh;
-    border-radius: 24px 24px 18px 18px;
-  }
-
-  .trip-camera-card-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 380px) {
-  .trip-camera-mode-button {
-    min-width: 55px;
-    padding-inline: 9px;
-  }
-
-  .trip-camera-card-grid {
-    grid-template-columns: 1fr;
-  }
-
+  .trip-camera-card-grid,
   .trip-camera-button-row {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+
+  .trip-camera-panel-header {
+    padding: 18px 17px 13px;
+  }
+
+  .trip-camera-panel-body {
+    padding: 14px 17px 18px;
+  }
+}
+
+@media (max-height: 620px) {
+  .trip-camera-mode-switch {
+    top: 7px;
+  }
+
+  .trip-camera-selection-button,
+  .trip-camera-corner-actions {
+    top: 54px;
+  }
+
+  .trip-camera-save-message {
+    bottom: 104px;
   }
 }

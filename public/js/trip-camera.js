@@ -16,6 +16,8 @@
 
     fallbackCollection: CONFIG.fallbackCollection || "tripFallbacks",
 
+    activityCollection: CONFIG.activityCollection || "tripPhotoActivity",
+
     receiverCollection:
       CONFIG.receiverCollection ||
       CONFIG.receiverFirestoreCollection ||
@@ -52,6 +54,7 @@
 
     trips: [],
     selectedTripId: null,
+    pendingTripWrites: new Map(),
 
     receiverUrl: null,
     receiverPublishedAt: null,
@@ -63,15 +66,16 @@
     cloudinaryAvailable: false,
 
     processing: false,
+    localUploading: 0,
+    localQueueCount: 0,
+    sessionTaken: 0,
 
     unsubscribeTrips: null,
     unsubscribeReceiver: null,
+    unsubscribeActivity: null,
+    unsubscribeFallback: null,
 
-    listeners: new Set(),
-
-    lastLocation: null,
-
-    counters: {
+    activityCounts: {
       taken: 0,
       savedOnLaptop: 0,
       cloudinaryWaiting: 0,
@@ -79,6 +83,14 @@
       waitingToRetry: 0,
       failed: 0,
     },
+
+    fallbackCounts: {
+      cloudinaryWaiting: 0,
+    },
+
+    listeners: new Set(),
+
+    lastLocation: null,
   };
 
   function cleanText(value, maxLength = 100) {
@@ -223,20 +235,41 @@
     return Boolean(getCloudinaryConfig() && navigator.onLine);
   }
 
-function canCaptureTripPhoto() {
-  const selectedTrip = getSelectedTrip();
+  function canCaptureTripPhoto() {
+    const selectedTrip = getSelectedTrip();
 
-  return Boolean(
-    state.mode === "trip" &&
-    selectedTrip &&
-    selectedTrip.status === "active" &&
-    getSelectedCity() &&
-    (
-      state.laptopOnline ||
-      state.cloudinaryAvailable
-    ),
-  );
-}
+    return Boolean(
+      state.mode === "trip" &&
+      selectedTrip &&
+      selectedTrip.status === "active" &&
+      getSelectedCity() &&
+      (state.laptopOnline || state.cloudinaryAvailable),
+    );
+  }
+
+  function deriveCounters() {
+    return {
+      taken: Math.max(
+        Number(state.activityCounts.taken || 0),
+        Number(state.sessionTaken || 0),
+      ),
+      savedOnLaptop: Number(state.activityCounts.savedOnLaptop || 0),
+      cloudinaryWaiting: Math.max(
+        Number(state.activityCounts.cloudinaryWaiting || 0),
+        Number(state.fallbackCounts.cloudinaryWaiting || 0),
+      ),
+      uploading: Math.max(
+        Number(state.activityCounts.uploading || 0),
+        Number(state.localUploading || 0),
+      ),
+      waitingToRetry: Math.max(
+        Number(state.activityCounts.waitingToRetry || 0),
+        Number(state.localQueueCount || 0),
+      ),
+      failed: Number(state.activityCounts.failed || 0),
+    };
+  }
+
   function getState() {
     return {
       ready: state.ready,
@@ -269,9 +302,7 @@ function canCaptureTripPhoto() {
 
       canCaptureTripPhoto: canCaptureTripPhoto(),
 
-      counters: {
-        ...state.counters,
-      },
+      counters: deriveCounters(),
     };
   }
 
@@ -368,9 +399,15 @@ function canCaptureTripPhoto() {
       throw new Error("The selected trip does not exist.");
     }
 
+    const changed = state.selectedTripId !== trip.id;
     state.selectedTripId = trip.id;
 
     storageSet(tripKey(), trip.id);
+
+    if (changed) {
+      state.sessionTaken = 0;
+      syncTripObservers();
+    }
 
     notify();
 
@@ -405,10 +442,7 @@ function canCaptureTripPhoto() {
     requireReady();
 
     const name = createFullTripName(baseName);
-
-    const ref = db
-      .collection(SETTINGS.tripsCollection)
-      .doc();
+    const ref = db.collection(SETTINGS.tripsCollection).doc();
 
     const optimisticTrip = {
       id: ref.id,
@@ -422,70 +456,49 @@ function canCaptureTripPhoto() {
       finishedAt: null,
     };
 
-    /*
-     * Queue the Firestore write, but do not make the
-     * phone wait for the server before showing the trip.
-     */
+    state.trips = [
+      optimisticTrip,
+      ...state.trips.filter((trip) => trip.id !== ref.id),
+    ];
+    state.selectedTripId = ref.id;
+    state.sessionTaken = 0;
+    storageSet(tripKey(), ref.id);
+    syncTripObservers();
+    notify();
+
     const savePromise = ref.set({
       name,
-
-      createdAt:
-        firebase.firestore.FieldValue
-          .serverTimestamp(),
-
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       createdBy: state.who,
-
-      updatedAt:
-        firebase.firestore.FieldValue
-          .serverTimestamp(),
-
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       status: "active",
       cities: [],
       finishedAt: null,
     });
 
-    const existingIndex =
-      state.trips.findIndex(
-        (trip) => trip.id === ref.id,
-      );
+    state.pendingTripWrites.set(ref.id, savePromise);
 
-    if (existingIndex >= 0) {
-      state.trips[existingIndex] =
-        optimisticTrip;
-    } else {
-      state.trips = [
-        optimisticTrip,
-        ...state.trips,
-      ];
-    }
+    savePromise
+      .catch((error) => {
+        console.error("Trip could not be saved:", error);
+        state.trips = state.trips.filter((trip) => trip.id !== ref.id);
 
-    state.selectedTripId = ref.id;
+        if (state.selectedTripId === ref.id) {
+          state.selectedTripId = null;
+          storageSet(tripKey(), null);
+          syncTripObservers();
+        }
 
-    storageSet(tripKey(), ref.id);
-
-    notify();
-
-    savePromise.catch((error) => {
-      console.error(
-        "Trip could not be saved:",
-        error,
-      );
-
-      state.trips = state.trips.filter(
-        (trip) => trip.id !== ref.id,
-      );
-
-      if (state.selectedTripId === ref.id) {
-        state.selectedTripId = null;
-        storageSet(tripKey(), null);
-      }
-
-      notify();
-
-      window.alert(
-        "The trip could not be saved. Please check your internet connection and try again.",
-      );
-    });
+        notify();
+        window.alert(
+          "The trip could not be saved. Check the internet connection and try again.",
+        );
+      })
+      .finally(() => {
+        if (state.pendingTripWrites.get(ref.id) === savePromise) {
+          state.pendingTripWrites.delete(ref.id);
+        }
+      });
 
     return optimisticTrip;
   }
@@ -493,99 +506,57 @@ function canCaptureTripPhoto() {
   async function addCity(tripId, cityName) {
     requireReady();
 
-    const tripIndex =
-      state.trips.findIndex(
-        (trip) => trip.id === tripId,
-      );
+    const tripIndex = state.trips.findIndex((trip) => trip.id === tripId);
 
-    if (tripIndex === -1) {
-      throw new Error(
-        "The selected trip does not exist.",
-      );
+    if (tripIndex < 0) {
+      throw new Error("The selected trip does not exist.");
     }
 
-    const city = cleanText(
-      cityName,
-      60,
-    );
+    const city = cleanText(cityName, 60);
 
     if (city.length < 2) {
-      throw new Error(
-        "Please enter a city name.",
-      );
+      throw new Error("Please enter a city name.");
     }
 
     const trip = state.trips[tripIndex];
-
     const existing = trip.cities.find(
-      (savedCity) =>
-        savedCity.toLocaleLowerCase() ===
-        city.toLocaleLowerCase(),
+      (item) => item.toLocaleLowerCase() === city.toLocaleLowerCase(),
     );
 
     if (existing) {
-      storageSet(
-        cityKey(tripId),
-        existing,
-      );
-
+      storageSet(cityKey(tripId), existing);
       notify();
-
       return existing;
     }
 
-    const previousCities = [
-      ...trip.cities,
-    ];
-
-    /*
-     * Queue the Firestore update first, then immediately
-     * add and select the city on the phone.
-     */
-    const savePromise = db
-      .collection(SETTINGS.tripsCollection)
-      .doc(tripId)
-      .set(
-        {
-          cities:
-            firebase.firestore.FieldValue
-              .arrayUnion(city),
-
-          updatedAt:
-            firebase.firestore.FieldValue
-              .serverTimestamp(),
-        },
-        {
-          merge: true,
-        },
-      );
-
+    const previousCities = [...trip.cities];
     state.trips[tripIndex] = {
       ...trip,
-      cities: [
-        ...trip.cities,
-        city,
-      ],
+      cities: [...trip.cities, city],
     };
-
-    storageSet(
-      cityKey(tripId),
-      city,
-    );
-
+    storageSet(cityKey(tripId), city);
     notify();
 
-    savePromise.catch((error) => {
-      console.error(
-        "City could not be saved:",
-        error,
-      );
+    const pendingCreation = state.pendingTripWrites.get(tripId);
+    const savePromise = Promise.resolve(pendingCreation).then(() =>
+      db
+        .collection(SETTINGS.tripsCollection)
+        .doc(tripId)
+        .set(
+          {
+            cities: firebase.firestore.FieldValue.arrayUnion(city),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        ),
+    );
 
-      const currentIndex =
-        state.trips.findIndex(
-          (savedTrip) =>
-            savedTrip.id === tripId,
-        );
+    savePromise.catch((error) => {
+      console.error("City could not be saved:", error);
+
+      const currentIndex = state.trips.findIndex(
+        (savedTrip) => savedTrip.id === tripId,
+      );
 
       if (currentIndex >= 0) {
         state.trips[currentIndex] = {
@@ -594,31 +565,140 @@ function canCaptureTripPhoto() {
         };
       }
 
-      const rememberedCity =
-        storageGet(cityKey(tripId));
-
       if (
-        rememberedCity?.toLocaleLowerCase() ===
+        storageGet(cityKey(tripId))?.toLocaleLowerCase() ===
         city.toLocaleLowerCase()
       ) {
-        storageSet(
-          cityKey(tripId),
-          previousCities[0] || null,
-        );
+        storageSet(cityKey(tripId), previousCities[0] || null);
       }
 
       notify();
-
       window.alert(
-        "The city could not be saved. Please check your internet connection and try again.",
+        "The city could not be saved. Check the internet connection and try again.",
       );
     });
 
     return city;
   }
 
+  function emptyActivityCounts() {
+    return {
+      taken: 0,
+      savedOnLaptop: 0,
+      cloudinaryWaiting: 0,
+      uploading: 0,
+      waitingToRetry: 0,
+      failed: 0,
+    };
+  }
+
+  function countActivityDocuments(snapshot) {
+    const counts = emptyActivityCounts();
+
+    snapshot.docs.forEach((doc) => {
+      const status = String(doc.data()?.status || "");
+      counts.taken += 1;
+
+      if (status === "saved_on_laptop" || status === "completed") {
+        counts.savedOnLaptop += 1;
+      } else if (
+        status === "cloudinary_waiting" ||
+        status === "cloudinary_importing" ||
+        status === "saved_on_laptop_pending_cloudinary_delete"
+      ) {
+        counts.cloudinaryWaiting += 1;
+      } else if (status === "uploading") {
+        counts.uploading += 1;
+      } else if (
+        status === "queued_on_phone" ||
+        status === "waiting_to_retry"
+      ) {
+        counts.waitingToRetry += 1;
+      } else if (status === "failed") {
+        counts.failed += 1;
+      }
+    });
+
+    return counts;
+  }
+
+  function syncTripObservers() {
+    state.unsubscribeActivity?.();
+    state.unsubscribeFallback?.();
+    state.unsubscribeActivity = null;
+    state.unsubscribeFallback = null;
+    state.activityCounts = emptyActivityCounts();
+    state.fallbackCounts.cloudinaryWaiting = 0;
+
+    const tripId = state.selectedTripId;
+    if (!state.started || !tripId) {
+      notify();
+      return;
+    }
+
+    state.unsubscribeActivity = db
+      .collection(SETTINGS.activityCollection)
+      .where("tripId", "==", tripId)
+      .onSnapshot(
+        (snapshot) => {
+          state.activityCounts = countActivityDocuments(snapshot);
+          notify();
+        },
+        (error) => {
+          console.warn("Trip activity could not be loaded:", error);
+        },
+      );
+
+    state.unsubscribeFallback = db
+      .collection(SETTINGS.fallbackCollection)
+      .where("tripId", "==", tripId)
+      .onSnapshot(
+        (snapshot) => {
+          state.fallbackCounts.cloudinaryWaiting = snapshot.docs.filter(
+            (doc) => {
+              const status = String(doc.data()?.status || "");
+              return [
+                "waiting_for_laptop",
+                "retry",
+                "cloudinary_importing",
+                "saved_on_laptop_pending_cloudinary_delete",
+              ].includes(status);
+            },
+          ).length;
+          notify();
+        },
+        (error) => {
+          console.warn(
+            "Cloudinary fallback activity could not be loaded:",
+            error,
+          );
+        },
+      );
+  }
+
+  function activityRef(fileId) {
+    return db.collection(SETTINGS.activityCollection).doc(fileId);
+  }
+
+  async function updateActivity(fileId, values) {
+    try {
+      await activityRef(fileId).set(
+        {
+          fileId,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          ...values,
+        },
+        { merge: true },
+      );
+    } catch (error) {
+      console.warn("Trip activity status could not be saved:", error);
+    }
+  }
+
   async function finishTrip(tripId) {
     requireReady();
+
+    await Promise.resolve(state.pendingTripWrites.get(tripId));
 
     await db.collection(SETTINGS.tripsCollection).doc(tripId).update({
       status: "finished",
@@ -631,6 +711,8 @@ function canCaptureTripPhoto() {
 
   async function reopenTrip(tripId) {
     requireReady();
+
+    await Promise.resolve(state.pendingTripWrites.get(tripId));
 
     await db.collection(SETTINGS.tripsCollection).doc(tripId).update({
       status: "active",
@@ -1110,62 +1192,38 @@ function canCaptureTripPhoto() {
       throw new Error("No safe storage destination is available.");
     }
 
-    state.counters.taken += 1;
-
-    notify();
+    const trip = getSelectedTrip();
+    const city = getSelectedCity();
+    const fileId = makeId("photo");
 
     try {
-      const trip = getSelectedTrip();
-
-      const city = getSelectedCity();
-
       const compressed = await compressTripPhotoWithoutCropping(sourceBlob);
-
       const captured = options.capturedAt || new Date();
-
       const location = options.location || (await getLocation());
-
-      const fileId = makeId("photo");
 
       const metadata = {
         tripId: trip.id,
-
         tripName: trip.name,
-
         fileId,
-
         city,
-
         captureDate: localDate(captured),
-
         captureTime: localTime(captured),
-
         capturedAt: captured.toISOString(),
-
         capturedBy: state.who,
-
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown",
-
         latitude: location?.latitude ?? null,
-
         longitude: location?.longitude ?? null,
-
         gpsAccuracyMeters: location?.gpsAccuracyMeters ?? null,
-
         width: compressed.width,
-
         height: compressed.height,
-
         device: navigator.userAgent.slice(0, 250),
       };
 
       const file = new File(
         [compressed.blob],
-
-        `${fileId}.` + `${compressed.extension}`,
+        `${fileId}.${compressed.extension}`,
         {
           type: compressed.type,
-
           lastModified: Date.now(),
         },
       );
@@ -1174,33 +1232,47 @@ function canCaptureTripPhoto() {
         fileId,
         file,
         metadata,
-
         status: "queued",
-
         attempts: 0,
-
         createdAt: Date.now(),
+        lastError: null,
+      });
 
+      state.sessionTaken += 1;
+
+      updateActivity(fileId, {
+        tripId: trip.id,
+        tripName: trip.name,
+        city,
+        capturedBy: state.who,
+        capturedAt: firebase.firestore.Timestamp.fromDate(captured),
+        status: "queued_on_phone",
+        bytes: file.size,
+        width: compressed.width,
+        height: compressed.height,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         lastError: null,
       });
 
       await updateQueueCount();
-
       processPendingQueue();
 
       return {
         fileId,
-
         bytes: file.size,
-
         width: compressed.width,
-
         height: compressed.height,
       };
     } catch (error) {
-      state.counters.failed += 1;
-
-      notify();
+      updateActivity(fileId, {
+        tripId: trip?.id || null,
+        tripName: trip?.name || null,
+        city: city || null,
+        capturedBy: state.who,
+        status: "failed",
+        lastError: error.message || "Capture failed",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
 
       throw error;
     }
@@ -1334,8 +1406,9 @@ function canCaptureTripPhoto() {
   async function updateQueueCount() {
     try {
       const records = await getAllRecords();
-
-      state.counters.waitingToRetry = records.length;
+      state.localQueueCount = records.filter(
+        (record) => record.status !== "uploading",
+      ).length;
     } catch (error) {
       console.warn("Could not count pending Trip photos:", error);
     }
@@ -1345,58 +1418,71 @@ function canCaptureTripPhoto() {
 
   async function processRecord(record) {
     record.status = "uploading";
-
     record.attempts = Number(record.attempts || 0) + 1;
-
     record.lastError = null;
 
     await putRecord(record);
-
-    state.counters.uploading += 1;
-
+    state.localUploading += 1;
+    await updateActivity(record.fileId, {
+      tripId: record.metadata.tripId,
+      tripName: record.metadata.tripName,
+      city: record.metadata.city,
+      capturedBy: record.metadata.capturedBy,
+      status: "uploading",
+      attempts: record.attempts,
+      lastError: null,
+    });
     notify();
 
     try {
       if (state.laptopOnline) {
         try {
-          await uploadToLaptop(record);
-
+          const result = await uploadToLaptop(record);
           await deleteRecord(record.fileId);
-
-          state.counters.savedOnLaptop += 1;
-
+          await updateActivity(record.fileId, {
+            status: "saved_on_laptop",
+            destination: "laptop",
+            savedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            relativePath: result.relativePath || null,
+            fileName: result.fileName || null,
+            sha256: result.sha256 || null,
+            verified: true,
+            lastError: null,
+          });
           return;
         } catch (error) {
           console.warn("Laptop upload failed; trying Cloudinary:", error);
-
           state.laptopOnline = false;
-
           state.laptopStatus = null;
         }
       }
 
       if (canUseCloudinary()) {
-        await uploadToCloudinary(record);
-
+        const result = await uploadToCloudinary(record);
         await deleteRecord(record.fileId);
-
-        state.counters.cloudinaryWaiting += 1;
-
+        await updateActivity(record.fileId, {
+          status: "cloudinary_waiting",
+          destination: "cloudinary",
+          cloudinaryPublicId: result.public_id,
+          cloudinaryUrl: result.secure_url,
+          lastError: null,
+        });
         return;
       }
 
       throw new Error("Neither laptop nor Cloudinary is available.");
     } catch (error) {
       record.status = "retry";
-
       record.lastError = error.message;
-
       await putRecord(record);
-
+      await updateActivity(record.fileId, {
+        status: "waiting_to_retry",
+        attempts: record.attempts,
+        lastError: error.message,
+      });
       console.warn("Trip photo kept safely on this phone:", error);
     } finally {
-      state.counters.uploading = Math.max(0, state.counters.uploading - 1);
-
+      state.localUploading = Math.max(0, state.localUploading - 1);
       await updateQueueCount();
     }
   }
@@ -1416,17 +1502,13 @@ function canCaptureTripPhoto() {
       );
 
       for (const record of records) {
-        if (!state.laptopOnline && !canUseCloudinary()) {
-          break;
-        }
-
+        if (!state.laptopOnline && !canUseCloudinary()) break;
         await processRecord(record);
       }
     } catch (error) {
       console.warn("Trip upload queue failed:", error);
     } finally {
       state.processing = false;
-
       await updateQueueCount();
     }
   }
@@ -1437,15 +1519,10 @@ function canCaptureTripPhoto() {
     }
 
     state.started = true;
-
     state.who = who;
-
     state.mode = storageGet(modeKey()) === "trip" ? "trip" : "chat";
-
     state.selectedTripId = storageGet(tripKey());
-
     state.cloudinaryConfigured = Boolean(getCloudinaryConfig());
-
     state.cloudinaryAvailable = canUseCloudinary();
 
     state.unsubscribeTrips = db
@@ -1460,20 +1537,16 @@ function canCaptureTripPhoto() {
             !state.trips.some((trip) => trip.id === state.selectedTripId)
           ) {
             state.selectedTripId = null;
-
             storageSet(tripKey(), null);
           }
 
           state.ready = true;
-
+          syncTripObservers();
           notify();
         },
-
         (error) => {
           state.ready = false;
-
           console.error("Trip list could not be loaded:", error);
-
           notify();
         },
       );
@@ -1484,26 +1557,18 @@ function canCaptureTripPhoto() {
       .onSnapshot(
         (doc) => {
           const data = doc.exists ? doc.data() : null;
-
           state.receiverUrl = isSafeReceiverUrl(data?.url) ? data.url : null;
-
           state.receiverPublishedAt =
             timestampToMillis(data?.publishedAt) ||
             timestampToMillis(data?.updatedAt) ||
             null;
-
           refreshAvailability();
         },
-
         (error) => {
           console.warn("Receiver address could not be read:", error);
-
           state.receiverUrl = null;
-
           state.laptopOnline = false;
-
           state.laptopStatus = null;
-
           notify();
         },
       );
@@ -1516,28 +1581,29 @@ function canCaptureTripPhoto() {
   function stop() {
     state.unsubscribeTrips?.();
     state.unsubscribeReceiver?.();
+    state.unsubscribeActivity?.();
+    state.unsubscribeFallback?.();
 
     state.unsubscribeTrips = null;
-
     state.unsubscribeReceiver = null;
+    state.unsubscribeActivity = null;
+    state.unsubscribeFallback = null;
 
     state.started = false;
-
     state.ready = false;
-
     state.who = null;
-
     state.mode = "chat";
-
     state.trips = [];
-
     state.selectedTripId = null;
-
+    state.pendingTripWrites.clear();
     state.receiverUrl = null;
-
     state.laptopOnline = false;
-
     state.laptopStatus = null;
+    state.localUploading = 0;
+    state.localQueueCount = 0;
+    state.sessionTaken = 0;
+    state.activityCounts = emptyActivityCounts();
+    state.fallbackCounts.cloudinaryWaiting = 0;
 
     notify();
   }
