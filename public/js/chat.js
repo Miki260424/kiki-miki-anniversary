@@ -5808,64 +5808,127 @@ function initChat(WHO) {
 
   async function openCamera() {
     if (cameraModal.classList.contains("open")) return;
+
     cameraCaptureRequestId += 1;
     cameraIsCapturing = false;
     snapBtn.disabled = false;
+
     ensureCameraEnhancementUI();
+
+    const tripCameraUI =
+      window.KikiMikiTripCameraUI;
+
+    tripCameraUI?.attach({
+      who: WHO,
+      cameraModal,
+      snapButton: snapBtn,
+    });
+
+    tripCameraUI?.setCaptureBusy(false);
+
     cameraModal.classList.add("open");
     enableCameraGestureGuard();
+
     cameraLiveWrap.style.display = "flex";
     cameraPreviewWrap.classList.remove("visible");
+
     applyCameraRatioLayout();
+
     capturedBlob = null;
+
     pushCameraHistoryState();
+
     await startCameraStream();
   }
 
-  function closeCamera(useHistoryBack = true, discardPending = true) {
+  function closeCamera(
+    useHistoryBack = true,
+    discardPending = true,
+  ) {
     cameraStreamRequestId += 1;
     cameraCaptureRequestId += 1;
+
     cameraIsCapturing = false;
     snapBtn.disabled = false;
+
     cancelCameraCountdown();
+
     clearTimeout(cameraFocusResetTimer);
     cameraFocusResetTimer = null;
+
     stopMediaStream(cameraStream);
+
     if (cameraPreviewObjectUrl) {
-      URL.revokeObjectURL(cameraPreviewObjectUrl);
+      URL.revokeObjectURL(
+        cameraPreviewObjectUrl,
+      );
+
       cameraPreviewObjectUrl = null;
     }
+
     capturedBlob = null;
+
     if (discardPending) {
       pendingCameraFile = null;
       queueSelectedFilesDraftSave();
     }
+
     cameraPreviewImg.removeAttribute("src");
-    cameraFeed.classList.remove("front-camera-corrected");
+
+    cameraFeed.classList.remove(
+      "front-camera-corrected",
+    );
+
     cameraModal.classList.remove("open");
+
+    window.KikiMikiTripCameraUI
+      ?.onCameraClosed();
+
     disableCameraGestureGuard();
+
     cameraZoomRange = null;
     cameraZoomQueuedValue = null;
     cameraZoomUsesSoftware = false;
     cameraZoomCurrent = 1;
-    clearSoftwareCameraZoomLayout({ restoreRatio: true });
-    cameraZoomWrap?.classList.remove("supported", "software");
+
+    clearSoftwareCameraZoomLayout({
+      restoreRatio: true,
+    });
+
+    cameraZoomWrap?.classList.remove(
+      "supported",
+      "software",
+    );
+
     cameraTorchSupported = false;
     cameraTorchOn = false;
-    cameraTorchBtn?.classList.remove("supported", "on");
-    // The timer popup lives under document.body so it can be positioned
-    // against the real viewport. Explicitly hide and reset it when closing
-    // the camera modal.
+
+    cameraTorchBtn?.classList.remove(
+      "supported",
+      "on",
+    );
+
     if (cameraTimerMenu) {
-      cameraTimerMenu.classList.remove("visible");
+      cameraTimerMenu.classList.remove(
+        "visible",
+      );
+
       cameraTimerMenu.style.left = "";
       cameraTimerMenu.style.top = "";
       cameraTimerMenu.style.width = "";
       cameraTimerMenu.style.maxHeight = "";
-      delete cameraTimerMenu.dataset.placement;
+
+      delete cameraTimerMenu.dataset
+        .placement;
     }
+
     document.body.style.overflow = "";
-    if (useHistoryBack && history.state && history.state.cameraOpen) {
+
+    if (
+      useHistoryBack &&
+      history.state &&
+      history.state.cameraOpen
+    ) {
       history.back();
     }
   }
