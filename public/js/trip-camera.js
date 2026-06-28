@@ -406,21 +406,62 @@ function canCaptureTripPhoto() {
 
     const name = createFullTripName(baseName);
 
-    const ref = db.collection(SETTINGS.tripsCollection).doc();
+    const ref = db
+      .collection(SETTINGS.tripsCollection)
+      .doc();
 
     await ref.set({
       name,
 
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdAt:
+        firebase.firestore.FieldValue
+          .serverTimestamp(),
 
       createdBy: state.who,
 
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt:
+        firebase.firestore.FieldValue
+          .serverTimestamp(),
 
       status: "active",
       cities: [],
       finishedAt: null,
     });
+
+    /*
+     * Add the new trip locally immediately.
+     *
+     * Firestore's live listener will replace this temporary
+     * local version with the official server version shortly.
+     * This prevents the interface from saying that the newly
+     * created trip does not exist.
+     */
+    const optimisticTrip = {
+      id: ref.id,
+      name,
+      createdBy: state.who,
+      createdAt: null,
+      createdAtMs: Date.now(),
+      updatedAt: null,
+      status: "active",
+      cities: [],
+      finishedAt: null,
+    };
+
+    const existingIndex =
+      state.trips.findIndex(
+        (trip) => trip.id === ref.id,
+      );
+
+    if (existingIndex >= 0) {
+      state.trips[existingIndex] =
+        optimisticTrip;
+    } else {
+      state.trips = [
+        optimisticTrip,
+        ...state.trips,
+      ];
+    }
 
     state.selectedTripId = ref.id;
 
@@ -428,10 +469,7 @@ function canCaptureTripPhoto() {
 
     notify();
 
-    return {
-      id: ref.id,
-      name,
-    };
+    return optimisticTrip;
   }
 
   async function addCity(tripId, cityName) {
