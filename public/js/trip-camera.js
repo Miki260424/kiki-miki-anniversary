@@ -223,15 +223,20 @@
     return Boolean(getCloudinaryConfig() && navigator.onLine);
   }
 
-  function canCaptureTripPhoto() {
-    return Boolean(
-      state.mode === "trip" &&
-      getSelectedTrip() &&
-      getSelectedCity() &&
-      (state.laptopOnline || state.cloudinaryAvailable),
-    );
-  }
+function canCaptureTripPhoto() {
+  const selectedTrip = getSelectedTrip();
 
+  return Boolean(
+    state.mode === "trip" &&
+    selectedTrip &&
+    selectedTrip.status === "active" &&
+    getSelectedCity() &&
+    (
+      state.laptopOnline ||
+      state.cloudinaryAvailable
+    ),
+  );
+}
   function getState() {
     return {
       ready: state.ready,
