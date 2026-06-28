@@ -74,11 +74,7 @@
     const subtitle = document.createElement("p");
     subtitle.textContent = subtitleText;
 
-    const closeButton = makeButton(
-      "trip-camera-panel-close",
-      "✕",
-      "Close",
-    );
+    const closeButton = makeButton("trip-camera-panel-close", "✕", "Close");
 
     const body = document.createElement("div");
     body.className = "trip-camera-panel-body";
@@ -165,8 +161,7 @@
 
     if (state.laptopOnline) {
       title.textContent = "Laptop is online";
-      description.textContent =
-        "New photos are sent directly to the laptop.";
+      description.textContent = "New photos are sent directly to the laptop.";
     } else if (state.cloudinaryAvailable) {
       title.textContent = "Cloudinary fallback is ready";
       description.textContent =
@@ -205,9 +200,7 @@
       createInfoCard("Storage", storageText),
       createInfoCard(
         "Cloudinary",
-        state.cloudinaryAvailable
-          ? "Available"
-          : "Unavailable",
+        state.cloudinaryAvailable ? "Available" : "Unavailable",
       ),
       createInfoCard(
         "Last connection",
@@ -223,14 +216,8 @@
     selectedGrid.className = "trip-camera-card-grid";
 
     selectedGrid.append(
-      createInfoCard(
-        "Trip",
-        state.selectedTrip?.name || "Not selected",
-      ),
-      createInfoCard(
-        "City",
-        state.selectedCity || "Not selected",
-      ),
+      createInfoCard("Trip", state.selectedTrip?.name || "Not selected"),
+      createInfoCard("City", state.selectedCity || "Not selected"),
     );
 
     const refreshButton = makeButton(
@@ -259,15 +246,9 @@
       }
     });
 
-    body.append(
-      mainStatus,
-      grid,
-      selectionTitle,
-      selectedGrid,
-      refreshButton,
-    );
+    body.append(mainStatus, grid, selectionTitle, selectedGrid, refreshButton);
   }
-    function showActivityPanel() {
+  function showActivityPanel() {
     const state = engine?.getState?.() || latestState;
 
     if (!state) {
@@ -283,30 +264,12 @@
     list.className = "trip-camera-counter-list";
 
     list.append(
-      createCounterRow(
-        "Taken this session",
-        state.counters.taken,
-      ),
-      createCounterRow(
-        "Saved on laptop",
-        state.counters.savedOnLaptop,
-      ),
-      createCounterRow(
-        "Cloudinary waiting",
-        state.counters.cloudinaryWaiting,
-      ),
-      createCounterRow(
-        "Uploading now",
-        state.counters.uploading,
-      ),
-      createCounterRow(
-        "Waiting to retry",
-        state.counters.waitingToRetry,
-      ),
-      createCounterRow(
-        "Failed",
-        state.counters.failed,
-      ),
+      createCounterRow("Taken this session", state.counters.taken),
+      createCounterRow("Saved on laptop", state.counters.savedOnLaptop),
+      createCounterRow("Cloudinary waiting", state.counters.cloudinaryWaiting),
+      createCounterRow("Uploading now", state.counters.uploading),
+      createCounterRow("Waiting to retry", state.counters.waitingToRetry),
+      createCounterRow("Failed", state.counters.failed),
     );
 
     const title = document.createElement("div");
@@ -336,9 +299,7 @@
         finishButton.disabled = true;
 
         try {
-          await engine.finishTrip(
-            state.selectedTrip.id,
-          );
+          await engine.finishTrip(state.selectedTrip.id);
 
           closeOverlay();
         } catch (error) {
@@ -351,24 +312,19 @@
     }
 
     if (state.finishedTrips.length > 0) {
-      const finishedSelect =
-        document.createElement("select");
+      const finishedSelect = document.createElement("select");
 
-      finishedSelect.className =
-        "trip-camera-dialog-select";
+      finishedSelect.className = "trip-camera-dialog-select";
 
-      const placeholder =
-        document.createElement("option");
+      const placeholder = document.createElement("option");
 
       placeholder.value = "";
-      placeholder.textContent =
-        "Choose a finished trip";
+      placeholder.textContent = "Choose a finished trip";
 
       finishedSelect.appendChild(placeholder);
 
       state.finishedTrips.forEach((trip) => {
-        const option =
-          document.createElement("option");
+        const option = document.createElement("option");
 
         option.value = trip.id;
         option.textContent = trip.name;
@@ -384,53 +340,37 @@
 
       reopenButton.disabled = true;
 
-      finishedSelect.addEventListener(
-        "change",
-        () => {
-          reopenButton.disabled =
-            !finishedSelect.value;
-        },
-      );
+      finishedSelect.addEventListener("change", () => {
+        reopenButton.disabled = !finishedSelect.value;
+      });
 
-      reopenButton.addEventListener(
-        "click",
-        async () => {
-          if (!finishedSelect.value) {
-            return;
-          }
+      reopenButton.addEventListener("click", async () => {
+        if (!finishedSelect.value) {
+          return;
+        }
 
-          reopenButton.disabled = true;
+        reopenButton.disabled = true;
 
-          try {
-            await engine.reopenTrip(
-              finishedSelect.value,
-            );
+        try {
+          await engine.reopenTrip(finishedSelect.value);
 
-            engine.selectTrip(
-              finishedSelect.value,
-            );
+          engine.selectTrip(finishedSelect.value);
 
-            closeOverlay();
-          } catch (error) {
-            window.alert(error.message);
-            reopenButton.disabled = false;
-          }
-        },
-      );
+          closeOverlay();
+        } catch (error) {
+          window.alert(error.message);
+          reopenButton.disabled = false;
+        }
+      });
 
-      management.append(
-        finishedSelect,
-        reopenButton,
-      );
+      management.append(finishedSelect, reopenButton);
     }
 
     if (!management.children.length) {
       const empty = document.createElement("div");
-      empty.className =
-        "trip-camera-empty-message";
+      empty.className = "trip-camera-empty-message";
 
-      empty.textContent =
-        "There are no trip-management actions right now.";
+      empty.textContent = "There are no trip-management actions right now.";
 
       management.appendChild(empty);
     }
@@ -455,11 +395,9 @@
     input.autocomplete = "off";
 
     const preview = document.createElement("div");
-    preview.className =
-      "trip-camera-empty-message";
+    preview.className = "trip-camera-empty-message";
 
-    preview.textContent =
-      "The full name will appear here.";
+    preview.textContent = "The full name will appear here.";
 
     const createButton = makeButton(
       "trip-camera-primary-button",
@@ -469,49 +407,37 @@
 
     input.addEventListener("input", () => {
       try {
-        preview.textContent =
-          engine.createFullTripName(input.value);
+        preview.textContent = engine.createFullTripName(input.value);
       } catch {
-        preview.textContent =
-          "The full name will appear here.";
+        preview.textContent = "The full name will appear here.";
       }
     });
 
-    form.addEventListener(
-      "submit",
-      async (event) => {
-        event.preventDefault();
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-        createButton.disabled = true;
-        createButton.textContent = "Creating…";
+      createButton.disabled = true;
+      createButton.textContent = "Creating…";
 
-        try {
-          const trip = await engine.createTrip(
-            input.value,
-          );
+      try {
+        const trip = await engine.createTrip(input.value);
 
-          engine.selectTrip(trip.id);
+        engine.selectTrip(trip.id);
 
-          closeOverlay();
+        closeOverlay();
 
-          window.setTimeout(() => {
-            showAddCityPanel();
-          }, 210);
-        } catch (error) {
-          window.alert(error.message);
+        window.setTimeout(() => {
+          showAddCityPanel();
+        }, 210);
+      } catch (error) {
+        window.alert(error.message);
 
-          createButton.disabled = false;
-          createButton.textContent =
-            "Create trip";
-        }
-      },
-    );
+        createButton.disabled = false;
+        createButton.textContent = "Create trip";
+      }
+    });
 
-    form.append(
-      input,
-      preview,
-      createButton,
-    );
+    form.append(input, preview, createButton);
 
     body.appendChild(form);
 
@@ -537,11 +463,9 @@
     form.className = "trip-camera-form";
 
     const tripInfo = document.createElement("div");
-    tripInfo.className =
-      "trip-camera-empty-message";
+    tripInfo.className = "trip-camera-empty-message";
 
-    tripInfo.textContent =
-      state.selectedTrip.name;
+    tripInfo.textContent = state.selectedTrip.name;
 
     const input = document.createElement("input");
     input.className = "trip-camera-input";
@@ -556,36 +480,25 @@
       "Add and select city",
     );
 
-    form.addEventListener(
-      "submit",
-      async (event) => {
-        event.preventDefault();
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-        addButton.disabled = true;
-        addButton.textContent = "Adding…";
+      addButton.disabled = true;
+      addButton.textContent = "Adding…";
 
-        try {
-          await engine.addCity(
-            state.selectedTrip.id,
-            input.value,
-          );
+      try {
+        await engine.addCity(state.selectedTrip.id, input.value);
 
-          closeOverlay();
-        } catch (error) {
-          window.alert(error.message);
+        closeOverlay();
+      } catch (error) {
+        window.alert(error.message);
 
-          addButton.disabled = false;
-          addButton.textContent =
-            "Add and select city";
-        }
-      },
-    );
+        addButton.disabled = false;
+        addButton.textContent = "Add and select city";
+      }
+    });
 
-    form.append(
-      tripInfo,
-      input,
-      addButton,
-    );
+    form.append(tripInfo, input, addButton);
 
     body.appendChild(form);
 
@@ -593,33 +506,29 @@
       input.focus();
     });
   }
-    function populateTripSelect(state) {
+  function populateTripSelect(state) {
     const select = elements.tripSelect;
 
     if (!select) {
       return;
     }
 
-    const previous =
-      state.selectedTripId || "";
+    const previous = state.selectedTripId || "";
 
     select.replaceChildren();
 
-    const placeholder =
-      document.createElement("option");
+    const placeholder = document.createElement("option");
 
     placeholder.value = "";
 
-    placeholder.textContent =
-      state.activeTrips.length
-        ? "Choose a trip"
-        : "No active trips";
+    placeholder.textContent = state.activeTrips.length
+      ? "Choose a trip"
+      : "No active trips";
 
     select.appendChild(placeholder);
 
     state.activeTrips.forEach((trip) => {
-      const option =
-        document.createElement("option");
+      const option = document.createElement("option");
 
       option.value = trip.id;
       option.textContent = trip.name;
@@ -627,18 +536,14 @@
       select.appendChild(option);
     });
 
-    const create =
-      document.createElement("option");
+    const create = document.createElement("option");
 
     create.value = "__create__";
-    create.textContent =
-      "＋ Create new trip";
+    create.textContent = "＋ Create new trip";
 
     select.appendChild(create);
 
-    select.value = state.activeTrips.some(
-      (trip) => trip.id === previous,
-    )
+    select.value = state.activeTrips.some((trip) => trip.id === previous)
       ? previous
       : "";
   }
@@ -654,21 +559,17 @@
 
     const trip = state.selectedTrip;
 
-    const placeholder =
-      document.createElement("option");
+    const placeholder = document.createElement("option");
 
     placeholder.value = "";
 
-    placeholder.textContent = trip
-      ? "Choose a city"
-      : "Select trip first";
+    placeholder.textContent = trip ? "Choose a city" : "Select trip first";
 
     select.appendChild(placeholder);
 
     if (trip?.status === "active") {
       trip.cities.forEach((city) => {
-        const option =
-          document.createElement("option");
+        const option = document.createElement("option");
 
         option.value = city;
         option.textContent = city;
@@ -676,56 +577,42 @@
         select.appendChild(option);
       });
 
-      const add =
-        document.createElement("option");
+      const add = document.createElement("option");
 
       add.value = "__add__";
-      add.textContent =
-        "＋ Add another city";
+      add.textContent = "＋ Add another city";
 
       select.appendChild(add);
     }
 
-    select.disabled =
-      !trip ||
-      trip.status !== "active";
+    select.disabled = !trip || trip.status !== "active";
 
-    select.value =
-      state.selectedCity || "";
+    select.value = state.selectedCity || "";
   }
 
   function updateDestinationStatus(state) {
-    const status =
-      elements.destinationStatus;
+    const status = elements.destinationStatus;
 
-    const text =
-      elements.destinationText;
+    const text = elements.destinationText;
 
     if (!status || !text) {
       return;
     }
 
-    status.classList.remove(
-      "laptop",
-      "cloudinary",
-      "offline",
-    );
+    status.classList.remove("laptop", "cloudinary", "offline");
 
     if (state.laptopOnline) {
       status.classList.add("laptop");
 
-      text.textContent =
-        "Laptop connected · direct saving";
+      text.textContent = "Laptop connected · direct saving";
     } else if (state.cloudinaryAvailable) {
       status.classList.add("cloudinary");
 
-      text.textContent =
-        "Laptop offline · Cloudinary fallback ready";
+      text.textContent = "Laptop offline · Cloudinary fallback ready";
     } else {
       status.classList.add("offline");
 
-      text.textContent =
-        "No safe storage destination";
+      text.textContent = "No safe storage destination";
     }
   }
 
@@ -735,27 +622,21 @@
     }
 
     const warning = elements.warning;
-    const isTrip =
-      state.mode === "trip";
+    const isTrip = state.mode === "trip";
 
     if (!isTrip) {
       elements.snapButton.disabled = false;
 
-      elements.snapButton.classList.remove(
-        "trip-camera-shutter-disabled",
-      );
+      elements.snapButton.classList.remove("trip-camera-shutter-disabled");
 
       warning.hidden = true;
 
       return;
     }
 
-    const allowed =
-      state.canCaptureTripPhoto &&
-      !captureBusy;
+    const allowed = state.canCaptureTripPhoto && !captureBusy;
 
-    elements.snapButton.disabled =
-      !allowed;
+    elements.snapButton.disabled = !allowed;
 
     elements.snapButton.classList.toggle(
       "trip-camera-shutter-disabled",
@@ -765,16 +646,11 @@
     warning.hidden = allowed;
 
     if (!state.selectedTrip) {
-      warning.textContent =
-        "Select or create a trip before taking photos.";
-    } else if (
-      state.selectedTrip.status !== "active"
-    ) {
-      warning.textContent =
-        "This trip is finished. Reopen it to take photos.";
+      warning.textContent = "Select or create a trip before taking photos.";
+    } else if (state.selectedTrip.status !== "active") {
+      warning.textContent = "This trip is finished. Reopen it to take photos.";
     } else if (!state.selectedCity) {
-      warning.textContent =
-        "Choose or add a city before taking photos.";
+      warning.textContent = "Choose or add a city before taking photos.";
     } else {
       warning.textContent =
         "Laptop and Cloudinary are unavailable. The shutter is disabled.";
@@ -788,27 +664,17 @@
       return;
     }
 
-    const isTrip =
-      state.mode === "trip";
+    const isTrip = state.mode === "trip";
 
-    elements.chatButton.classList.toggle(
-      "active",
-      !isTrip,
-    );
+    elements.chatButton.classList.toggle("active", !isTrip);
 
-    elements.tripButton.classList.toggle(
-      "active",
-      isTrip,
-    );
+    elements.tripButton.classList.toggle("active", isTrip);
 
-    elements.tripControls.hidden =
-      !isTrip;
+    elements.tripControls.hidden = !isTrip;
 
-    elements.cornerActions.hidden =
-      !isTrip;
+    elements.cornerActions.hidden = !isTrip;
 
-    elements.destinationStatus.hidden =
-      !isTrip;
+    elements.destinationStatus.hidden = !isTrip;
 
     populateTripSelect(state);
     populateCitySelect(state);
@@ -820,11 +686,9 @@
     const root = document.createElement("div");
     root.className = "trip-camera-ui-root";
 
-    const modeSwitch =
-      document.createElement("div");
+    const modeSwitch = document.createElement("div");
 
-    modeSwitch.className =
-      "trip-camera-mode-switch";
+    modeSwitch.className = "trip-camera-mode-switch";
 
     const chatButton = makeButton(
       "trip-camera-mode-button active",
@@ -838,16 +702,11 @@
       "Use Trip camera mode",
     );
 
-    modeSwitch.append(
-      chatButton,
-      tripButton,
-    );
+    modeSwitch.append(chatButton, tripButton);
 
-    const cornerActions =
-      document.createElement("div");
+    const cornerActions = document.createElement("div");
 
-    cornerActions.className =
-      "trip-camera-corner-actions";
+    cornerActions.className = "trip-camera-corner-actions";
 
     const detailsButton = makeButton(
       "trip-camera-corner-button",
@@ -861,111 +720,71 @@
       "Upload activity",
     );
 
-    cornerActions.append(
-      detailsButton,
-      activityButton,
-    );
+    cornerActions.append(detailsButton, activityButton);
 
-    const tripControls =
-      document.createElement("div");
+    const tripControls = document.createElement("div");
 
-    tripControls.className =
-      "trip-camera-trip-controls";
+    tripControls.className = "trip-camera-trip-controls";
 
-    const tripField =
-      document.createElement("label");
+    const tripField = document.createElement("label");
 
-    tripField.className =
-      "trip-camera-field";
+    tripField.className = "trip-camera-field";
 
-    const tripLabel =
-      document.createElement("span");
+    const tripLabel = document.createElement("span");
 
-    tripLabel.className =
-      "trip-camera-field-label";
+    tripLabel.className = "trip-camera-field-label";
 
     tripLabel.textContent = "Trip";
 
-    const tripSelect =
-      document.createElement("select");
+    const tripSelect = document.createElement("select");
 
-    tripSelect.className =
-      "trip-camera-select";
+    tripSelect.className = "trip-camera-select";
 
-    tripField.append(
-      tripLabel,
-      tripSelect,
-    );
+    tripField.append(tripLabel, tripSelect);
 
-    const cityField =
-      document.createElement("label");
+    const cityField = document.createElement("label");
 
-    cityField.className =
-      "trip-camera-field";
+    cityField.className = "trip-camera-field";
 
-    const cityLabel =
-      document.createElement("span");
+    const cityLabel = document.createElement("span");
 
-    cityLabel.className =
-      "trip-camera-field-label";
+    cityLabel.className = "trip-camera-field-label";
 
     cityLabel.textContent = "City";
 
-    const citySelect =
-      document.createElement("select");
+    const citySelect = document.createElement("select");
 
-    citySelect.className =
-      "trip-camera-select";
+    citySelect.className = "trip-camera-select";
 
-    cityField.append(
-      cityLabel,
-      citySelect,
-    );
+    cityField.append(cityLabel, citySelect);
 
-    tripControls.append(
-      tripField,
-      cityField,
-    );
+    tripControls.append(tripField, cityField);
 
-    const destinationStatus =
-      document.createElement("div");
+    const destinationStatus = document.createElement("div");
 
-    destinationStatus.className =
-      "trip-camera-destination-status";
+    destinationStatus.className = "trip-camera-destination-status";
 
-    const destinationDot =
-      document.createElement("span");
+    const destinationDot = document.createElement("span");
 
-    destinationDot.className =
-      "trip-camera-status-dot";
+    destinationDot.className = "trip-camera-status-dot";
 
-    const destinationText =
-      document.createElement("span");
+    const destinationText = document.createElement("span");
 
-    destinationStatus.append(
-      destinationDot,
-      destinationText,
-    );
+    destinationStatus.append(destinationDot, destinationText);
 
-    const warning =
-      document.createElement("div");
+    const warning = document.createElement("div");
 
-    warning.className =
-      "trip-camera-shutter-warning";
+    warning.className = "trip-camera-shutter-warning";
 
     warning.hidden = true;
 
-    const flash =
-      document.createElement("div");
+    const flash = document.createElement("div");
 
-    flash.className =
-      "trip-camera-capture-flash";
+    flash.className = "trip-camera-capture-flash";
 
-    const saveMessage =
-      document.createElement("div");
+    const saveMessage = document.createElement("div");
 
-    saveMessage.className =
-      "trip-camera-save-message";
+    saveMessage.className = "trip-camera-save-message";
 
     root.append(
       modeSwitch,
@@ -995,82 +814,50 @@
       snapButton: options.snapButton,
     });
 
-    chatButton.addEventListener(
-      "click",
-      () => {
-        engine.setMode("chat");
-        options.snapButton.disabled = false;
-      },
-    );
+    chatButton.addEventListener("click", () => {
+      engine.setMode("chat");
+      options.snapButton.disabled = false;
+    });
 
-    tripButton.addEventListener(
-      "click",
-      async () => {
-        engine.setMode("trip");
+    tripButton.addEventListener("click", async () => {
+      engine.setMode("trip");
 
-        await engine.refreshAvailability();
-      },
-    );
+      await engine.refreshAvailability();
+    });
 
-    detailsButton.addEventListener(
-      "click",
-      showDetailsPanel,
-    );
+    detailsButton.addEventListener("click", showDetailsPanel);
 
-    activityButton.addEventListener(
-      "click",
-      showActivityPanel,
-    );
+    activityButton.addEventListener("click", showActivityPanel);
 
-    tripSelect.addEventListener(
-      "change",
-      () => {
-        if (
-          tripSelect.value === "__create__"
-        ) {
-          tripSelect.value =
-            latestState?.selectedTripId || "";
+    tripSelect.addEventListener("change", () => {
+      if (tripSelect.value === "__create__") {
+        tripSelect.value = latestState?.selectedTripId || "";
 
-          showCreateTripPanel();
+        showCreateTripPanel();
 
-          return;
-        }
+        return;
+      }
 
-        if (tripSelect.value) {
-          engine.selectTrip(
-            tripSelect.value,
-          );
-        }
-      },
-    );
+      if (tripSelect.value) {
+        engine.selectTrip(tripSelect.value);
+      }
+    });
 
-    citySelect.addEventListener(
-      "change",
-      () => {
-        if (
-          citySelect.value === "__add__"
-        ) {
-          citySelect.value =
-            latestState?.selectedCity || "";
+    citySelect.addEventListener("change", () => {
+      if (citySelect.value === "__add__") {
+        citySelect.value = latestState?.selectedCity || "";
 
-          showAddCityPanel();
+        showAddCityPanel();
 
-          return;
-        }
+        return;
+      }
 
-        if (
-          citySelect.value &&
-          latestState?.selectedTripId
-        ) {
-          engine.selectCity(
-            latestState.selectedTripId,
-            citySelect.value,
-          );
-        }
-      },
-    );
+      if (citySelect.value && latestState?.selectedTripId) {
+        engine.selectCity(latestState.selectedTripId, citySelect.value);
+      }
+    });
   }
-    function attach(options) {
+  function attach(options) {
     if (attached) {
       return true;
     }
@@ -1088,8 +875,7 @@
 
     buildInterface(options);
 
-    unsubscribe =
-      engine.subscribe(render);
+    unsubscribe = engine.subscribe(render);
 
     return true;
   }
@@ -1107,15 +893,11 @@
       return;
     }
 
-    elements.flash.classList.remove(
-      "visible",
-    );
+    elements.flash.classList.remove("visible");
 
     void elements.flash.offsetWidth;
 
-    elements.flash.classList.add(
-      "visible",
-    );
+    elements.flash.classList.add("visible");
   }
 
   function showSaveMessage(text) {
@@ -1125,19 +907,13 @@
 
     clearTimeout(saveMessageTimer);
 
-    elements.saveMessage.textContent =
-      text;
+    elements.saveMessage.textContent = text;
 
-    elements.saveMessage.classList.add(
-      "visible",
-    );
+    elements.saveMessage.classList.add("visible");
 
-    saveMessageTimer =
-      window.setTimeout(() => {
-        elements.saveMessage?.classList.remove(
-          "visible",
-        );
-      }, 2200);
+    saveMessageTimer = window.setTimeout(() => {
+      elements.saveMessage?.classList.remove("visible");
+    }, 2200);
   }
 
   function onCameraClosed() {
@@ -1156,13 +932,12 @@
     attached = false;
   }
 
-  window.KikiMikiTripCameraUI =
-    Object.freeze({
-      attach,
-      setCaptureBusy,
-      showCaptureFlash,
-      showSaveMessage,
-      onCameraClosed,
-      destroy,
-    });
+  window.KikiMikiTripCameraUI = Object.freeze({
+    attach,
+    setCaptureBusy,
+    showCaptureFlash,
+    showSaveMessage,
+    onCameraClosed,
+    destroy,
+  });
 })();
