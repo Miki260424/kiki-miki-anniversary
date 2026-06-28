@@ -410,7 +410,23 @@ function canCaptureTripPhoto() {
       .collection(SETTINGS.tripsCollection)
       .doc();
 
-    await ref.set({
+    const optimisticTrip = {
+      id: ref.id,
+      name,
+      createdBy: state.who,
+      createdAt: null,
+      createdAtMs: Date.now(),
+      updatedAt: null,
+      status: "active",
+      cities: [],
+      finishedAt: null,
+    };
+
+    /*
+     * Queue the Firestore write, but do not make the
+     * phone wait for the server before showing the trip.
+     */
+    const savePromise = ref.set({
       name,
 
       createdAt:
@@ -427,26 +443,6 @@ function canCaptureTripPhoto() {
       cities: [],
       finishedAt: null,
     });
-
-    /*
-     * Add the new trip locally immediately.
-     *
-     * Firestore's live listener will replace this temporary
-     * local version with the official server version shortly.
-     * This prevents the interface from saying that the newly
-     * created trip does not exist.
-     */
-    const optimisticTrip = {
-      id: ref.id,
-      name,
-      createdBy: state.who,
-      createdAt: null,
-      createdAtMs: Date.now(),
-      updatedAt: null,
-      status: "active",
-      cities: [],
-      finishedAt: null,
-    };
 
     const existingIndex =
       state.trips.findIndex(
@@ -469,46 +465,156 @@ function canCaptureTripPhoto() {
 
     notify();
 
+    savePromise.catch((error) => {
+      console.error(
+        "Trip could not be saved:",
+        error,
+      );
+
+      state.trips = state.trips.filter(
+        (trip) => trip.id !== ref.id,
+      );
+
+      if (state.selectedTripId === ref.id) {
+        state.selectedTripId = null;
+        storageSet(tripKey(), null);
+      }
+
+      notify();
+
+      window.alert(
+        "The trip could not be saved. Please check your internet connection and try again.",
+      );
+    });
+
     return optimisticTrip;
   }
 
   async function addCity(tripId, cityName) {
     requireReady();
 
-    const trip = state.trips.find((item) => item.id === tripId);
+    const tripIndex =
+      state.trips.findIndex(
+        (trip) => trip.id === tripId,
+      );
 
-    if (!trip) {
-      throw new Error("The selected trip does not exist.");
+    if (tripIndex === -1) {
+      throw new Error(
+        "The selected trip does not exist.",
+      );
     }
 
-    const city = cleanText(cityName, 60);
-
-    if (city.length < 2) {
-      throw new Error("Please enter a city name.");
-    }
-
-    const existing = trip.cities.find(
-      (item) => item.toLocaleLowerCase() === city.toLocaleLowerCase(),
+    const city = cleanText(
+      cityName,
+      60,
     );
 
-    const finalCity = existing || city;
-
-    if (!existing) {
-      await db
-        .collection(SETTINGS.tripsCollection)
-        .doc(tripId)
-        .update({
-          cities: firebase.firestore.FieldValue.arrayUnion(city),
-
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        });
+    if (city.length < 2) {
+      throw new Error(
+        "Please enter a city name.",
+      );
     }
 
-    storageSet(cityKey(tripId), finalCity);
+    const trip = state.trips[tripIndex];
+
+    const existing = trip.cities.find(
+      (savedCity) =>
+        savedCity.toLocaleLowerCase() ===
+        city.toLocaleLowerCase(),
+    );
+
+    if (existing) {
+      storageSet(
+        cityKey(tripId),
+        existing,
+      );
+
+      notify();
+
+      return existing;
+    }
+
+    const previousCities = [
+      ...trip.cities,
+    ];
+
+    /*
+     * Queue the Firestore update first, then immediately
+     * add and select the city on the phone.
+     */
+    const savePromise = db
+      .collection(SETTINGS.tripsCollection)
+      .doc(tripId)
+      .set(
+        {
+          cities:
+            firebase.firestore.FieldValue
+              .arrayUnion(city),
+
+          updatedAt:
+            firebase.firestore.FieldValue
+              .serverTimestamp(),
+        },
+        {
+          merge: true,
+        },
+      );
+
+    state.trips[tripIndex] = {
+      ...trip,
+      cities: [
+        ...trip.cities,
+        city,
+      ],
+    };
+
+    storageSet(
+      cityKey(tripId),
+      city,
+    );
 
     notify();
 
-    return finalCity;
+    savePromise.catch((error) => {
+      console.error(
+        "City could not be saved:",
+        error,
+      );
+
+      const currentIndex =
+        state.trips.findIndex(
+          (savedTrip) =>
+            savedTrip.id === tripId,
+        );
+
+      if (currentIndex >= 0) {
+        state.trips[currentIndex] = {
+          ...state.trips[currentIndex],
+          cities: previousCities,
+        };
+      }
+
+      const rememberedCity =
+        storageGet(cityKey(tripId));
+
+      if (
+        rememberedCity?.toLocaleLowerCase() ===
+        city.toLocaleLowerCase()
+      ) {
+        storageSet(
+          cityKey(tripId),
+          previousCities[0] || null,
+        );
+      }
+
+      notify();
+
+      window.alert(
+        "The city could not be saved. Please check your internet connection and try again.",
+      );
+    });
+
+    return city;
   }
 
   async function finishTrip(tripId) {
