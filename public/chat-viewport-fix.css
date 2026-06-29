@@ -1,0 +1,74 @@
+/* Stable mobile chat viewport
+   Keeps the composer inside the visible viewport when entering Chat from a
+   scrolled page, when Chrome's toolbar changes height, and when the keyboard
+   opens or closes. */
+
+html.chat-viewport-managed {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  background: var(--bg, #fff0f5) !important;
+}
+
+html.chat-viewport-managed body {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: var(--chat-viewport-height, 100dvh) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+html.chat-viewport-managed #app {
+  position: fixed !important;
+  top: var(--chat-viewport-top, 0px) !important;
+  left: var(--chat-viewport-left, 0px) !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: var(--chat-viewport-width, 100vw) !important;
+  height: var(--chat-viewport-height, 100dvh) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  transform: translateZ(0) !important;
+  transition: none !important;
+  contain: layout style;
+}
+
+html.chat-viewport-managed #messages-container {
+  min-height: 0 !important;
+  overscroll-behavior: contain !important;
+}
+
+html.chat-viewport-managed #input-bar,
+html.chat-viewport-managed #img-preview-bar,
+html.chat-viewport-managed #reply-bar,
+html.chat-viewport-managed #typing-bubble {
+  position: relative;
+  flex-shrink: 0 !important;
+  transform: translateZ(0) !important;
+  transition-property: none !important;
+}
+
+html.chat-viewport-managed #input-bar {
+  bottom: auto !important;
+  z-index: 25 !important;
+  padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+}
+
+html.chat-viewport-managed #scroll-to-bottom {
+  bottom: calc(
+    var(--input-h, 76px) + max(18px, env(safe-area-inset-bottom))
+  ) !important;
+}
+
+@supports not (height: 100dvh) {
+  html.chat-viewport-managed body,
+  html.chat-viewport-managed #app {
+    height: var(--chat-viewport-height, 100vh) !important;
+  }
+}
