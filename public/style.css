@@ -24,7 +24,6 @@ body {
   cursor:
     url("/cursor/Preppy-Pinky-Spider-Man-Arrow--c.png") 0 0,
     auto;
-  display: none;
   user-select: none;
   -webkit-user-select: none;
 }

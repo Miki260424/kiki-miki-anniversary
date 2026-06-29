@@ -1,59 +1,118 @@
 "use strict";
 
 (function () {
-  const loader = document.getElementById("loader");
-  if (!loader) return;
-
-  const shownAt = performance.now();
-  let pageLoaded = document.readyState === "complete";
+  const LOADER_ID = "loader";
+  let pageReady = document.readyState === "complete";
   let authReady = window.__MK_AUTH_READY__ === true;
-  let finished = false;
+  let hidden = false;
+  let loader = null;
 
-  function finish() {
-    if (finished || !pageLoaded || !authReady) return;
+  function ensureLoader() {
+    loader = document.getElementById(LOADER_ID);
 
-    finished = true;
-    const minimumVisibleMs = 350;
-    const remaining = Math.max(0, minimumVisibleMs - (performance.now() - shownAt));
+    if (loader) return loader;
 
-    window.setTimeout(() => {
-      document.body.classList.remove("page-loading", "mk-auth-pending");
-      loader.classList.add("is-hidden");
+    loader = document.createElement("div");
+    loader.id = LOADER_ID;
+    loader.innerHTML = `
+      <div class="back"></div>
+      <div class="heart" aria-hidden="true"></div>
+      <p class="landing-loader-text">Loading our world…</p>
+    `;
 
-      window.setTimeout(() => {
-        loader.style.display = "none";
-      }, 320);
-    }, remaining);
+    if (document.body.firstChild) {
+      document.body.insertBefore(loader, document.body.firstChild);
+    } else {
+      document.body.appendChild(loader);
+    }
+
+    return loader;
   }
 
-  if (!pageLoaded) {
+  function showLoader() {
+    const element = ensureLoader();
+
+    if (hidden) return;
+
+    element.style.display = "flex";
+    element.classList.remove("is-hidden", "is-gone");
+    document.documentElement.classList.add("landing-page-loading");
+    document.body.classList.add("landing-page-loading");
+  }
+
+  function hideLoaderWhenReady() {
+    authReady = authReady || window.__MK_AUTH_READY__ === true;
+
+    if (hidden || !pageReady || !authReady) {
+      showLoader();
+      return;
+    }
+
+    hidden = true;
+    const element = ensureLoader();
+
+    element.classList.add("is-hidden");
+    document.documentElement.classList.remove("landing-page-loading");
+    document.body.classList.remove("landing-page-loading");
+
+    window.setTimeout(function () {
+      element.classList.add("is-gone");
+      element.style.display = "none";
+    }, 320);
+  }
+
+  function handleAuthReady() {
+    authReady = true;
+    hideLoaderWhenReady();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      function () {
+        showLoader();
+        hideLoaderWhenReady();
+      },
+      { once: true },
+    );
+  } else {
+    showLoader();
+  }
+
+  if (pageReady) {
+    hideLoaderWhenReady();
+  } else {
     window.addEventListener(
       "load",
-      () => {
-        pageLoaded = true;
-        finish();
+      function () {
+        pageReady = true;
+        hideLoaderWhenReady();
       },
       { once: true },
     );
   }
 
-  window.addEventListener(
-    "mk_user_ready",
-    () => {
-      authReady = true;
-      finish();
-    },
-    { once: true },
-  );
+  window.addEventListener("mk_user_ready", handleAuthReady);
 
-  const authPoll = window.setInterval(() => {
-    if (window.__MK_AUTH_READY__ === true) {
-      authReady = true;
-      window.clearInterval(authPoll);
-      finish();
+  // Covers the case where Firebase finished before this file executed.
+  if (window.__MK_AUTH_READY__ === true) {
+    handleAuthReady();
+  }
+
+  // Never leave a blank white screen. If authentication is unusually slow,
+  // keep the visible loader and show a helpful message instead.
+  window.setTimeout(function () {
+    if (window.__MK_AUTH_READY__ === true || hidden) return;
+
+    const element = ensureLoader();
+    let text = element.querySelector(".landing-loader-text");
+
+    if (!text) {
+      text = document.createElement("p");
+      text.className = "landing-loader-text";
+      element.appendChild(text);
     }
-  }, 100);
 
-  window.setTimeout(() => window.clearInterval(authPoll), 15000);
-  finish();
+    text.textContent = "Still signing you in…";
+  }, 8000);
 })();
