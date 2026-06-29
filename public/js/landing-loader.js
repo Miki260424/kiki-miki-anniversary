@@ -2,9 +2,6 @@
 
 (function () {
   const loader = document.getElementById("loader");
-  const startedAt = performance.now();
-  const minimumVisibleMs = 1200;
-
   let authReady = window.__MK_AUTH_READY__ === true;
   let pageReady = document.readyState === "complete";
   let finished = false;
@@ -86,10 +83,7 @@
       return;
     }
 
-    const elapsed = performance.now() - startedAt;
-    const remaining = Math.max(0, minimumVisibleMs - elapsed);
-
-    window.setTimeout(hideLoader, remaining);
+    hideLoader();
   }
 
   lockPage();
