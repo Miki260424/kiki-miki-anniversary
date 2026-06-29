@@ -387,11 +387,6 @@
     notify();
 
     if (state.mode === "trip") {
-      // Start one live location watcher for the whole page session.
-      // Once permission is granted, later photos do not ask again.
-      prepareTripLocation({ allowPrompt: true }).catch((error) => {
-        console.warn("Trip location could not be prepared:", error);
-      });
       refreshAvailability();
       processPendingQueue();
     }
@@ -816,12 +811,10 @@
   async function refreshAvailability() {
     state.cloudinaryConfigured = Boolean(getCloudinaryConfig());
     state.cloudinaryAvailable = canUseCloudinary();
-    state.lastLocation = readSavedLocation();
-
-    // Refresh silently when the browser has already granted permission.
-    if (state.mode === "trip") {
-      prepareTripLocation({ allowPrompt: false }).catch(() => {});
-    }
+    state.lastLocation =
+      window.KikiMikiTripLocation?.getLatest({
+        maxAgeMs: 5 * 60 * 1000,
+      }) || readSavedLocation();
 
     await checkLaptopStatus();
 
@@ -1193,138 +1186,48 @@
     }
   }
 
-  function rememberLocation(position) {
-    state.lastLocation = {
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-      gpsAccuracyMeters: position.coords.accuracy,
-      receivedAt: Date.now(),
-    };
+  function stopLocationTracking() {
+    state.locationWatchId = null;
+    state.locationRequestPromise = null;
 
-    try {
-      localStorage.setItem(
-        locationCacheKey(),
-        JSON.stringify(state.lastLocation),
-      );
-    } catch {
-      // Continue without persistent location caching.
+    window.KikiMikiTripLocation?.stop?.();
+  }
+
+  async function prepareTripLocation(options = {}) {
+    if (!window.KikiMikiTripLocation || !state.who) {
+      state.lastLocation = readSavedLocation();
+      return state.lastLocation;
     }
+
+    const location = await window.KikiMikiTripLocation.startForUser(state.who, {
+      allowPrompt: options.allowPrompt === true,
+    });
+
+    state.lastLocation =
+      location ||
+      window.KikiMikiTripLocation.getLatest({
+        maxAgeMs: 5 * 60 * 1000,
+      }) ||
+      null;
 
     return state.lastLocation;
   }
 
-  async function getLocationPermissionState() {
-    try {
-      if (!navigator.permissions?.query) return "unknown";
-
-      const permission = await navigator.permissions.query({
-        name: "geolocation",
-      });
-
-      return permission.state;
-    } catch {
-      return "unknown";
-    }
-  }
-
-  function stopLocationTracking() {
-    if (state.locationWatchId !== null && navigator.geolocation) {
-      navigator.geolocation.clearWatch(state.locationWatchId);
-    }
-
-    state.locationWatchId = null;
-    state.locationRequestPromise = null;
-  }
-
-  async function prepareTripLocation(options = {}) {
-    if (!navigator.geolocation) {
-      return state.lastLocation;
-    }
-
-    if (!state.lastLocation) {
-      state.lastLocation = readSavedLocation();
-    }
-
-    if (state.locationWatchId !== null) {
-      return state.lastLocation;
-    }
-
-    if (state.locationRequestPromise) {
-      return state.locationRequestPromise;
-    }
-
-    const allowPrompt = options.allowPrompt === true;
-
-    state.locationRequestPromise = (async () => {
-      const permissionState = await getLocationPermissionState();
-
-      if (permissionState === "denied") {
-        return state.lastLocation;
-      }
-
-      if (permissionState === "prompt" || permissionState === "unknown") {
-        // A saved location prevents another browser prompt after the site is
-        // reopened. It does not expire. When permission remains permanently
-        // granted, the live watcher below refreshes it silently.
-        if (state.lastLocation) {
-          return state.lastLocation;
-        }
-
-        if (!allowPrompt || state.locationPromptedThisSession) {
-          return null;
-        }
-
-        state.locationPromptedThisSession = true;
-      }
-
-      return new Promise((resolve) => {
-        let resolved = false;
-
-        const finish = (value) => {
-          if (resolved) return;
-          resolved = true;
-          resolve(value);
-        };
-
-        state.locationWatchId = navigator.geolocation.watchPosition(
-          (position) => {
-            const location = rememberLocation(position);
-            finish(location);
-          },
-          (error) => {
-            if (error?.code === 1 && state.locationWatchId !== null) {
-              navigator.geolocation.clearWatch(state.locationWatchId);
-              state.locationWatchId = null;
-            }
-
-            finish(state.lastLocation);
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 10_000,
-            maximumAge: 10 * 60 * 1000,
-          },
-        );
-
-        window.setTimeout(() => finish(state.lastLocation), 10_500);
-      });
-    })();
-
-    try {
-      return await state.locationRequestPromise;
-    } finally {
-      state.locationRequestPromise = null;
-    }
-  }
-
   async function getLocation() {
-    if (state.lastLocation) {
-      return state.lastLocation;
-    }
+    /*
+     * Never request permission while the shutter is being used.
+     *
+     * The shared watcher starts when the authenticated website opens and keeps
+     * the latest coordinates updated while the page is active. Every photo
+     * receives only a recent position, so a location from a different place is
+     * never reused indefinitely.
+     */
+    const location = window.KikiMikiTripLocation?.getLatest({
+      maxAgeMs: 5 * 60 * 1000,
+    });
 
-    // The browser can prompt at most once during this page session.
-    // Later Trip photos reuse the live watcher result.
-    return prepareTripLocation({ allowPrompt: true });
+    state.lastLocation = location || null;
+    return state.lastLocation;
   }
 
   async function enqueueCapturedBlob(sourceBlob, options = {}) {
@@ -1671,6 +1574,13 @@
     state.cloudinaryConfigured = Boolean(getCloudinaryConfig());
     state.cloudinaryAvailable = canUseCloudinary();
 
+    // Start one live GPS watcher as soon as the authenticated website opens.
+    // The watcher keeps updating in the background while the page is active;
+    // taking a photo only reads its latest value and never opens a prompt.
+    prepareTripLocation({ allowPrompt: true }).catch((error) => {
+      console.warn("Trip location could not start:", error);
+    });
+
     state.unsubscribeTrips = db
       .collection(SETTINGS.tripsCollection)
       .orderBy("createdAt", "desc")
@@ -1812,6 +1722,26 @@
     state.laptopStatus = null;
 
     notify();
+  });
+
+  window.addEventListener("mk_trip_location_update", (event) => {
+    const location = event.detail;
+
+    if (
+      Number.isFinite(location?.latitude) &&
+      Number.isFinite(location?.longitude)
+    ) {
+      state.lastLocation = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        gpsAccuracyMeters: Number.isFinite(location.gpsAccuracyMeters)
+          ? location.gpsAccuracyMeters
+          : null,
+        receivedAt: Number.isFinite(location.receivedAt)
+          ? location.receivedAt
+          : Date.now(),
+      };
+    }
   });
 
   setInterval(() => {
