@@ -1,142 +1,132 @@
 "use strict";
 
 (function () {
-  let loader = null;
-  let pageReady = document.readyState === "complete";
+  const loader = document.getElementById("loader");
+  const startedAt = performance.now();
+  const minimumVisibleMs = 1200;
+
   let authReady = window.__MK_AUTH_READY__ === true;
+  let pageReady = document.readyState === "complete";
   let finished = false;
   let authPoll = 0;
 
-  function getLoader() {
-    loader = document.getElementById("loader");
-
-    if (loader) {
-      return loader;
-    }
-
-    loader = document.createElement("div");
-    loader.id = "loader";
-    loader.innerHTML = `
-      <div class="back"></div>
-      <div class="heart" aria-hidden="true"></div>
-    `;
-
-    document.body.insertBefore(loader, document.body.firstChild);
-    return loader;
+  if (!loader) {
+    console.error("Landing loader element was not found.");
+    unlockPage();
+    return;
   }
 
-  function clearOldScrollLocks() {
-    document.documentElement.classList.remove("landing-page-loading");
-    document.body.classList.remove("landing-page-loading");
-
-    document.documentElement.style.removeProperty("overflow");
-    document.documentElement.style.removeProperty("overflow-y");
-    document.documentElement.style.removeProperty("height");
-
-    document.body.style.removeProperty("overflow");
-    document.body.style.removeProperty("overflow-y");
-    document.body.style.removeProperty("height");
-    document.body.style.removeProperty("position");
-    document.body.style.removeProperty("inset");
-  }
-
-  function showLoader() {
-    const element = getLoader();
-
-    element.classList.remove("is-hidden", "is-gone");
-    element.style.display = "block";
-
-    // Match the other pages: only lock scrolling while the loader is visible.
+  function lockPage() {
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
   }
 
-  function finishLoading() {
-    authReady = authReady || window.__MK_AUTH_READY__ === true;
+  function unlockPage() {
+    const root = document.documentElement;
+    const body = document.body;
 
-    if (finished || !pageReady || !authReady) {
+    root.classList.remove(
+      "page-loading",
+      "landing-page-loading",
+      "mk-auth-pending",
+    );
+
+    body.classList.remove(
+      "page-loading",
+      "landing-page-loading",
+      "mk-auth-pending",
+    );
+
+    [
+      "overflow",
+      "overflow-y",
+      "height",
+      "min-height",
+      "position",
+      "inset",
+      "top",
+      "right",
+      "bottom",
+      "left",
+      "touch-action",
+    ].forEach(function (property) {
+      root.style.removeProperty(property);
+      body.style.removeProperty(property);
+    });
+
+    body.style.removeProperty("display");
+    body.style.removeProperty("visibility");
+    body.style.removeProperty("opacity");
+  }
+
+  function hideLoader() {
+    if (finished) return;
+
+    finished = true;
+    loader.style.display = "none";
+    loader.setAttribute("aria-hidden", "true");
+
+    unlockPage();
+
+    requestAnimationFrame(unlockPage);
+    window.setTimeout(unlockPage, 50);
+    window.setTimeout(unlockPage, 250);
+
+    if (authPoll) {
+      clearInterval(authPoll);
+      authPoll = 0;
+    }
+  }
+
+  function finishWhenReady() {
+    authReady = authReady || window.__MK_AUTH_READY__ === true;
+    pageReady = pageReady || document.readyState === "complete";
+
+    if (!authReady || !pageReady || finished) {
       return;
     }
 
-    finished = true;
+    const elapsed = performance.now() - startedAt;
+    const remaining = Math.max(0, minimumVisibleMs - elapsed);
 
-    const element = getLoader();
-    element.style.display = "none";
-    element.classList.add("is-gone");
-
-    // Remove every lock left by both the old and new loader implementations.
-    clearOldScrollLocks();
-
-    if (authPoll) {
-      window.clearInterval(authPoll);
-      authPoll = 0;
-    }
-
-    // Mobile browsers sometimes apply the previous overflow value one frame
-    // late. Repeat cleanup after layout has settled.
-    window.requestAnimationFrame(clearOldScrollLocks);
-    window.setTimeout(clearOldScrollLocks, 50);
-    window.setTimeout(clearOldScrollLocks, 250);
+    window.setTimeout(hideLoader, remaining);
   }
 
-  function handleAuthReady() {
+  lockPage();
+  loader.style.display = "block";
+  loader.removeAttribute("aria-hidden");
+
+  window.addEventListener(
+    "load",
+    function () {
+      pageReady = true;
+      finishWhenReady();
+    },
+    { once: true },
+  );
+
+  window.addEventListener("mk_user_ready", function () {
     authReady = true;
-    finishLoading();
-  }
+    finishWhenReady();
+  });
 
-  function handlePageReady() {
-    pageReady = true;
-    finishLoading();
-  }
+  window.addEventListener("pageshow", function () {
+    if (window.__MK_AUTH_READY__ === true) authReady = true;
+    if (document.readyState === "complete") pageReady = true;
 
-  if (document.readyState === "loading") {
-    document.addEventListener(
-      "DOMContentLoaded",
-      function () {
-        showLoader();
-        finishLoading();
-      },
-      { once: true },
-    );
-  } else {
-    showLoader();
-  }
+    if (finished) {
+      unlockPage();
+    } else {
+      finishWhenReady();
+    }
+  });
 
-  if (pageReady) {
-    handlePageReady();
-  } else {
-    window.addEventListener("load", handlePageReady, { once: true });
-  }
-
-  window.addEventListener("mk_user_ready", handleAuthReady);
-
-  // Covers the race where Firebase authenticated before this script was ready.
   authPoll = window.setInterval(function () {
     if (window.__MK_AUTH_READY__ === true) {
-      handleAuthReady();
+      authReady = true;
+      finishWhenReady();
     }
   }, 100);
 
-  window.addEventListener("pageshow", function () {
-    if (window.__MK_AUTH_READY__ === true) {
-      authReady = true;
-    }
-
-    if (document.readyState === "complete") {
-      pageReady = true;
-    }
-
-    finishLoading();
-
-    if (finished) {
-      clearOldScrollLocks();
-    }
-  });
-
-  window.addEventListener("pagehide", function () {
-    if (authPoll) {
-      window.clearInterval(authPoll);
-      authPoll = 0;
-    }
-  });
+  finishWhenReady();
 })();

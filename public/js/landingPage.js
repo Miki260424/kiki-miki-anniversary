@@ -264,7 +264,7 @@ window.addEventListener("resize", () => {
   }
 });
 
-// loader is managed by landing-loader.js
+// loader is managed only by landing-loader.js
 
 // heart animation
 // Add floating hearts animation

@@ -1760,34 +1760,85 @@ footer::before {
   display: none; /* uncomment later */
 }
 
-
-/* Reliable authenticated-page loader */
-body.page-loading {
-  overflow: hidden !important;
-}
-
+/* KIKIMIKI EXACT LANDING LOADER START
+   Exact geometry and animation copied from the loaders on the other pages. */
 #loader {
   position: fixed;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  z-index: 2147483647;
+  display: block;
   width: 100%;
   height: 100%;
-  z-index: 2147483000;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: all;
-  transition: opacity 0.28s ease, visibility 0.28s ease;
+  margin: 0;
+  padding: 0;
 }
 
-#loader.is-hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+#loader .back {
+  z-index: 2147483646;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: white;
+  animation-name: backdiv;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
 }
 
-#loader .back,
 #loader .heart {
-  z-index: 2147483001;
+  z-index: 2147483647;
+  position: fixed;
+  inset: 0;
+  width: 50px;
+  height: 50px;
+  margin: auto;
+  padding: 0;
+  background-color: pink;
+  transform: rotate(-45deg);
+  transform-origin: 50% 50%;
+  animation-name: beat;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
 }
+
+#loader .heart::after {
+  content: "";
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  top: 0;
+  left: 25px;
+  background-color: pink;
+  border-radius: 50%;
+}
+
+#loader .heart::before {
+  content: "";
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  top: -25px;
+  left: 0;
+  background-color: pink;
+  border-radius: 50%;
+}
+
+@keyframes backdiv {
+  50% {
+    background: #ffe6f2;
+  }
+}
+
+@keyframes beat {
+  0% {
+    transform: scale(1) rotate(-45deg);
+  }
+
+  50% {
+    transform: scale(0.6) rotate(-45deg);
+  }
+}
+/* KIKIMIKI EXACT LANDING LOADER END */
