@@ -1,7 +1,12 @@
 {
   "hosting": {
     "public": "public",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "js/index.js"
+    ],
     "headers": [
       {
         "source": "**/*.@(js|css|html)",

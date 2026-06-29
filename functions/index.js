@@ -87,8 +87,8 @@ exports.sendChatNotification = onDocumentCreated(
         },
         webpush: {
           notification: {
-            icon: "/favicon.ico",
-            badge: "/favicon.ico",
+            icon: "/sliki/icons/mk.png",
+            badge: "/sliki/icons/mk.png",
             tag: "chat-message",
             renotify: true,
           },

@@ -89,8 +89,10 @@
     },
 
     listeners: new Set(),
-
     lastLocation: null,
+    locationWatchId: null,
+    locationPromptedThisSession: false,
+    locationRequestPromise: null,
   };
 
   function cleanText(value, maxLength = 100) {
@@ -385,6 +387,11 @@
     notify();
 
     if (state.mode === "trip") {
+      // Start one live location watcher for the whole page session.
+      // Once permission is granted, later photos do not ask again.
+      prepareTripLocation({ allowPrompt: true }).catch((error) => {
+        console.warn("Trip location could not be prepared:", error);
+      });
       refreshAvailability();
       processPendingQueue();
     }
@@ -808,8 +815,13 @@
 
   async function refreshAvailability() {
     state.cloudinaryConfigured = Boolean(getCloudinaryConfig());
-
     state.cloudinaryAvailable = canUseCloudinary();
+    state.lastLocation = readSavedLocation();
+
+    // Refresh silently when the browser has already granted permission.
+    if (state.mode === "trip") {
+      prepareTripLocation({ allowPrompt: false }).catch(() => {});
+    }
 
     await checkLaptopStatus();
 
@@ -1140,45 +1152,163 @@
     ].join("-");
   }
 
-  async function getLocation() {
-    if (!navigator.geolocation) {
+  function locationCacheKey() {
+    return `mk_trip_last_location_${state.who || "unknown"}`;
+  }
+
+  function readSavedLocation() {
+    try {
+      const raw = localStorage.getItem(locationCacheKey());
+      if (!raw) return null;
+
+      const saved = JSON.parse(raw);
+      if (
+        !Number.isFinite(saved?.latitude) ||
+        !Number.isFinite(saved?.longitude) ||
+        !Number.isFinite(saved?.receivedAt) ||
+        Date.now() - saved.receivedAt > 12 * 60 * 60 * 1000
+      ) {
+        return null;
+      }
+
+      return saved;
+    } catch {
       return null;
     }
+  }
 
-    if (
-      state.lastLocation &&
-      Date.now() - state.lastLocation.receivedAt < 5 * 60 * 1000
-    ) {
+  function rememberLocation(position) {
+    state.lastLocation = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      gpsAccuracyMeters: position.coords.accuracy,
+      receivedAt: Date.now(),
+    };
+
+    try {
+      localStorage.setItem(
+        locationCacheKey(),
+        JSON.stringify(state.lastLocation),
+      );
+    } catch {
+      // Continue without persistent location caching.
+    }
+
+    return state.lastLocation;
+  }
+
+  async function getLocationPermissionState() {
+    try {
+      if (!navigator.permissions?.query) return "unknown";
+
+      const permission = await navigator.permissions.query({
+        name: "geolocation",
+      });
+
+      return permission.state;
+    } catch {
+      return "unknown";
+    }
+  }
+
+  function stopLocationTracking() {
+    if (state.locationWatchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(state.locationWatchId);
+    }
+
+    state.locationWatchId = null;
+    state.locationRequestPromise = null;
+  }
+
+  async function prepareTripLocation(options = {}) {
+    if (!navigator.geolocation) {
       return state.lastLocation;
     }
 
-    return new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          state.lastLocation = {
-            latitude: position.coords.latitude,
+    if (!state.lastLocation) {
+      state.lastLocation = readSavedLocation();
+    }
 
-            longitude: position.coords.longitude,
+    if (state.locationWatchId !== null) {
+      return state.lastLocation;
+    }
 
-            gpsAccuracyMeters: position.coords.accuracy,
+    if (state.locationRequestPromise) {
+      return state.locationRequestPromise;
+    }
 
-            receivedAt: Date.now(),
-          };
+    const allowPrompt = options.allowPrompt === true;
 
-          resolve(state.lastLocation);
-        },
+    state.locationRequestPromise = (async () => {
+      const permissionState = await getLocationPermissionState();
 
-        () => resolve(null),
+      if (permissionState === "denied") {
+        return state.lastLocation;
+      }
 
-        {
-          enableHighAccuracy: true,
+      if (permissionState === "prompt" || permissionState === "unknown") {
+        // A saved location prevents a new browser prompt after the site is reopened.
+        // The cache lasts 12 hours. When permission is permanently granted, the
+        // live watcher below refreshes it silently.
+        if (state.lastLocation) {
+          return state.lastLocation;
+        }
 
-          timeout: 8_000,
+        if (!allowPrompt || state.locationPromptedThisSession) {
+          return null;
+        }
 
-          maximumAge: 5 * 60 * 1000,
-        },
-      );
-    });
+        state.locationPromptedThisSession = true;
+      }
+
+      return new Promise((resolve) => {
+        let resolved = false;
+
+        const finish = (value) => {
+          if (resolved) return;
+          resolved = true;
+          resolve(value);
+        };
+
+        state.locationWatchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const location = rememberLocation(position);
+            finish(location);
+          },
+          (error) => {
+            if (error?.code === 1 && state.locationWatchId !== null) {
+              navigator.geolocation.clearWatch(state.locationWatchId);
+              state.locationWatchId = null;
+            }
+
+            finish(state.lastLocation);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10_000,
+            maximumAge: 10 * 60 * 1000,
+          },
+        );
+
+        window.setTimeout(() => finish(state.lastLocation), 10_500);
+      });
+    })();
+
+    try {
+      return await state.locationRequestPromise;
+    } finally {
+      state.locationRequestPromise = null;
+    }
+  }
+
+  async function getLocation() {
+    if (state.lastLocation) {
+      return state.lastLocation;
+    }
+
+    // The browser can prompt at most once during this page session.
+    // Later Trip photos reuse the live watcher result.
+    return prepareTripLocation({ allowPrompt: true });
   }
 
   async function enqueueCapturedBlob(sourceBlob, options = {}) {
@@ -1588,6 +1718,10 @@
     state.unsubscribeReceiver = null;
     state.unsubscribeActivity = null;
     state.unsubscribeFallback = null;
+
+    stopLocationTracking();
+    state.locationPromptedThisSession = false;
+    state.lastLocation = null;
 
     state.started = false;
     state.ready = false;

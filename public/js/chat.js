@@ -23,7 +23,6 @@ function initChat(WHO) {
   if (_hdrEl) _hdrEl.textContent = _partnerName;
 
   // ─── FIREBASE REFS ───────────────────────────────────────────────
-  const storage = firebase.storage();
   const messagesRef = db
     .collection("chats")
     .doc(CHAT_ID)
@@ -1072,7 +1071,7 @@ function initChat(WHO) {
           type: "NOTIFY",
           title,
           body,
-          icon: "favicon.ico",
+          icon: "/sliki/icons/mk.png",
           tag: "chat-message",
           url: window.location.href,
         });
@@ -1082,8 +1081,8 @@ function initChat(WHO) {
     try {
       const notif = new Notification(title, {
         body,
-        icon: "favicon.ico",
-        badge: "favicon.ico",
+        icon: "/sliki/icons/mk.png",
+        badge: "/sliki/icons/mk.png",
         tag: "chat-message",
         renotify: true,
       });
@@ -2330,33 +2329,10 @@ function initChat(WHO) {
       onProgress(1);
       return data.secure_url;
     } catch (cloudinaryError) {
-      console.warn("Cloudinary failed; using Firebase Storage fallback:", cloudinaryError);
-      const safeName = (file.name || "photo.jpg").replace(/[^a-zA-Z0-9._-]/g, "_");
-      const uniqueId =
-        crypto.randomUUID?.() ||
-        `${Date.now()}_${Math.random().toString(36).slice(2)}`;
-      const ref = storage.ref(`chat/${uniqueId}_${safeName}`);
-      const task = ref.put(uploadPayload);
-      return new Promise((resolve, reject) => {
-        task.on(
-          "state_changed",
-          (snap) => {
-            if (snap.totalBytes > 0) {
-              onProgress(snap.bytesTransferred / snap.totalBytes);
-            }
-          },
-          reject,
-          async () => {
-            try {
-              const url = await task.snapshot.ref.getDownloadURL();
-              onProgress(1);
-              resolve(url);
-            } catch (error) {
-              reject(error);
-            }
-          },
-        );
-      });
+      console.error("Cloudinary upload failed:", cloudinaryError);
+      throw new Error(
+        "The photo could not be uploaded to Cloudinary. Check your internet connection and try again.",
+      );
     }
   }
 
@@ -5804,6 +5780,7 @@ function initChat(WHO) {
         cameraPreviewObjectUrl = URL.createObjectURL(blob);
         cameraPreviewImg.src = cameraPreviewObjectUrl;
         cameraLiveWrap.style.display = "none";
+        cameraModal.classList.add("camera-reviewing");
         cameraPreviewWrap.classList.add("visible");
       },
       "image/jpeg",
@@ -5831,6 +5808,7 @@ function initChat(WHO) {
     }
     cameraPreviewImg.removeAttribute("src");
     cameraPreviewWrap.classList.remove("visible");
+    cameraModal.classList.remove("camera-reviewing");
     cameraLiveWrap.style.display = "flex";
 
     retakeBtn.disabled = true;
@@ -5901,6 +5879,7 @@ function initChat(WHO) {
 
     tripCameraUI?.setCaptureBusy(false);
 
+    cameraModal.classList.remove("camera-reviewing");
     cameraModal.classList.add("open");
     enableCameraGestureGuard();
 
@@ -5954,7 +5933,7 @@ function initChat(WHO) {
       "front-camera-corrected",
     );
 
-    cameraModal.classList.remove("open");
+    cameraModal.classList.remove("open", "camera-reviewing");
 
     window.KikiMikiTripCameraUI
       ?.onCameraClosed();

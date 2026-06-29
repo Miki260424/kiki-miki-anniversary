@@ -533,8 +533,30 @@
       "Choose the trip and city used for new photos",
     );
 
+    body.classList.add("trip-camera-destination-panel-body");
+
+    const destinationHero = document.createElement("div");
+    destinationHero.className = "trip-camera-destination-hero";
+
+    const destinationHeroIcon = document.createElement("span");
+    destinationHeroIcon.className = "trip-camera-destination-hero-icon";
+    destinationHeroIcon.setAttribute("aria-hidden", "true");
+    destinationHeroIcon.innerHTML = `
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"></path>
+        <circle cx="12" cy="10" r="2.2"></circle>
+      </svg>
+    `;
+
+    const destinationHeroText = document.createElement("div");
+    destinationHeroText.className = "trip-camera-destination-hero-text";
+    const destinationHeroTrip = document.createElement("strong");
+    const destinationHeroCity = document.createElement("span");
+    destinationHeroText.append(destinationHeroTrip, destinationHeroCity);
+    destinationHero.append(destinationHeroIcon, destinationHeroText);
+
     const form = document.createElement("div");
-    form.className = "trip-camera-form";
+    form.className = "trip-camera-form trip-camera-destination-form";
 
     const tripLabel = document.createElement("label");
     tripLabel.className = "trip-camera-dialog-label";
@@ -562,6 +584,15 @@
 
     const citySelect = document.createElement("select");
     citySelect.className = "trip-camera-dialog-select";
+
+    function updateDestinationHero() {
+      const current = engine.getState();
+      destinationHeroTrip.textContent =
+        current.selectedTrip?.name || "Choose a trip";
+      destinationHeroCity.textContent = current.selectedCity
+        ? `City: ${current.selectedCity}`
+        : "Choose or add a city";
+    }
 
     function fillCities() {
       citySelect.innerHTML = "";
@@ -591,15 +622,18 @@
     tripSelect.addEventListener("change", () => {
       if (tripSelect.value) engine.selectTrip(tripSelect.value);
       fillCities();
+      updateDestinationHero();
     });
 
     citySelect.addEventListener("change", () => {
       if (tripSelect.value && citySelect.value) {
         engine.selectCity(tripSelect.value, citySelect.value);
+        updateDestinationHero();
       }
     });
 
     fillCities();
+    updateDestinationHero();
 
     const buttonRow = document.createElement("div");
     buttonRow.className = "trip-camera-button-row";
@@ -621,13 +655,16 @@
 
     buttonRow.append(createTripButton, addCityButton);
     form.append(tripLabel, tripSelect, cityLabel, citySelect, buttonRow);
-    body.appendChild(form);
+    body.append(destinationHero, form);
   }
 
   function createInterface() {
     const root = document.createElement("div");
     root.className = "trip-camera-ui-root";
     root.hidden = true;
+
+    const topbar = document.createElement("div");
+    topbar.className = "trip-camera-topbar";
 
     const modeSwitch = document.createElement("div");
     modeSwitch.className = "trip-camera-mode-switch";
@@ -650,6 +687,16 @@
       "Choose trip and city",
     );
 
+    const selectionIcon = document.createElement("span");
+    selectionIcon.className = "trip-camera-selection-icon";
+    selectionIcon.setAttribute("aria-hidden", "true");
+    selectionIcon.innerHTML = `
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"></path>
+        <circle cx="12" cy="10" r="2.1"></circle>
+      </svg>
+    `;
+
     const selectionText = document.createElement("span");
     selectionText.className = "trip-camera-selection-text";
     const selectionPrimary = document.createElement("strong");
@@ -658,7 +705,7 @@
     selectionChevron.className = "trip-camera-selection-chevron";
     selectionChevron.textContent = "⌄";
     selectionText.append(selectionPrimary, selectionSecondary);
-    selectionButton.append(selectionText, selectionChevron);
+    selectionButton.append(selectionIcon, selectionText, selectionChevron);
 
     const cornerActions = document.createElement("div");
     cornerActions.className = "trip-camera-corner-actions";
@@ -669,17 +716,33 @@
       "Connection details",
     );
     detailsButton.innerHTML = `
-      <span class="trip-camera-device-icon" aria-hidden="true">▣</span>
+      <span class="trip-camera-device-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <rect x="4" y="5" width="16" height="11" rx="2"></rect>
+          <path d="M2.8 19h18.4"></path>
+        </svg>
+      </span>
       <span class="trip-camera-connection-dot" aria-hidden="true"></span>
     `;
 
     const activityButton = makeButton(
-      "trip-camera-corner-button",
-      "☷",
+      "trip-camera-corner-button trip-camera-activity-button",
+      "",
       "Trip Camera activity",
     );
+    activityButton.innerHTML = `
+      <span class="trip-camera-activity-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M5 19V11"></path>
+          <path d="M12 19V5"></path>
+          <path d="M19 19v-6"></path>
+          <path d="M3 19h18"></path>
+        </svg>
+      </span>
+    `;
 
-    cornerActions.append(detailsButton, activityButton);
+    cornerActions.append(activityButton, detailsButton);
+    topbar.append(modeSwitch, selectionButton, cornerActions);
 
     const captureFlash = document.createElement("div");
     captureFlash.className = "trip-camera-capture-flash";
@@ -687,13 +750,7 @@
     const saveMessage = document.createElement("div");
     saveMessage.className = "trip-camera-save-message";
 
-    root.append(
-      modeSwitch,
-      selectionButton,
-      cornerActions,
-      captureFlash,
-      saveMessage,
-    );
+    root.append(topbar, captureFlash, saveMessage);
 
     elements.root = root;
     elements.chatButton = chatButton;
@@ -740,6 +797,7 @@
     if (!elements.root) return;
 
     const tripMode = state.mode === "trip";
+    elements.cameraModal?.classList.toggle("trip-camera-trip-mode", tripMode);
     elements.chatButton.classList.toggle("active", !tripMode);
     elements.tripButton.classList.toggle("active", tripMode);
     elements.selectionButton.hidden = !tripMode;
@@ -781,6 +839,7 @@
     }
 
     elements.root.hidden = false;
+    cameraModal.classList.add("trip-camera-ui-attached");
     attached = true;
 
     if (!unsubscribe) unsubscribe = engine.subscribe(render);
@@ -817,6 +876,10 @@
     closeOverlay();
 
     if (elements.root) elements.root.hidden = true;
+    elements.cameraModal?.classList.remove(
+      "trip-camera-ui-attached",
+      "trip-camera-trip-mode",
+    );
     if (elements.snapButton) {
       elements.snapButton.disabled = false;
       elements.snapButton.classList.remove("trip-camera-shutter-disabled");
