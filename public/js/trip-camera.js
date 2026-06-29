@@ -1162,16 +1162,32 @@
       if (!raw) return null;
 
       const saved = JSON.parse(raw);
+
+      /*
+       * Keep the last valid location without an expiry.
+       *
+       * After the user grants location once, reopening the website can reuse
+       * this saved value without triggering another browser permission prompt.
+       * When Chrome still reports permission as "granted", the live watcher
+       * refreshes this value silently in the background.
+       */
       if (
         !Number.isFinite(saved?.latitude) ||
-        !Number.isFinite(saved?.longitude) ||
-        !Number.isFinite(saved?.receivedAt) ||
-        Date.now() - saved.receivedAt > 12 * 60 * 60 * 1000
+        !Number.isFinite(saved?.longitude)
       ) {
         return null;
       }
 
-      return saved;
+      return {
+        latitude: saved.latitude,
+        longitude: saved.longitude,
+        gpsAccuracyMeters: Number.isFinite(saved?.gpsAccuracyMeters)
+          ? saved.gpsAccuracyMeters
+          : null,
+        receivedAt: Number.isFinite(saved?.receivedAt)
+          ? saved.receivedAt
+          : 0,
+      };
     } catch {
       return null;
     }
@@ -1247,9 +1263,9 @@
       }
 
       if (permissionState === "prompt" || permissionState === "unknown") {
-        // A saved location prevents a new browser prompt after the site is reopened.
-        // The cache lasts 12 hours. When permission is permanently granted, the
-        // live watcher below refreshes it silently.
+        // A saved location prevents another browser prompt after the site is
+        // reopened. It does not expire. When permission remains permanently
+        // granted, the live watcher below refreshes it silently.
         if (state.lastLocation) {
           return state.lastLocation;
         }
