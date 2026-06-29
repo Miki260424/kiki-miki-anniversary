@@ -11,6 +11,7 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="stylesheet" href="chat.css" />
+    <link rel="stylesheet" href="trip-camera.css?v=20260629-6" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap"
@@ -25,36 +26,23 @@
       rel="stylesheet"
     />
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/safetyCode.js"></script>
     <script src="js/cloudinary-config.js"></script>
   </head>
   <body>
-    <!-- LOADER -->
-    <div id="loader">
-      <div class="heart-loader"></div>
-    </div>
+    <div id="loader"><div class="heart-loader"></div></div>
 
-    <!-- Shto da kazuvam pokje pufle, do koga ke istrazuvash kazi mi? To sho go barash go ima ama na greshno mesto barash -->
-    <!-- Sigurno se prashvash koe tocnoto mesto. Epa tocnoto mesto e na tocnoto mesto😅😅😅 -->
-    <!-- Џокинг Џокинг. Ima neshta sho se podskrieni, ne e lesno ama ke gi najdish -->
-
-    <!-- LIGHTBOX -->
     <div id="lightbox">
       <button id="lightbox-close">✕</button>
-
-      <!-- Image wrapper -->
       <div id="lb-img-wrap">
         <img id="lightbox-img" src="" alt="Full size" />
       </div>
-
       <div id="lightbox-nav">
         <button class="lb-nav-btn" id="lb-prev">‹</button>
         <span id="lightbox-counter"></span>
@@ -62,7 +50,6 @@
       </div>
     </div>
 
-    <!-- CAMERA MODAL -->
     <div id="camera-modal">
       <div
         id="camera-live-wrap"
@@ -102,15 +89,10 @@
       </div>
     </div>
 
-    <!-- EMOJI TRAY -->
     <div id="emoji-tray"></div>
-
-    <!-- SCROLL TO BOTTOM FAB -->
     <button id="scroll-to-bottom" title="Scroll to latest">↓</button>
 
-    <!-- MAIN APP -->
     <div id="app">
-      <!-- HEADER -->
       <header id="chat-header">
         <a href="landingPage.html" id="back-btn">‹</a>
         <div class="header-avatar">💌</div>
@@ -123,19 +105,14 @@
         </div>
       </header>
 
-      <!-- NOTIFICATION PERMISSION BANNER -->
       <div id="notif-banner">
         <span>🔔 Allow notifications to know when a new message arrives!</span>
         <button id="notif-allow-btn">Allow</button>
         <button id="notif-dismiss-btn">✕</button>
       </div>
 
-      <!-- UPLOAD PROGRESS -->
-      <div id="upload-progress">
-        <div id="upload-progress-bar"></div>
-      </div>
+      <div id="upload-progress"><div id="upload-progress-bar"></div></div>
 
-      <!-- MESSAGES -->
       <div id="messages-container">
         <div id="empty-state">
           <div class="big-heart">💌</div>
@@ -144,7 +121,6 @@
         </div>
       </div>
 
-      <!-- IMAGE PREVIEW BAR (multi) -->
       <div id="img-preview-bar">
         <div id="preview-info">
           <span id="preview-count-label">0 image(s) selected</span>
@@ -158,18 +134,13 @@
         </div>
       </div>
 
-      <!-- TYPING BUBBLE — appears bottom-left above input when partner is typing -->
       <div id="typing-bubble" aria-live="polite"></div>
-
-      <!-- REPLY BAR -->
       <div id="reply-bar"></div>
 
-      <!-- INPUT BAR -->
       <div id="input-bar">
         <button class="input-icon-btn" id="emoji-toggle-btn" title="Emoji">
           😊
         </button>
-
         <label
           class="input-icon-btn"
           for="file-input"
@@ -179,11 +150,7 @@
           📎
           <input type="file" id="file-input" hidden accept="image/*" multiple />
         </label>
-
-        <button class="input-icon-btn" id="camera-btn" title="Camera">
-          📷
-        </button>
-
+        <button class="input-icon-btn" id="camera-btn" title="Camera">📷</button>
         <textarea
           id="msg-input"
           placeholder="Write something"
@@ -207,16 +174,11 @@
       </div>
     </div>
 
-        <!-- 
-      Epa ko si +tolku zainteresirana ova pod komentarot e canvas se koristi za crtanje so 
-      javascript a vo ovaj slucaj go koristam za kameratata 
-    -->
-
-
-
-    <!-- Hidden canvas for camera snap -->
     <canvas id="snap-canvas" style="display: none"></canvas>
 
-   <script src="js/chat.js"></script>
+    <script src="js/trip-config.js?v=20260629-6"></script>
+    <script src="js/trip-camera.js?v=20260629-persistent-location"></script>
+    <script src="js/trip-camera-ui.js?v=20260629-6"></script>
+    <script src="js/chat.js?v=20260629-7"></script>
   </body>
 </html>

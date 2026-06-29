@@ -1,14 +1,170 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Only users who passed the secret date check can read/write anything
+    /*
+     * A user must have passed the secret-date verification.
+     */
     function isVerified() {
-      return request.auth != null && request.auth.token.verified == true;
+      return request.auth != null
+        && request.auth.token.verified == true;
     }
 
-    match /{document=**} {
-      allow read, write: if isVerified();
+    /*
+     * Only Mikica and Kikica may use Trip Camera data.
+     */
+    function isTripUser() {
+      return isVerified()
+        && request.auth.token.who in [
+          "mikica",
+          "kikica"
+        ];
+    }
+
+    /*
+     * Validate a newly created trip.
+     */
+    function validNewTrip() {
+      return request.resource.data.keys().hasAll([
+          "name",
+          "createdAt",
+          "createdBy",
+          "updatedAt",
+          "status",
+          "cities",
+          "finishedAt"
+        ])
+        && request.resource.data.keys().hasOnly([
+          "name",
+          "createdAt",
+          "createdBy",
+          "updatedAt",
+          "status",
+          "cities",
+          "finishedAt"
+        ])
+
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2
+        && request.resource.data.name.size() <= 100
+
+        && request.resource.data.createdBy
+          == request.auth.token.who
+
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+
+        && request.resource.data.status == "active"
+
+        && request.resource.data.cities is list
+        && request.resource.data.cities.size() <= 100
+
+        && request.resource.data.finishedAt == null;
+    }
+
+    /*
+     * Allow only cities, status and finishing information
+     * to change after a trip has been created.
+     */
+    function validTripUpdate() {
+      return request.resource.data
+          .diff(resource.data)
+          .affectedKeys()
+          .hasOnly([
+            "cities",
+            "status",
+            "updatedAt",
+            "finishedAt"
+          ])
+
+        && request.resource.data.name
+          == resource.data.name
+
+        && request.resource.data.createdAt
+          == resource.data.createdAt
+
+        && request.resource.data.createdBy
+          == resource.data.createdBy
+
+        && request.resource.data.createdBy in [
+          "mikica",
+          "kikica"
+        ]
+
+        && request.resource.data.updatedAt is timestamp
+
+        && request.resource.data.cities is list
+        && request.resource.data.cities.size() <= 100
+
+        && (
+          request.resource.data.status == "active"
+          || request.resource.data.status == "finished"
+        )
+
+        && (
+          request.resource.data.finishedAt == null
+          || request.resource.data.finishedAt is timestamp
+        )
+
+        && (
+          (
+            request.resource.data.status == "active"
+            && request.resource.data.finishedAt == null
+          )
+          ||
+          (
+            request.resource.data.status == "finished"
+            && request.resource.data.finishedAt is timestamp
+          )
+        );
+    }
+
+    /*
+     * The laptop tunnel manager writes this document.
+     *
+     * Phones may read the receiver address and status,
+     * but client-side code may never modify it.
+     */
+    match /tripSystem/{documentId} {
+      allow read: if isTripUser();
+      allow create, update, delete: if false;
+    }
+
+    /*
+     * Shared trips created by Mikica or Kikica.
+     *
+     * Either user may:
+     * - see all trips;
+     * - create a new trip;
+     * - add cities;
+     * - finish or reopen a trip.
+     *
+     * Trips cannot be deleted from the phone website.
+     */
+    match /trips/{tripId} {
+      allow read: if isTripUser();
+
+      allow create: if isTripUser()
+        && validNewTrip();
+
+      allow update: if isTripUser()
+        && validTripUpdate();
+
+      allow delete: if false;
+    }
+
+    /*
+     * Preserve your existing website behavior for every
+     * other collection.
+     *
+     * The Trip collections are excluded because they use
+     * the stricter rules above.
+     */
+    match /{collection}/{document=**} {
+      allow read, write: if isVerified()
+        && collection != "tripSystem"
+        && collection != "trips";
     }
   }
 }

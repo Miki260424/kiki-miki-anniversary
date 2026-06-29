@@ -23,7 +23,6 @@ function initChat(WHO) {
   if (_hdrEl) _hdrEl.textContent = _partnerName;
 
   // ─── FIREBASE REFS ───────────────────────────────────────────────
-  const storage = firebase.storage();
   const messagesRef = db
     .collection("chats")
     .doc(CHAT_ID)
@@ -1072,7 +1071,7 @@ function initChat(WHO) {
           type: "NOTIFY",
           title,
           body,
-          icon: "favicon.ico",
+          icon: "/sliki/icons/mk.png",
           tag: "chat-message",
           url: window.location.href,
         });
@@ -1082,8 +1081,8 @@ function initChat(WHO) {
     try {
       const notif = new Notification(title, {
         body,
-        icon: "favicon.ico",
-        badge: "favicon.ico",
+        icon: "/sliki/icons/mk.png",
+        badge: "/sliki/icons/mk.png",
         tag: "chat-message",
         renotify: true,
       });
@@ -2330,33 +2329,10 @@ function initChat(WHO) {
       onProgress(1);
       return data.secure_url;
     } catch (cloudinaryError) {
-      console.warn("Cloudinary failed; using Firebase Storage fallback:", cloudinaryError);
-      const safeName = (file.name || "photo.jpg").replace(/[^a-zA-Z0-9._-]/g, "_");
-      const uniqueId =
-        crypto.randomUUID?.() ||
-        `${Date.now()}_${Math.random().toString(36).slice(2)}`;
-      const ref = storage.ref(`chat/${uniqueId}_${safeName}`);
-      const task = ref.put(uploadPayload);
-      return new Promise((resolve, reject) => {
-        task.on(
-          "state_changed",
-          (snap) => {
-            if (snap.totalBytes > 0) {
-              onProgress(snap.bytesTransferred / snap.totalBytes);
-            }
-          },
-          reject,
-          async () => {
-            try {
-              const url = await task.snapshot.ref.getDownloadURL();
-              onProgress(1);
-              resolve(url);
-            } catch (error) {
-              reject(error);
-            }
-          },
-        );
-      });
+      console.error("Cloudinary upload failed:", cloudinaryError);
+      throw new Error(
+        "The photo could not be uploaded to Cloudinary. Check your internet connection and try again.",
+      );
     }
   }
 
@@ -5606,8 +5582,83 @@ function initChat(WHO) {
     captureCurrentFrame();
   }
 
+  async function captureTripCurrentFrame(video) {
+    const tripCamera = window.KikiMikiTripCamera;
+    const tripCameraUI = window.KikiMikiTripCameraUI;
+    const liveTrack = cameraStream?.getVideoTracks()[0];
+
+    if (
+      cameraIsCapturing ||
+      !liveTrack ||
+      liveTrack.readyState !== "live" ||
+      !video.videoWidth ||
+      !video.videoHeight
+    ) {
+      return;
+    }
+
+    if (!tripCamera?.canCaptureTripPhoto?.()) {
+      tripCameraUI?.showSaveMessage(
+        "Select a trip and city, or restore a storage connection.",
+      );
+      tripCameraUI?.setCaptureBusy(false);
+      return;
+    }
+
+    cameraIsCapturing = true;
+    snapBtn.disabled = true;
+    tripCameraUI?.setCaptureBusy(true);
+    tripCameraUI?.showCaptureFlash();
+
+    const captureId = ++cameraCaptureRequestId;
+    const shouldMirrorCapturedFrame = cameraFeed.classList.contains(
+      "front-camera-corrected",
+    );
+
+    try {
+      const blob = await tripCamera.captureFullFrame(
+        video,
+        shouldMirrorCapturedFrame,
+      );
+
+      if (
+        captureId !== cameraCaptureRequestId ||
+        !cameraModal.classList.contains("open")
+      ) {
+        return;
+      }
+
+      await tripCamera.enqueueCapturedBlob(blob);
+
+      if (
+        captureId !== cameraCaptureRequestId ||
+        !cameraModal.classList.contains("open")
+      ) {
+        return;
+      }
+
+      tripCameraUI?.showSaveMessage("Trip photo secured");
+    } catch (error) {
+      console.error("Trip photo capture failed:", error);
+      tripCameraUI?.showSaveMessage(
+        error?.message || "Could not save the Trip photo",
+      );
+    } finally {
+      if (captureId === cameraCaptureRequestId) {
+        cameraIsCapturing = false;
+        snapBtn.disabled = false;
+        tripCameraUI?.setCaptureBusy(false);
+      }
+    }
+  }
+
   function captureCurrentFrame() {
     const video = cameraFeed;
+
+    if (window.KikiMikiTripCamera?.getMode?.() === "trip") {
+      captureTripCurrentFrame(video);
+      return;
+    }
     const liveTrack = cameraStream?.getVideoTracks()[0];
     if (
       cameraIsCapturing ||
@@ -5729,6 +5780,7 @@ function initChat(WHO) {
         cameraPreviewObjectUrl = URL.createObjectURL(blob);
         cameraPreviewImg.src = cameraPreviewObjectUrl;
         cameraLiveWrap.style.display = "none";
+        cameraModal.classList.add("camera-reviewing");
         cameraPreviewWrap.classList.add("visible");
       },
       "image/jpeg",
@@ -5756,6 +5808,7 @@ function initChat(WHO) {
     }
     cameraPreviewImg.removeAttribute("src");
     cameraPreviewWrap.classList.remove("visible");
+    cameraModal.classList.remove("camera-reviewing");
     cameraLiveWrap.style.display = "flex";
 
     retakeBtn.disabled = true;
@@ -5808,64 +5861,128 @@ function initChat(WHO) {
 
   async function openCamera() {
     if (cameraModal.classList.contains("open")) return;
+
     cameraCaptureRequestId += 1;
     cameraIsCapturing = false;
     snapBtn.disabled = false;
+
     ensureCameraEnhancementUI();
+
+    const tripCameraUI =
+      window.KikiMikiTripCameraUI;
+
+    tripCameraUI?.attach({
+      who: WHO,
+      cameraModal,
+      snapButton: snapBtn,
+    });
+
+    tripCameraUI?.setCaptureBusy(false);
+
+    cameraModal.classList.remove("camera-reviewing");
     cameraModal.classList.add("open");
     enableCameraGestureGuard();
+
     cameraLiveWrap.style.display = "flex";
     cameraPreviewWrap.classList.remove("visible");
+
     applyCameraRatioLayout();
+
     capturedBlob = null;
+
     pushCameraHistoryState();
+
     await startCameraStream();
   }
 
-  function closeCamera(useHistoryBack = true, discardPending = true) {
+  function closeCamera(
+    useHistoryBack = true,
+    discardPending = true,
+  ) {
     cameraStreamRequestId += 1;
     cameraCaptureRequestId += 1;
+
     cameraIsCapturing = false;
     snapBtn.disabled = false;
+
     cancelCameraCountdown();
+
     clearTimeout(cameraFocusResetTimer);
     cameraFocusResetTimer = null;
+
     stopMediaStream(cameraStream);
+
     if (cameraPreviewObjectUrl) {
-      URL.revokeObjectURL(cameraPreviewObjectUrl);
+      URL.revokeObjectURL(
+        cameraPreviewObjectUrl,
+      );
+
       cameraPreviewObjectUrl = null;
     }
+
     capturedBlob = null;
+
     if (discardPending) {
       pendingCameraFile = null;
       queueSelectedFilesDraftSave();
     }
+
     cameraPreviewImg.removeAttribute("src");
-    cameraFeed.classList.remove("front-camera-corrected");
-    cameraModal.classList.remove("open");
+
+    cameraFeed.classList.remove(
+      "front-camera-corrected",
+    );
+
+    cameraModal.classList.remove("open", "camera-reviewing");
+
+    window.KikiMikiTripCameraUI
+      ?.onCameraClosed();
+
     disableCameraGestureGuard();
+
     cameraZoomRange = null;
     cameraZoomQueuedValue = null;
     cameraZoomUsesSoftware = false;
     cameraZoomCurrent = 1;
-    clearSoftwareCameraZoomLayout({ restoreRatio: true });
-    cameraZoomWrap?.classList.remove("supported", "software");
+
+    clearSoftwareCameraZoomLayout({
+      restoreRatio: true,
+    });
+
+    cameraZoomWrap?.classList.remove(
+      "supported",
+      "software",
+    );
+
     cameraTorchSupported = false;
     cameraTorchOn = false;
-    cameraTorchBtn?.classList.remove("supported", "on");
-    // The timer popup lives under document.body so it can be positioned
-    // against the real viewport. Explicitly hide and reset it when closing
-    // the camera modal.
+
+    cameraTorchBtn?.classList.remove(
+      "supported",
+      "on",
+    );
+
     if (cameraTimerMenu) {
-      cameraTimerMenu.classList.remove("visible");
+      cameraTimerMenu.classList.remove(
+        "visible",
+      );
+
       cameraTimerMenu.style.left = "";
       cameraTimerMenu.style.top = "";
       cameraTimerMenu.style.width = "";
       cameraTimerMenu.style.maxHeight = "";
-      delete cameraTimerMenu.dataset.placement;
+
+      delete cameraTimerMenu.dataset
+        .placement;
     }
+
     document.body.style.overflow = "";
-    if (useHistoryBack && history.state && history.state.cameraOpen) {
+
+    if (
+      useHistoryBack &&
+      history.state &&
+      history.state.cameraOpen
+    ) {
       history.back();
     }
   }
@@ -5996,13 +6113,31 @@ function initChat(WHO) {
     queueSelectedFilesDraftSave();
   };
 
+  function closeCameraForBackground() {
+    if (!cameraModal.classList.contains("open")) return;
+
+    closeCamera(false, true);
+
+    if (history.state?.cameraOpen) {
+      history.replaceState(
+        {
+          ...history.state,
+          cameraOpen: false,
+        },
+        "",
+      );
+    }
+  }
+
   const handleLocalStateVisibility = () => {
     if (document.visibilityState === "hidden") {
+      closeCameraForBackground();
       persistLocalChatState();
       stopTyping();
     }
   };
   const handleFinalPageHide = (event) => {
+    closeCameraForBackground();
     persistLocalChatState();
     stopTyping();
     if (!event.persisted) cleanupChatResources();
