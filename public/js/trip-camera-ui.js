@@ -830,6 +830,8 @@
       return false;
     }
 
+    engine.ensureStartedForUser?.(who);
+
     elements.cameraModal = cameraModal;
     elements.snapButton = snapButton;
 

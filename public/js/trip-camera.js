@@ -45,6 +45,10 @@
 
   const STORE_NAME = "pendingPhotos";
 
+  const PREFERENCES_KEY = "mk_trip_camera_preferences_v2";
+  const LEGACY_MODE_KEY = "mk_trip_camera_mode";
+  const LEGACY_TRIP_KEY = "mk_trip_selected";
+
   const state = {
     started: false,
     ready: false,
@@ -66,6 +70,7 @@
     cloudinaryAvailable: false,
 
     processing: false,
+    recoveryPromise: null,
     localUploading: 0,
     localQueueCount: 0,
     sessionTaken: 0,
@@ -137,16 +142,74 @@
     }
   }
 
-  function modeKey() {
-    return `mk_trip_camera_mode_` + `${state.who || "unknown"}`;
+  function modeKey(who = state.who) {
+    return `mk_trip_camera_mode_${who || "unknown"}`;
   }
 
-  function tripKey() {
-    return `mk_trip_selected_` + `${state.who || "unknown"}`;
+  function tripKey(who = state.who) {
+    return `mk_trip_selected_${who || "unknown"}`;
   }
 
-  function cityKey(tripId) {
-    return `mk_trip_city_` + `${state.who || "unknown"}_` + `${tripId}`;
+  function cityKey(tripId, who = state.who) {
+    return `mk_trip_city_${who || "unknown"}_${tripId}`;
+  }
+
+  function readPreferenceStore() {
+    try {
+      const parsed = JSON.parse(storageGet(PREFERENCES_KEY) || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function readPreferences(who = state.who) {
+    const store = readPreferenceStore();
+    const saved = store[who] && typeof store[who] === "object" ? store[who] : {};
+
+    return {
+      mode:
+        saved.mode ||
+        storageGet(modeKey(who)) ||
+        storageGet(LEGACY_MODE_KEY) ||
+        "chat",
+      tripId:
+        saved.tripId ||
+        storageGet(tripKey(who)) ||
+        storageGet(LEGACY_TRIP_KEY) ||
+        null,
+      cities:
+        saved.cities && typeof saved.cities === "object" ? saved.cities : {},
+    };
+  }
+
+  function savePreferences(values, who = state.who) {
+    if (!who) return;
+
+    const store = readPreferenceStore();
+    const previous = readPreferences(who);
+    const next = {
+      ...previous,
+      ...values,
+      cities: {
+        ...previous.cities,
+        ...(values.cities || {}),
+      },
+    };
+
+    store[who] = next;
+    storageSet(PREFERENCES_KEY, JSON.stringify(store));
+
+    // Keep the original keys in sync so older versions can still restore them.
+    storageSet(modeKey(who), next.mode);
+    storageSet(tripKey(who), next.tripId);
+    storageSet(LEGACY_MODE_KEY, next.mode);
+    storageSet(LEGACY_TRIP_KEY, next.tripId);
+  }
+
+  function savedCityForTrip(tripId, who = state.who) {
+    const preferences = readPreferences(who);
+    return preferences.cities?.[tripId] || storageGet(cityKey(tripId, who));
   }
 
   function timestampToMillis(value) {
@@ -204,7 +267,7 @@
       return null;
     }
 
-    const remembered = storageGet(cityKey(tripId));
+    const remembered = savedCityForTrip(tripId);
 
     const existing = trip.cities.find(
       (city) => city.toLocaleLowerCase() === remembered?.toLocaleLowerCase(),
@@ -382,8 +445,7 @@
   function setMode(mode) {
     state.mode = mode === "trip" && isAllowedUser(state.who) ? "trip" : "chat";
 
-    storageSet(modeKey(), state.mode);
-
+    savePreferences({ mode: state.mode });
     notify();
 
     if (state.mode === "trip") {
@@ -404,7 +466,7 @@
     const changed = state.selectedTripId !== trip.id;
     state.selectedTripId = trip.id;
 
-    storageSet(tripKey(), trip.id);
+    savePreferences({ tripId: trip.id });
 
     if (changed) {
       state.sessionTaken = 0;
@@ -433,6 +495,7 @@
       throw new Error("That city is not part of this trip.");
     }
 
+    savePreferences({ cities: { [tripId]: city } });
     storageSet(cityKey(tripId), city);
 
     notify();
@@ -464,7 +527,7 @@
     ];
     state.selectedTripId = ref.id;
     state.sessionTaken = 0;
-    storageSet(tripKey(), ref.id);
+    savePreferences({ tripId: ref.id });
     syncTripObservers();
     notify();
 
@@ -571,6 +634,9 @@
         storageGet(cityKey(tripId))?.toLocaleLowerCase() ===
         city.toLocaleLowerCase()
       ) {
+        savePreferences({
+          cities: { [tripId]: previousCities[0] || null },
+        });
         storageSet(cityKey(tripId), previousCities[0] || null);
       }
 
@@ -645,6 +711,9 @@
         (snapshot) => {
           state.activityCounts = countActivityDocuments(snapshot);
           notify();
+          reconcileActivitySnapshot(snapshot).catch((error) => {
+            console.warn("Interrupted Trip activity could not be repaired:", error);
+          });
         },
         (error) => {
           console.warn("Trip activity could not be loaded:", error);
@@ -694,6 +763,67 @@
       );
     } catch (error) {
       console.warn("Trip activity status could not be saved:", error);
+    }
+  }
+
+  async function reconcileActivitySnapshot(snapshot) {
+    let records;
+
+    try {
+      records = await getAllRecords();
+    } catch {
+      return;
+    }
+
+    const localIds = new Set(records.map((record) => record.fileId));
+    const currentDeviceId = getDeviceId();
+    const now = Date.now();
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data() || {};
+      const status = String(data.status || "");
+
+      if (
+        !["uploading", "queued_on_phone", "waiting_to_retry"].includes(status) ||
+        localIds.has(doc.id) ||
+        data.capturedBy !== state.who ||
+        (data.deviceId && data.deviceId !== currentDeviceId)
+      ) {
+        continue;
+      }
+
+      const updatedAtMs = timestampToMillis(data.updatedAt);
+      if (updatedAtMs && now - updatedAtMs < 60_000) {
+        continue;
+      }
+
+      if (status === "uploading") {
+        try {
+          const fallbackDoc = await db
+            .collection(SETTINGS.fallbackCollection)
+            .doc(doc.id)
+            .get();
+
+          if (fallbackDoc.exists) {
+            await updateActivity(doc.id, {
+              status: "cloudinary_waiting",
+              destination: "cloudinary",
+              lastError: null,
+            });
+            continue;
+          }
+        } catch {
+          // Continue with the honest interrupted-state repair below.
+        }
+      }
+
+      await updateActivity(doc.id, {
+        status: "failed",
+        lastError:
+          status === "uploading"
+            ? "The website closed during the final upload confirmation. No local retry copy remains; check the laptop folder or Cloudinary."
+            : "The local retry copy is no longer available on this device.",
+      });
     }
   }
 
@@ -1125,6 +1255,18 @@
     return `${prefix}_${value}`.replace(/[^A-Za-z0-9_-]/g, "_");
   }
 
+  function getDeviceId() {
+    const key = "mk_trip_camera_device_id";
+    let deviceId = storageGet(key);
+
+    if (!deviceId) {
+      deviceId = makeId("device");
+      storageSet(key, deviceId);
+    }
+
+    return deviceId;
+  }
+
   function localDate(date) {
     return [
       String(date.getDate()).padStart(2, "0"),
@@ -1233,7 +1375,7 @@
   async function enqueueCapturedBlob(sourceBlob, options = {}) {
     requireReady();
 
-    if (state.mode !== "trip") {
+    if (state.mode !== "trip" && !options.tripId) {
       throw new Error("Trip mode is not active.");
     }
 
@@ -1241,64 +1383,69 @@
       throw new Error("No safe storage destination is available.");
     }
 
-    const trip = getSelectedTrip();
-    const city = getSelectedCity();
+    if (!(sourceBlob instanceof Blob) || sourceBlob.size <= 0) {
+      throw new Error("The captured photo is empty.");
+    }
+
+    const trip = options.tripId
+      ? state.trips.find((item) => item.id === options.tripId)
+      : getSelectedTrip();
+    const city = options.city || getSelectedCity(trip?.id);
     const fileId = makeId("photo");
+    const captured = options.capturedAt || new Date();
+    const location = options.location || (await getLocation());
+
+    if (!trip || !city) {
+      throw new Error("Select a trip and city before taking a photo.");
+    }
+
+    const metadata = {
+      tripId: trip.id,
+      tripName: trip.name,
+      fileId,
+      city,
+      captureDate: localDate(captured),
+      captureTime: localTime(captured),
+      capturedAt: captured.toISOString(),
+      capturedBy: state.who,
+      deviceId: getDeviceId(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown",
+      latitude: location?.latitude ?? null,
+      longitude: location?.longitude ?? null,
+      gpsAccuracyMeters: location?.gpsAccuracyMeters ?? null,
+      width: null,
+      height: null,
+      device: navigator.userAgent.slice(0, 250),
+    };
+
+    const record = {
+      fileId,
+      sourceBlob,
+      file: null,
+      metadata,
+      status: "queued",
+      attempts: 0,
+      createdAt: Date.now(),
+      lastError: null,
+    };
 
     try {
-      const compressed = await compressTripPhotoWithoutCropping(sourceBlob);
-      const captured = options.capturedAt || new Date();
-      const location = options.location || (await getLocation());
-
-      const metadata = {
-        tripId: trip.id,
-        tripName: trip.name,
-        fileId,
-        city,
-        captureDate: localDate(captured),
-        captureTime: localTime(captured),
-        capturedAt: captured.toISOString(),
-        capturedBy: state.who,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown",
-        latitude: location?.latitude ?? null,
-        longitude: location?.longitude ?? null,
-        gpsAccuracyMeters: location?.gpsAccuracyMeters ?? null,
-        width: compressed.width,
-        height: compressed.height,
-        device: navigator.userAgent.slice(0, 250),
-      };
-
-      const file = new File(
-        [compressed.blob],
-        `${fileId}.${compressed.extension}`,
-        {
-          type: compressed.type,
-          lastModified: Date.now(),
-        },
-      );
-
-      await putRecord({
-        fileId,
-        file,
-        metadata,
-        status: "queued",
-        attempts: 0,
-        createdAt: Date.now(),
-        lastError: null,
-      });
+      // Durability comes first. The original camera frame is committed to
+      // IndexedDB before compression or any network request begins.
+      await putRecord(record);
 
       state.sessionTaken += 1;
-
-      updateActivity(fileId, {
+      await updateActivity(fileId, {
         tripId: trip.id,
         tripName: trip.name,
         city,
         capturedBy: state.who,
+        deviceId: metadata.deviceId,
         capturedAt: firebase.firestore.Timestamp.fromDate(captured),
         status: "queued_on_phone",
-        bytes: file.size,
-        width: compressed.width,
-        height: compressed.height,
+        bytes: sourceBlob.size,
+        width: null,
+        height: null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         lastError: null,
       });
@@ -1308,16 +1455,16 @@
 
       return {
         fileId,
-        bytes: file.size,
-        width: compressed.width,
-        height: compressed.height,
+        bytes: sourceBlob.size,
+        secured: true,
       };
     } catch (error) {
-      updateActivity(fileId, {
-        tripId: trip?.id || null,
-        tripName: trip?.name || null,
-        city: city || null,
+      await updateActivity(fileId, {
+        tripId: trip.id,
+        tripName: trip.name,
+        city,
         capturedBy: state.who,
+        deviceId: metadata.deviceId,
         status: "failed",
         lastError: error.message || "Capture failed",
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1325,6 +1472,53 @@
 
       throw error;
     }
+  }
+
+  async function prepareRecordForUpload(record) {
+    if (record.file instanceof Blob && record.file.size > 0) {
+      return record;
+    }
+
+    const source = record.sourceBlob;
+    if (!(source instanceof Blob) || source.size <= 0) {
+      throw new Error("The queued photo data is missing from this phone.");
+    }
+
+    record.status = "compressing";
+    record.lastError = null;
+    await putRecord(record);
+    await updateActivity(record.fileId, {
+      status: "queued_on_phone",
+      lastError: null,
+    });
+
+    const compressed = await compressTripPhotoWithoutCropping(source);
+    record.file = new File(
+      [compressed.blob],
+      `${record.fileId}.${compressed.extension}`,
+      {
+        type: compressed.type,
+        lastModified: Date.now(),
+      },
+    );
+    record.metadata = {
+      ...record.metadata,
+      width: compressed.width,
+      height: compressed.height,
+    };
+    record.sourceBlob = null;
+    record.status = "queued";
+    await putRecord(record);
+
+    await updateActivity(record.fileId, {
+      bytes: record.file.size,
+      width: compressed.width,
+      height: compressed.height,
+      status: "queued_on_phone",
+      lastError: null,
+    });
+
+    return record;
   }
 
   async function uploadToLaptop(record) {
@@ -1455,8 +1649,11 @@
   async function updateQueueCount() {
     try {
       const records = await getAllRecords();
+      state.localUploading = records.filter(
+        (record) => record.status === "uploading" || record.status === "compressing",
+      ).length;
       state.localQueueCount = records.filter(
-        (record) => record.status !== "uploading",
+        (record) => record.status !== "uploading" && record.status !== "compressing",
       ).length;
     } catch (error) {
       console.warn("Could not count pending Trip photos:", error);
@@ -1465,25 +1662,70 @@
     notify();
   }
 
-  async function processRecord(record) {
-    record.status = "uploading";
-    record.attempts = Number(record.attempts || 0) + 1;
-    record.lastError = null;
+  async function recoverInterruptedQueue() {
+    if (state.recoveryPromise) return state.recoveryPromise;
 
-    await putRecord(record);
-    state.localUploading += 1;
-    await updateActivity(record.fileId, {
-      tripId: record.metadata.tripId,
-      tripName: record.metadata.tripName,
-      city: record.metadata.city,
-      capturedBy: record.metadata.capturedBy,
-      status: "uploading",
-      attempts: record.attempts,
-      lastError: null,
+    state.recoveryPromise = (async () => {
+      const records = await getAllRecords();
+      state.localUploading = 0;
+
+      for (const record of records) {
+        if (
+          record.status === "uploading" ||
+          record.status === "compressing" ||
+          !record.status
+        ) {
+          record.status = "retry";
+          record.lastError = "The previous upload was interrupted when the website closed.";
+          await putRecord(record);
+        }
+
+        if (["queued", "retry", "uploading", "compressing"].includes(record.status)) {
+          await updateActivity(record.fileId, {
+            tripId: record.metadata?.tripId || null,
+            tripName: record.metadata?.tripName || null,
+            city: record.metadata?.city || null,
+            capturedBy: record.metadata?.capturedBy || state.who,
+            deviceId: record.metadata?.deviceId || getDeviceId(),
+            status: "waiting_to_retry",
+            attempts: Number(record.attempts || 0),
+            lastError: record.lastError || null,
+          });
+        }
+      }
+
+      await updateQueueCount();
+      return records.length;
+    })().finally(() => {
+      state.recoveryPromise = null;
     });
+
+    return state.recoveryPromise;
+  }
+
+  async function processRecord(inputRecord) {
+    let record = inputRecord;
+    state.localUploading += 1;
     notify();
 
     try {
+      record = await prepareRecordForUpload(record);
+      record.status = "uploading";
+      record.attempts = Number(record.attempts || 0) + 1;
+      record.lastError = null;
+
+      await putRecord(record);
+      await updateActivity(record.fileId, {
+        tripId: record.metadata.tripId,
+        tripName: record.metadata.tripName,
+        city: record.metadata.city,
+        capturedBy: record.metadata.capturedBy,
+        deviceId: record.metadata.deviceId || getDeviceId(),
+        status: "uploading",
+        attempts: record.attempts,
+        lastError: null,
+      });
+
       if (state.laptopOnline) {
         try {
           const result = await uploadToLaptop(record);
@@ -1522,12 +1764,18 @@
       throw new Error("Neither laptop nor Cloudinary is available.");
     } catch (error) {
       record.status = "retry";
-      record.lastError = error.message;
-      await putRecord(record);
+      record.lastError = error.message || "Upload interrupted";
+
+      try {
+        await putRecord(record);
+      } catch (storageError) {
+        console.error("Could not preserve the Trip photo retry record:", storageError);
+      }
+
       await updateActivity(record.fileId, {
         status: "waiting_to_retry",
-        attempts: record.attempts,
-        lastError: error.message,
+        attempts: Number(record.attempts || 0),
+        lastError: record.lastError,
       });
       console.warn("Trip photo kept safely on this phone:", error);
     } finally {
@@ -1544,6 +1792,7 @@
     state.processing = true;
 
     try {
+      await recoverInterruptedQueue();
       await refreshAvailability();
 
       const records = (await getAllRecords()).sort(
@@ -1563,14 +1812,20 @@
   }
 
   function startForUser(who) {
-    if (state.started || !isAllowedUser(who)) {
-      return;
+    if (!isAllowedUser(who)) {
+      return false;
+    }
+
+    if (state.started) {
+      return state.who === who;
     }
 
     state.started = true;
     state.who = who;
-    state.mode = storageGet(modeKey()) === "trip" ? "trip" : "chat";
-    state.selectedTripId = storageGet(tripKey());
+
+    const preferences = readPreferences(who);
+    state.mode = preferences.mode === "trip" ? "trip" : "chat";
+    state.selectedTripId = preferences.tripId || null;
     state.cloudinaryConfigured = Boolean(getCloudinaryConfig());
     state.cloudinaryAvailable = canUseCloudinary();
 
@@ -1588,13 +1843,25 @@
         (snapshot) => {
           state.trips = snapshot.docs.map(mapTrip);
 
-          if (
-            state.selectedTripId &&
-            !state.trips.some((trip) => trip.id === state.selectedTripId)
-          ) {
-            state.selectedTripId = null;
-            storageSet(tripKey(), null);
+          const savedTripId =
+            state.selectedTripId || readPreferences(state.who).tripId;
+          const savedTripExists = state.trips.some(
+            (trip) => trip.id === savedTripId,
+          );
+
+          if (savedTripExists) {
+            state.selectedTripId = savedTripId;
+          } else {
+            state.selectedTripId =
+              state.trips.find((trip) => trip.status === "active")?.id ||
+              state.trips[0]?.id ||
+              null;
           }
+
+          savePreferences({
+            mode: state.mode,
+            tripId: state.selectedTripId,
+          });
 
           state.ready = true;
           syncTripObservers();
@@ -1630,8 +1897,9 @@
       );
 
     refreshAvailability();
-    updateQueueCount();
     processPendingQueue();
+
+    return true;
   }
 
   function stop() {
@@ -1659,6 +1927,8 @@
     state.receiverUrl = null;
     state.laptopOnline = false;
     state.laptopStatus = null;
+    state.recoveryPromise = null;
+    state.processing = false;
     state.localUploading = 0;
     state.localQueueCount = 0;
     state.sessionTaken = 0;
@@ -1676,6 +1946,7 @@
       return state.mode;
     },
 
+    ensureStartedForUser: startForUser,
     setMode,
 
     createFullTripName,
@@ -1698,6 +1969,7 @@
     compressTripPhotoWithoutCropping,
 
     enqueueCapturedBlob,
+    recoverInterruptedQueue,
     processPendingQueue,
 
     stop,
@@ -1707,20 +1979,28 @@
     startForUser(event.detail?.who);
   });
 
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) return;
+    if (state.started) return;
+
+    try {
+      const token = await user.getIdTokenResult();
+      startForUser(token.claims?.who || storageGet("mk_user"));
+    } catch (error) {
+      console.warn("Trip Camera could not restore the authenticated user:", error);
+    }
+  });
+
   window.addEventListener("online", () => {
     state.cloudinaryAvailable = canUseCloudinary();
-
     refreshAvailability();
     processPendingQueue();
   });
 
   window.addEventListener("offline", () => {
     state.cloudinaryAvailable = false;
-
     state.laptopOnline = false;
-
     state.laptopStatus = null;
-
     notify();
   });
 
@@ -1744,6 +2024,19 @@
     }
   });
 
+  function resumeTripQueue() {
+    if (!state.started || document.visibilityState === "hidden") return;
+    processPendingQueue();
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      resumeTripQueue();
+    }
+  });
+  window.addEventListener("pageshow", resumeTripQueue);
+  window.addEventListener("focus", resumeTripQueue);
+
   setInterval(() => {
     if (state.started) {
       refreshAvailability();
@@ -1752,8 +2045,7 @@
   }, SETTINGS.retryInterval);
 
   const rememberedWho = storageGet("mk_user");
-
-  if (rememberedWho && firebase.auth().currentUser) {
+  if (rememberedWho) {
     startForUser(rememberedWho);
   }
 })();

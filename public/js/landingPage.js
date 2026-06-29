@@ -264,18 +264,7 @@ window.addEventListener("resize", () => {
   }
 });
 
-// loader
-
-let loader = document.getElementById("loader");
-if (document.readyState === "loading") {
-  document.body.style.overflow = "hidden";
-  console.log("still loading");
-}
-window.addEventListener("load", () => {
-  loader.style.display = "none";
-  document.body.style.overflow = "";
-  console.log("page loaded");
-});
+// loader is handled by js/landing-loader.js
 
 // heart animation
 // Add floating hearts animation

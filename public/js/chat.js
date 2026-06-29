@@ -458,6 +458,7 @@ function initChat(WHO) {
   let cameraTimerSeconds = 0;
   let cameraCountdownToken = 0;
   let cameraIsCapturing = false;
+  let tripCaptureInProgress = false;
   let cameraIsCountingDown = false;
   let cameraStage = null;
   let cameraFocusIndicator = null;
@@ -5589,6 +5590,7 @@ function initChat(WHO) {
 
     if (
       cameraIsCapturing ||
+      tripCaptureInProgress ||
       !liveTrack ||
       liveTrack.readyState !== "live" ||
       !video.videoWidth ||
@@ -5605,10 +5607,16 @@ function initChat(WHO) {
       return;
     }
 
+    const selectedTrip = tripCamera.getSelectedTrip?.();
+    const selectedCity = tripCamera.getSelectedCity?.();
+    const capturedAt = new Date();
+
     cameraIsCapturing = true;
+    tripCaptureInProgress = true;
     snapBtn.disabled = true;
     tripCameraUI?.setCaptureBusy(true);
     tripCameraUI?.showCaptureFlash();
+    tripCameraUI?.showSaveMessage("Securing photo on this phone…");
 
     const captureId = ++cameraCaptureRequestId;
     const shouldMirrorCapturedFrame = cameraFeed.classList.contains(
@@ -5621,31 +5629,29 @@ function initChat(WHO) {
         shouldMirrorCapturedFrame,
       );
 
-      if (
-        captureId !== cameraCaptureRequestId ||
-        !cameraModal.classList.contains("open")
-      ) {
-        return;
+      // Once a frame exists, always queue it. Closing the camera or sending the
+      // app to the background must not cancel the durable IndexedDB save.
+      await tripCamera.enqueueCapturedBlob(blob, {
+        tripId: selectedTrip?.id,
+        city: selectedCity,
+        capturedAt,
+      });
+
+      if (cameraModal.classList.contains("open")) {
+        tripCameraUI?.showSaveMessage("Trip photo secured — safe to close");
       }
-
-      await tripCamera.enqueueCapturedBlob(blob);
-
-      if (
-        captureId !== cameraCaptureRequestId ||
-        !cameraModal.classList.contains("open")
-      ) {
-        return;
-      }
-
-      tripCameraUI?.showSaveMessage("Trip photo secured");
     } catch (error) {
       console.error("Trip photo capture failed:", error);
-      tripCameraUI?.showSaveMessage(
-        error?.message || "Could not save the Trip photo",
-      );
+      if (cameraModal.classList.contains("open")) {
+        tripCameraUI?.showSaveMessage(
+          error?.message || "Could not secure the Trip photo",
+        );
+      }
     } finally {
+      tripCaptureInProgress = false;
+      cameraIsCapturing = false;
+
       if (captureId === cameraCaptureRequestId) {
-        cameraIsCapturing = false;
         snapBtn.disabled = false;
         tripCameraUI?.setCaptureBusy(false);
       }
@@ -5868,8 +5874,9 @@ function initChat(WHO) {
 
     ensureCameraEnhancementUI();
 
-    const tripCameraUI =
-      window.KikiMikiTripCameraUI;
+    window.KikiMikiTripCamera?.ensureStartedForUser?.(WHO);
+
+    const tripCameraUI = window.KikiMikiTripCameraUI;
 
     tripCameraUI?.attach({
       who: WHO,
@@ -6129,6 +6136,14 @@ function initChat(WHO) {
     }
   }
 
+  const handleTripCaptureBeforeUnload = (event) => {
+    if (!tripCaptureInProgress) return;
+    event.preventDefault();
+    event.returnValue = "";
+  };
+
+  window.addEventListener("beforeunload", handleTripCaptureBeforeUnload);
+
   const handleLocalStateVisibility = () => {
     if (document.visibilityState === "hidden") {
       closeCameraForBackground();
@@ -6151,5 +6166,6 @@ function initChat(WHO) {
       handleLocalStateVisibility,
     );
     window.removeEventListener("pagehide", handleFinalPageHide);
+    window.removeEventListener("beforeunload", handleTripCaptureBeforeUnload);
   });
 } // end initChat
