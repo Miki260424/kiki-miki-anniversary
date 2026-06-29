@@ -1,69 +1,92 @@
 "use strict";
 
 (function () {
-  const LOADER_ID = "loader";
+  let loader = null;
   let pageReady = document.readyState === "complete";
   let authReady = window.__MK_AUTH_READY__ === true;
-  let hidden = false;
-  let loader = null;
+  let finished = false;
+  let authPoll = 0;
 
-  function ensureLoader() {
-    loader = document.getElementById(LOADER_ID);
+  function getLoader() {
+    loader = document.getElementById("loader");
 
-    if (loader) return loader;
+    if (loader) {
+      return loader;
+    }
 
     loader = document.createElement("div");
-    loader.id = LOADER_ID;
+    loader.id = "loader";
     loader.innerHTML = `
       <div class="back"></div>
       <div class="heart" aria-hidden="true"></div>
-      <p class="landing-loader-text">Loading our world…</p>
     `;
 
-    if (document.body.firstChild) {
-      document.body.insertBefore(loader, document.body.firstChild);
-    } else {
-      document.body.appendChild(loader);
-    }
-
+    document.body.insertBefore(loader, document.body.firstChild);
     return loader;
   }
 
-  function showLoader() {
-    const element = ensureLoader();
-
-    if (hidden) return;
-
-    element.style.display = "flex";
-    element.classList.remove("is-hidden", "is-gone");
-    document.documentElement.classList.add("landing-page-loading");
-    document.body.classList.add("landing-page-loading");
-  }
-
-  function hideLoaderWhenReady() {
-    authReady = authReady || window.__MK_AUTH_READY__ === true;
-
-    if (hidden || !pageReady || !authReady) {
-      showLoader();
-      return;
-    }
-
-    hidden = true;
-    const element = ensureLoader();
-
-    element.classList.add("is-hidden");
+  function clearOldScrollLocks() {
     document.documentElement.classList.remove("landing-page-loading");
     document.body.classList.remove("landing-page-loading");
 
-    window.setTimeout(function () {
-      element.classList.add("is-gone");
-      element.style.display = "none";
-    }, 320);
+    document.documentElement.style.removeProperty("overflow");
+    document.documentElement.style.removeProperty("overflow-y");
+    document.documentElement.style.removeProperty("height");
+
+    document.body.style.removeProperty("overflow");
+    document.body.style.removeProperty("overflow-y");
+    document.body.style.removeProperty("height");
+    document.body.style.removeProperty("position");
+    document.body.style.removeProperty("inset");
+  }
+
+  function showLoader() {
+    const element = getLoader();
+
+    element.classList.remove("is-hidden", "is-gone");
+    element.style.display = "block";
+
+    // Match the other pages: only lock scrolling while the loader is visible.
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+  }
+
+  function finishLoading() {
+    authReady = authReady || window.__MK_AUTH_READY__ === true;
+
+    if (finished || !pageReady || !authReady) {
+      return;
+    }
+
+    finished = true;
+
+    const element = getLoader();
+    element.style.display = "none";
+    element.classList.add("is-gone");
+
+    // Remove every lock left by both the old and new loader implementations.
+    clearOldScrollLocks();
+
+    if (authPoll) {
+      window.clearInterval(authPoll);
+      authPoll = 0;
+    }
+
+    // Mobile browsers sometimes apply the previous overflow value one frame
+    // late. Repeat cleanup after layout has settled.
+    window.requestAnimationFrame(clearOldScrollLocks);
+    window.setTimeout(clearOldScrollLocks, 50);
+    window.setTimeout(clearOldScrollLocks, 250);
   }
 
   function handleAuthReady() {
     authReady = true;
-    hideLoaderWhenReady();
+    finishLoading();
+  }
+
+  function handlePageReady() {
+    pageReady = true;
+    finishLoading();
   }
 
   if (document.readyState === "loading") {
@@ -71,7 +94,7 @@
       "DOMContentLoaded",
       function () {
         showLoader();
-        hideLoaderWhenReady();
+        finishLoading();
       },
       { once: true },
     );
@@ -80,39 +103,40 @@
   }
 
   if (pageReady) {
-    hideLoaderWhenReady();
+    handlePageReady();
   } else {
-    window.addEventListener(
-      "load",
-      function () {
-        pageReady = true;
-        hideLoaderWhenReady();
-      },
-      { once: true },
-    );
+    window.addEventListener("load", handlePageReady, { once: true });
   }
 
   window.addEventListener("mk_user_ready", handleAuthReady);
 
-  // Covers the case where Firebase finished before this file executed.
-  if (window.__MK_AUTH_READY__ === true) {
-    handleAuthReady();
-  }
+  // Covers the race where Firebase authenticated before this script was ready.
+  authPoll = window.setInterval(function () {
+    if (window.__MK_AUTH_READY__ === true) {
+      handleAuthReady();
+    }
+  }, 100);
 
-  // Never leave a blank white screen. If authentication is unusually slow,
-  // keep the visible loader and show a helpful message instead.
-  window.setTimeout(function () {
-    if (window.__MK_AUTH_READY__ === true || hidden) return;
-
-    const element = ensureLoader();
-    let text = element.querySelector(".landing-loader-text");
-
-    if (!text) {
-      text = document.createElement("p");
-      text.className = "landing-loader-text";
-      element.appendChild(text);
+  window.addEventListener("pageshow", function () {
+    if (window.__MK_AUTH_READY__ === true) {
+      authReady = true;
     }
 
-    text.textContent = "Still signing you in…";
-  }, 8000);
+    if (document.readyState === "complete") {
+      pageReady = true;
+    }
+
+    finishLoading();
+
+    if (finished) {
+      clearOldScrollLocks();
+    }
+  });
+
+  window.addEventListener("pagehide", function () {
+    if (authPoll) {
+      window.clearInterval(authPoll);
+      authPoll = 0;
+    }
+  });
 })();
