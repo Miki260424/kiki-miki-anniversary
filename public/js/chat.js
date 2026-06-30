@@ -2175,9 +2175,10 @@ function initChat(WHO) {
       console.error("Send error:", err);
       renderPreviewBar();
       await queueSelectedFilesDraftSave();
-      alert(
-        "Couldn't send the message. Your selected photos are still saved on this device.\n\n" +
-          err.message,
+      // KIKIMIKI SAFE CHAT CLEANUP:
+      // Keep the draft/photos and use the existing non-blocking in-app notice.
+      showMiniNotif(
+        "Could not send. Your message and selected photos are still saved on this device.",
       );
     } finally {
       isSending = false;
@@ -3968,7 +3969,14 @@ function initChat(WHO) {
       if (showNotice) showMiniNotif("💾 Image saved!");
     } catch (err) {
       window.open(url, "_blank", "noopener");
-      if (showNotice) showMiniNotif("📂 Opened in new tab — long-press to save");
+      if (showNotice) {
+        const touchDevice = window.matchMedia?.("(pointer: coarse)")?.matches;
+        showMiniNotif(
+          touchDevice
+            ? "Opened in a new tab - long-press the image to save"
+            : "Opened in a new tab - right-click the image and choose Save image as",
+        );
+      }
     }
   }
 
@@ -6110,11 +6118,7 @@ function initChat(WHO) {
   if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().catch(() => {});
   }
-  if (typeof checkAuthentication === "function") {
-    setTimeout(() => {
-      loader.style.display = "none";
-    }, 4000);
-  }
+  // Authentication is handled by safetyCode.js; message loading hides this page loader.
 
   const persistLocalChatState = () => {
     queueSelectedFilesDraftSave();

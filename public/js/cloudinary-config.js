@@ -38,105 +38,92 @@ function getResizedDimensions(width, height) {
 // Always outputs WebP (or JPEG fallback) — smallest file, no visible quality loss
 // * HEIC requires iOS Safari 17+ to decode natively; other browsers may not support it
 async function compressImage(file) {
-  return new Promise((resolve, reject) => {
-    // ── Reject completely unreadable files early ──
-    const readable = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "image/avif",
-      "image/bmp",
-      "image/tiff",
-      "image/svg+xml",
-      "image/heic",
-      "image/heif",
-    ];
-    // Allow even unknown image/* types — browser will either decode or fail gracefully
-    if (!file.type.startsWith("image/")) {
-      reject(new Error(`Not an image file: ${file.type || "unknown type"}`));
-      return;
-    }
+  // KIKIMIKI OBJECT-URL COMPRESSION:
+  // Avoid reading the whole image into an unused base64 string first.
+  if (
+    !file ||
+    typeof file.type !== "string" ||
+    !file.type.startsWith("image/")
+  ) {
+    throw new Error(`Not an image file: ${file?.type || "unknown type"}`);
+  }
 
-    const useWebP = supportsWebP();
-    const format = useWebP ? "image/webp" : "image/jpeg";
-    const quality = useWebP
-      ? IMAGE_SETTINGS.webpQuality
-      : IMAGE_SETTINGS.jpegQuality;
-    const extension = useWebP ? ".webp" : ".jpg";
+  const useWebP = supportsWebP();
+  const format = useWebP ? "image/webp" : "image/jpeg";
+  const quality = useWebP
+    ? IMAGE_SETTINGS.webpQuality
+    : IMAGE_SETTINGS.jpegQuality;
+  const extension = useWebP ? ".webp" : ".jpg";
+  const objectUrl = URL.createObjectURL(file);
 
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error(`Failed to read: ${file.name}`));
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const image = new Image();
 
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onerror = () =>
+      image.onload = () => resolve(image);
+      image.onerror = () =>
         reject(
           new Error(
             `Browser cannot decode this image format (${file.type}). ` +
-              `Try converting it to JPEG or PNG first.`,
+              "Try converting it to JPEG or PNG first.",
           ),
         );
 
-      img.onload = () => {
-        const { width, height } = getResizedDimensions(img.width, img.height);
+      image.src = objectUrl;
+    });
 
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
+    const { width, height } = getResizedDimensions(
+      img.naturalWidth || img.width,
+      img.naturalHeight || img.height,
+    );
 
-        const ctx = canvas.getContext("2d");
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
 
-        // White background for formats with transparency (PNG, GIF, WebP with alpha)
-        // Prevents black/transparent artifacts when converting to JPEG fallback
-        if (!useWebP) {
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, width, height);
-        }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Image canvas is unavailable");
 
-        ctx.drawImage(img, 0, 0, width, height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
 
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              reject(new Error("Compression failed (toBlob returned null)"));
-              return;
-            }
+    if (!useWebP) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+    }
 
-            const name = file.name.replace(/\.[^/.]+$/, extension);
-            const compressedFile = new File([blob], name, { type: format });
+    ctx.drawImage(img, 0, 0, width, height);
 
-            const originalMB = (file.size / 1024 / 1024).toFixed(2);
-            const compressedMB = (blob.size / 1024 / 1024).toFixed(2);
-            const savings = ((1 - blob.size / file.size) * 100).toFixed(0);
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (result) => {
+          if (result) resolve(result);
+          else reject(new Error("Compression failed (toBlob returned null)"));
+        },
+        format,
+        quality,
+      );
+    });
 
-            console.log(`📦 Compressed: ${file.name}`);
-            console.log(`   Input format:  ${file.type || "unknown"}`);
-            console.log(`   Output format: ${format} @ ${quality * 100}%`);
-            console.log(
-              `   Dimensions:    ${img.width}×${img.height} → ${width}×${height}px`,
-            );
-            console.log(
-              `   File size:     ${originalMB}MB → ${compressedMB}MB (${savings}% saved)`,
-            );
+    const originalName =
+      typeof file.name === "string" && file.name
+        ? file.name
+        : `image_${Date.now()}`;
+    const name = originalName.replace(/\.[^/.]+$/, "") + extension;
 
-            resolve(compressedFile);
-          },
-          format,
-          quality,
-        );
-      };
+    console.log(
+      `Compressed ${originalName}: ` +
+        `${(file.size / 1024 / 1024).toFixed(2)}MB -> ` +
+        `${(blob.size / 1024 / 1024).toFixed(2)}MB`,
+    );
 
-      // Use object URL — faster than base64 for large files (no 33% size inflation)
-      img.src = URL.createObjectURL(file);
-    };
-
-    // Only need readAsDataURL if createObjectURL somehow isn't available (extremely rare)
-    reader.readAsDataURL(file);
-  });
+    return new File([blob], name, {
+      type: format,
+      lastModified: Date.now(),
+    });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 // ===== UPLOAD TO CLOUDINARY =====
