@@ -1,29 +1,24 @@
 "use strict";
 
 /*
- * KikiMiki mobile back-gesture guard
+ * KikiMiki layered mobile Back handler.
  *
- * Android/iOS browser back gestures should close the top in-app overlay first
- * instead of immediately navigating away from the current page.
+ * One Back/edge-swipe closes exactly one visible in-app layer:
+ *   photo -> shared gallery -> Chat page
+ *   Trip panel -> camera -> Chat page
  *
- * Covered overlays:
- * - Chat camera
- * - Chat photo lightbox / shared-media gallery
- * - Trip Camera panels
- * - Reaction picker / image action menu / blur picker
- * - Timeline memory viewer and add-memory form
- * - Favourites song and place popups
- *
- * Normal browser Back still leaves the page when no overlay is open.
+ * The script must be loaded in <head> without "defer" so its popstate
+ * listener is registered before chat.js.
  */
 (function () {
   const GUARD_KEY = "__kmBackGuard";
   const PAGE_KEY = "__kmBackPage";
+  const SKIP_KEY = "__KM_SKIP_NEXT_BACK_GESTURE__";
+
   const PAGE_ID =
     crypto.randomUUID?.() ||
     `page_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
-  let handlingPopState = false;
   let leavingPage = false;
 
   function stateObject() {
@@ -31,19 +26,19 @@
     return current && typeof current === "object" ? current : {};
   }
 
-  function isThisPageState(state) {
+  function belongsToThisPage(state) {
     return Boolean(state && state[PAGE_KEY] === PAGE_ID);
   }
 
   function isGuardState(state) {
     return Boolean(
-      isThisPageState(state) &&
+      belongsToThisPage(state) &&
         state[GUARD_KEY] === true,
     );
   }
 
   function markCurrentEntryAsBase() {
-    if (isThisPageState(history.state)) return;
+    if (belongsToThisPage(history.state)) return;
 
     history.replaceState(
       {
@@ -74,6 +69,7 @@
     if (!element || !element.isConnected || element.hidden) return false;
 
     const style = window.getComputedStyle(element);
+
     if (
       style.display === "none" ||
       style.visibility === "hidden" ||
@@ -90,9 +86,11 @@
 
   function lastVisible(selector) {
     const matches = Array.from(document.querySelectorAll(selector));
+
     for (let index = matches.length - 1; index >= 0; index -= 1) {
       if (isVisible(matches[index])) return matches[index];
     }
+
     return null;
   }
 
@@ -110,183 +108,252 @@
     return true;
   }
 
-  function clickCloseInside(root, selector) {
-    if (!root) return false;
-    return clickElement(root.querySelector(selector));
+  function closeInside(root, selector) {
+    return Boolean(root && clickElement(root.querySelector(selector)));
   }
 
-  function closeTopOverlay() {
-    // Trip Camera selection/details/activity panels sit above the camera.
-    let overlay = lastVisible(".trip-camera-overlay.visible");
-    if (overlay) {
-      return (
-        clickCloseInside(overlay, ".trip-camera-panel-close") ||
-        clickElement(overlay)
-      );
+  function getTopLayer() {
+    let element = lastVisible(".trip-camera-overlay.visible");
+    if (element) {
+      return {
+        name: "trip-panel",
+        close: () =>
+          closeInside(element, ".trip-camera-panel-close") ||
+          clickElement(element),
+      };
     }
 
-    // Separate blur-selection dialog.
-    overlay = lastVisible(".separate-blur-overlay.visible");
-    if (overlay) {
-      return (
-        clickCloseInside(overlay, ".separate-blur-close") ||
-        clickElement(overlay)
-      );
+    element = lastVisible(".separate-blur-overlay.visible");
+    if (element) {
+      return {
+        name: "blur-picker",
+        close: () =>
+          closeInside(element, ".separate-blur-close") ||
+          clickElement(element),
+      };
     }
 
-    // Reaction picker.
-    overlay = lastVisible(".reaction-picker-overlay.visible");
-    if (overlay) {
-      return (
-        clickCloseInside(overlay, ".reaction-picker-close") ||
-        clickElement(overlay)
-      );
+    element = lastVisible(".reaction-picker-overlay.visible");
+    if (element) {
+      return {
+        name: "reaction-picker",
+        close: () =>
+          closeInside(element, ".reaction-picker-close") ||
+          clickElement(element),
+      };
     }
 
-    // Chat shared media/search/settings full-screen panels.
-    overlay = lastVisible(".chat-feature-overlay.visible");
-    if (overlay) {
-      return (
-        clickCloseInside(overlay, ".chat-feature-close") ||
-        clickElement(overlay)
-      );
+    /*
+     * The lightbox must be checked before .chat-feature-overlay.
+     * A shared-gallery photo is the top layer while the gallery remains behind.
+     */
+    element = lastVisible("#lightbox.open");
+    if (element) {
+      return {
+        name: "lightbox",
+        close: () =>
+          closeInside(element, "#lightbox-close") ||
+          clickElement(element),
+      };
     }
 
-    // Long-press image action menu or reaction capsule.
-    overlay =
-      lastVisible(".img-action-popover.visible") ||
-      lastVisible(".reaction-bar.visible");
-    if (overlay) {
-      document.documentElement.dispatchEvent(
-        new MouseEvent("click", {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-        }),
-      );
-      return true;
+    element = lastVisible(".img-action-popover.visible");
+    if (element) {
+      return {
+        name: "image-actions",
+        close: () => {
+          document.documentElement.dispatchEvent(
+            new MouseEvent("click", {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+            }),
+          );
+          return true;
+        },
+      };
     }
 
-    // Chat image lightbox.
-    overlay = lastVisible("#lightbox.open");
-    if (overlay) {
-      return (
-        clickCloseInside(overlay, "#lightbox-close") ||
-        clickElement(overlay)
-      );
+    element = lastVisible(".reaction-bar.visible");
+    if (element) {
+      return {
+        name: "reaction-bar",
+        close: () => {
+          document.documentElement.dispatchEvent(
+            new MouseEvent("click", {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+            }),
+          );
+          return true;
+        },
+      };
     }
 
-    // Chat camera.
-    overlay = lastVisible("#camera-modal.open");
-    if (overlay) {
-      return (
-        clickCloseInside(overlay, "#close-camera-btn") ||
-        false
-      );
+    element = lastVisible(".chat-feature-overlay.visible");
+    if (element) {
+      return {
+        name: "chat-feature",
+        close: () =>
+          closeInside(element, ".chat-feature-close") ||
+          clickElement(element),
+      };
     }
 
-    // Emoji tray and open dropdowns are lightweight overlays.
-    overlay = lastVisible("#emoji-tray.open");
-    if (overlay) {
-      overlay.classList.remove("open");
-      return true;
+    element = lastVisible("#camera-modal.open");
+    if (element) {
+      return {
+        name: "camera",
+        close: () =>
+          closeInside(element, "#close-camera-btn"),
+      };
     }
 
-    overlay = lastVisible(".dropdown.open, .dropdown-menu.open");
-    if (overlay) {
-      overlay.classList.remove("open");
-      return true;
+    element = lastVisible("#emoji-tray.open");
+    if (element) {
+      return {
+        name: "emoji-tray",
+        close: () => {
+          element.classList.remove("open");
+          return true;
+        },
+      };
     }
 
-    // Timeline: add-memory form.
-    overlay = lastVisible("#popUpWindowInsertionOfMemory");
-    if (overlay) {
-      const display = window.getComputedStyle(overlay).display;
-      if (display !== "none") {
-        return (
+    element = lastVisible(".dropdown.open, .dropdown-menu.open");
+    if (element) {
+      return {
+        name: "dropdown",
+        close: () => {
+          element.classList.remove("open");
+          return true;
+        },
+      };
+    }
+
+    element = lastVisible("#popUpWindowInsertionOfMemory");
+    if (
+      element &&
+      window.getComputedStyle(element).display !== "none"
+    ) {
+      return {
+        name: "add-memory",
+        close: () =>
           clickElement(document.getElementById("backBtnMemory")) ||
-          clickElement(document.getElementById("imageBackArrow"))
-        );
-      }
+          clickElement(document.getElementById("imageBackArrow")),
+      };
     }
 
-    // Timeline memory viewer or Favourites song popup.
-    overlay = lastVisible("#popUpWindow");
-    if (overlay) {
-      const display = window.getComputedStyle(overlay).display;
-      if (display !== "none") {
-        return clickElement(
-          overlay.querySelector("#backBnt") ||
-            document.getElementById("backBnt"),
-        );
-      }
+    element = lastVisible("#popUpWindow");
+    if (
+      element &&
+      window.getComputedStyle(element).display !== "none"
+    ) {
+      return {
+        name: "memory-or-song",
+        close: () =>
+          clickElement(
+            element.querySelector("#backBnt") ||
+              document.getElementById("backBnt"),
+          ),
+      };
     }
 
-    // Favourites place popup.
-    overlay = lastVisible("#placePopUpWindow.visible");
-    if (overlay) {
-      return clickElement(
-        overlay.querySelector("#placeBackBtn") ||
-          document.getElementById("placeBackBtn"),
-      );
+    element = lastVisible("#placePopUpWindow.visible");
+    if (element) {
+      return {
+        name: "place-popup",
+        close: () =>
+          clickElement(
+            element.querySelector("#placeBackBtn") ||
+              document.getElementById("placeBackBtn"),
+          ),
+      };
     }
 
-    return false;
+    return null;
   }
 
-  function restoreGuardAfterOverlayClose() {
+  function restorePageGuard() {
     markCurrentEntryAsBase();
     ensureGuardEntry();
   }
 
-  function continueNormalBackNavigation() {
+  function leaveThroughSyntheticBaseEntry() {
     if (leavingPage) return;
     leavingPage = true;
 
-    const pageUrl = location.href;
+    const currentUrl = location.href;
     history.back();
 
-    // A directly opened page may have no previous history entry. In that case
-    // restore the guard so a later overlay still behaves correctly.
     window.setTimeout(() => {
+      /*
+       * A directly opened page may have no earlier browser entry. Restore the
+       * page guard if the browser stayed on the same document.
+       */
       if (
-        location.href === pageUrl &&
+        location.href === currentUrl &&
         document.visibilityState !== "hidden"
       ) {
-        markCurrentEntryAsBase();
-        ensureGuardEntry();
+        restorePageGuard();
       }
 
       leavingPage = false;
-      handlingPopState = false;
     }, 350);
   }
 
   function handlePopState(event) {
-    if (handlingPopState) return;
-    handlingPopState = true;
+    /*
+     * closeLightbox() uses history.back() after the X button is pressed.
+     * At that moment the lightbox is already gone but the gallery is still
+     * visible. This flag prevents that history cleanup from closing the gallery.
+     */
+    if (window[SKIP_KEY] === true) {
+      window[SKIP_KEY] = false;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      window.setTimeout(restorePageGuard, 0);
+      return;
+    }
 
-    // Let page-specific popstate listeners run first. The existing Chat
-    // camera/lightbox handlers may already close their own overlay.
-    window.setTimeout(() => {
-      const closedOverlay = closeTopOverlay();
+    /*
+     * This is evaluated synchronously, before chat.js can react to popstate.
+     * Therefore a Trip panel closes before the camera, and a lightbox closes
+     * before the shared gallery.
+     */
+    const topLayer = getTopLayer();
 
-      if (closedOverlay) {
-        restoreGuardAfterOverlayClose();
-        handlingPopState = false;
-        return;
+    if (topLayer) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      try {
+        topLayer.close();
+      } finally {
+        window.setTimeout(restorePageGuard, 0);
       }
 
-      // A page-specific handler already closed a camera/lightbox and returned
-      // to our guard entry. Stay on the current page.
-      if (isGuardState(event.state) || isGuardState(history.state)) {
-        handlingPopState = false;
-        return;
-      }
+      return;
+    }
 
-      // No overlay is open: preserve normal browser Back behaviour.
-      continueNormalBackNavigation();
-    }, 0);
+    /*
+     * Manual camera close moves cameraOpen -> our guard state. The camera is
+     * already closed, so remain on the page and do not consume another entry.
+     */
+    if (
+      isGuardState(event.state) ||
+      isGuardState(history.state)
+    ) {
+      return;
+    }
+
+    /*
+     * No in-app layer is open. The Back gesture moved from our guard entry to
+     * the synthetic base entry, so one additional history.back() performs the
+     * user's intended normal page navigation.
+     */
+    window.setTimeout(leaveThroughSyntheticBaseEntry, 0);
   }
 
   function initialise() {
@@ -294,7 +361,11 @@
     ensureGuardEntry();
   }
 
-  window.addEventListener("popstate", handlePopState);
+  /*
+   * Register immediately and in capture mode. The HTML loads this file in the
+   * head without defer, before chat.js registers its own popstate listener.
+   */
+  window.addEventListener("popstate", handlePopState, true);
 
   window.addEventListener("pageshow", () => {
     if (!leavingPage) initialise();

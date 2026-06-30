@@ -9,6 +9,13 @@
   let unsubscribe = null;
   let latestState = null;
   let saveMessageTimer = null;
+  // KIKIMIKI STABLE TRIP BACK STATE
+  // Trip panels do not create their own history entries. While a panel is
+  // open, Back temporarily moves from the camera entry to Chat, closes only
+  // the panel, then returns to the same camera entry with history.forward().
+  // This prevents history entries from accumulating after repeated panels.
+  let restoringCameraHistoryAfterPanel = false;
+  let restoreCameraHistoryTimer = null;
 
   const elements = {
     cameraModal: null,
@@ -59,15 +66,21 @@
     });
   }
 
-  function closeOverlay() {
+  function removeOverlayVisual() {
     const overlay = document.querySelector(".trip-camera-overlay");
-    if (!overlay) return;
+    if (!overlay) return false;
 
     overlay.classList.remove("visible");
     window.setTimeout(() => overlay.remove(), 190);
+    return true;
+  }
+
+  function closeOverlay() {
+    return removeOverlayVisual();
   }
 
   function openPanel(titleText, subtitleText) {
+    // Replacing one panel with another never changes browser history.
     closeOverlay();
 
     const overlay = document.createElement("div");
@@ -88,7 +101,7 @@
     const subtitle = document.createElement("p");
     subtitle.textContent = subtitleText;
 
-    const closeButton = makeButton("trip-camera-panel-close", "✕", "Close");
+    const closeButton = makeButton("trip-camera-panel-close", "x", "Close");
 
     const body = document.createElement("div");
     body.className = "trip-camera-panel-body";
@@ -107,6 +120,85 @@
     requestAnimationFrame(() => overlay.classList.add("visible"));
     return body;
   }
+
+  function restoreCameraHistoryEntry() {
+    restoringCameraHistoryAfterPanel = true;
+
+    window.clearTimeout(restoreCameraHistoryTimer);
+    history.forward();
+
+    /*
+     * Normally history.forward() returns to the existing cameraOpen entry.
+     * The fallback is only for unusual browser history states where no forward
+     * entry exists. It does not run during normal repeated panel use.
+     */
+    restoreCameraHistoryTimer = window.setTimeout(() => {
+      if (!restoringCameraHistoryAfterPanel) return;
+
+      restoringCameraHistoryAfterPanel = false;
+
+      const currentState =
+        history.state && typeof history.state === "object"
+          ? history.state
+          : {};
+
+      history.pushState(
+        {
+          ...currentState,
+          cameraOpen: true,
+        },
+        "",
+        location.href,
+      );
+    }, 350);
+  }
+
+  window.addEventListener(
+    "popstate",
+    (event) => {
+      /*
+       * This is the forward navigation used only to restore the camera's
+       * existing history guard after a Trip panel was closed by Back.
+       * Stop Chat's camera handler from treating it as another Back action.
+       */
+      if (restoringCameraHistoryAfterPanel) {
+        restoringCameraHistoryAfterPanel = false;
+        window.clearTimeout(restoreCameraHistoryTimer);
+        restoreCameraHistoryTimer = null;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+
+      const overlay = document.querySelector(".trip-camera-overlay");
+      const cameraModal =
+        elements.cameraModal ||
+        document.getElementById("camera-modal");
+
+      if (
+        overlay &&
+        cameraModal?.classList.contains("open")
+      ) {
+        /*
+         * Back moved cameraOpen -> Chat. Close only the top Trip panel, block
+         * Chat's camera popstate handler, then return to cameraOpen. Because
+         * the same camera entry is reused, this works indefinitely:
+         *
+         * panel -> camera
+         * panel -> camera
+         * panel -> camera
+         * camera -> Chat
+         */
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        removeOverlayVisual();
+        restoreCameraHistoryEntry();
+      }
+    },
+    true,
+  );
 
   function createInfoCard(label, value, modifier = "") {
     const card = document.createElement("div");
@@ -876,6 +968,10 @@
   function onCameraClosed() {
     captureBusy = false;
     closeOverlay();
+
+    restoringCameraHistoryAfterPanel = false;
+    window.clearTimeout(restoreCameraHistoryTimer);
+    restoreCameraHistoryTimer = null;
 
     if (elements.root) elements.root.hidden = true;
     elements.cameraModal?.classList.remove(

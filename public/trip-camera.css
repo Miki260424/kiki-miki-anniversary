@@ -1364,3 +1364,14 @@
     height: 17px;
   }
 }
+/* KIKIMIKI TRIP WHOLE-BOX CURSOR FIX
+   body * assigns the regular custom cursor to child spans. Apply the clickable
+   cursor to the buttons and every child so the full box behaves consistently. */
+.trip-camera-selection-button,
+.trip-camera-selection-button *,
+.trip-camera-corner-button,
+.trip-camera-corner-button *,
+.trip-camera-panel-close,
+.trip-camera-panel-close * {
+  cursor: url("/cursor/Preppy-Pinky-Spider-Man-Arrow--p.png"), pointer !important;
+}

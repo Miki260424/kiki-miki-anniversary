@@ -1664,13 +1664,18 @@ function initChat(WHO) {
   let _activeFeatureOverlay = null;
   let _activeFeatureCleanup = null;
 
+  // KIKIMIKI NATIVE CHAT OVERLAY HISTORY
+  // Shared Media sits below lightboxOpen in the browser history stack.
+  const CHAT_FEATURE_STATE_KEY = "kmChatFeatureOpen";
+  let featureOverlayHistoryClosing = false;
+
   const MEDIA_PAGE_SIZE = 24;
   const LEGACY_MEDIA_SCAN_PAGE_SIZE = 50;
   const MEDIA_SCROLL_THRESHOLD_PX = 320;
 
   let _sharedMediaState = null;
 
-  function closeFeatureOverlay() {
+  function closeFeatureOverlay(useHistoryBack = true) {
     if (_activeFeatureCleanup) {
       try {
         _activeFeatureCleanup();
@@ -1680,14 +1685,42 @@ function initChat(WHO) {
       _activeFeatureCleanup = null;
     }
 
-    if (!_activeFeatureOverlay) return;
-    _activeFeatureOverlay.remove();
-    _activeFeatureOverlay = null;
-    unlockScroll();
+    if (_activeFeatureOverlay) {
+      _activeFeatureOverlay.remove();
+      _activeFeatureOverlay = null;
+      unlockScroll();
+    }
+
+    if (
+      useHistoryBack &&
+      history.state?.[CHAT_FEATURE_STATE_KEY]
+    ) {
+      featureOverlayHistoryClosing = true;
+      history.back();
+    }
+  }
+
+  function ensureFeatureOverlayHistoryState() {
+    if (history.state?.[CHAT_FEATURE_STATE_KEY]) return;
+
+    const currentState =
+      history.state && typeof history.state === "object"
+        ? history.state
+        : {};
+
+    history.pushState(
+      {
+        ...currentState,
+        [CHAT_FEATURE_STATE_KEY]: true,
+      },
+      "",
+      location.href,
+    );
   }
 
   function createFeatureOverlay(titleText) {
-    closeFeatureOverlay();
+    // Replacing one feature panel with another reuses the same history layer.
+    closeFeatureOverlay(false);
     closeReactionBar();
     closeAllDropdowns();
     lockScroll();
@@ -1707,9 +1740,9 @@ function initChat(WHO) {
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
     closeBtn.className = "chat-feature-close";
-    closeBtn.textContent = "✕";
+    closeBtn.textContent = "x";
     closeBtn.setAttribute("aria-label", "Close");
-    closeBtn.addEventListener("click", closeFeatureOverlay);
+    closeBtn.addEventListener("click", () => closeFeatureOverlay(true));
 
     header.append(title, closeBtn);
 
@@ -1719,11 +1752,13 @@ function initChat(WHO) {
     panel.append(header, body);
     overlay.appendChild(panel);
     overlay.addEventListener("click", (event) => {
-      if (event.target === overlay) closeFeatureOverlay();
+      if (event.target === overlay) closeFeatureOverlay(true);
     });
 
     document.body.appendChild(overlay);
     _activeFeatureOverlay = overlay;
+    ensureFeatureOverlayHistoryState();
+
     requestAnimationFrame(() => overlay.classList.add("visible"));
     return { overlay, panel, body };
   }
@@ -1858,7 +1893,8 @@ function initChat(WHO) {
         (mediaItem) => mediaItem.key === item.key,
       );
 
-      closeFeatureOverlay();
+      // KIKIMIKI SHARED GALLERY LAYER FIX:
+      // Keep the gallery mounted underneath the full-screen photo.
       openLightbox(urls, Math.max(0, selectedIndex), true);
     });
 
@@ -5859,6 +5895,13 @@ function initChat(WHO) {
   }
 
   window.addEventListener("popstate", (e) => {
+    if (featureOverlayHistoryClosing) {
+      featureOverlayHistoryClosing = false;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return;
+    }
+
     if (lightbox.classList.contains("open")) {
       if (_activeImageActionPopoverClose) _activeImageActionPopoverClose();
       lightbox.classList.remove("open");
@@ -5867,6 +5910,17 @@ function initChat(WHO) {
       lbIndex = 0;
       return;
     }
+
+    if (
+      _activeFeatureOverlay &&
+      !e.state?.[CHAT_FEATURE_STATE_KEY]
+    ) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      closeFeatureOverlay(false);
+      return;
+    }
+
     if (cameraModal.classList.contains("open")) {
       e.preventDefault();
       closeCamera(false, true);
