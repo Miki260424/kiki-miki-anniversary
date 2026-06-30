@@ -3,7 +3,7 @@
 (function () {
   // Trip mode remains a surprise for Kikica for now.
   // Later change this to ["mikica", "kikica"].
-  const TRIP_MODE_ALLOWED_USERS = Object.freeze(["mikica"]);
+  const TRIP_MODE_ALLOWED_USERS = Object.freeze(["mikica", "kikica"]);
 
   window.KIKI_MIKI_TRIP_CONFIG = Object.freeze({
     enabled: true,
