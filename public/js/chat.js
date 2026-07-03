@@ -5656,22 +5656,17 @@ function initChat(WHO) {
     tripCameraUI?.showCaptureFlash();
     tripCameraUI?.showSaveMessage("Securing photo on this phone…");
 
-    const captureId = ++cameraCaptureRequestId;
+const captureId = ++cameraCaptureRequestId;
     const shouldMirrorCapturedFrame = cameraFeed.classList.contains(
       "front-camera-corrected",
     );
-
-    const captureId = ++cameraCaptureRequestId;
-    const shouldMirrorCapturedFrame = cameraFeed.classList.contains(
-      "front-camera-corrected",
-    );
-    const selectedRatio = CAMERA_RATIOS[cameraRatioKey]; // <-- add this line
+    const selectedRatio = CAMERA_RATIOS[cameraRatioKey];
 
     try {
       const blob = await tripCamera.captureFullFrame(
         video,
         shouldMirrorCapturedFrame,
-        selectedRatio, // <-- add this argument
+        selectedRatio,
       );
 
       // Once a frame exists, always queue it. Closing the camera or sending the
