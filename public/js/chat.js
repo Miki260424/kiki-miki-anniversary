@@ -591,10 +591,7 @@ function initChat(WHO) {
   }
 
   function reconcilePendingUploadCache(files = selectedFiles) {
-    pendingUploadCache = normalizePendingUploadCache(
-      pendingUploadCache,
-      files,
-    );
+    pendingUploadCache = normalizePendingUploadCache(pendingUploadCache, files);
   }
 
   function invalidatePendingUploadCache() {
@@ -730,7 +727,12 @@ function initChat(WHO) {
   const MAX_TRACKED_MESSAGE_STATE = 800;
   const msgRowMap = new Map();
 
-  function setBoundedMapValue(map, key, value, limit = MAX_TRACKED_MESSAGE_STATE) {
+  function setBoundedMapValue(
+    map,
+    key,
+    value,
+    limit = MAX_TRACKED_MESSAGE_STATE,
+  ) {
     if (map.has(key)) map.delete(key);
     map.set(key, value);
 
@@ -762,14 +764,12 @@ function initChat(WHO) {
     const seen = new Set();
     const urls = [];
 
-    msgContainer
-      .querySelectorAll(".grid-img[data-img-url]")
-      .forEach((img) => {
-        const url = img.dataset.imgUrl;
-        if (!url || seen.has(url)) return;
-        seen.add(url);
-        urls.push(url);
-      });
+    msgContainer.querySelectorAll(".grid-img[data-img-url]").forEach((img) => {
+      const url = img.dataset.imgUrl;
+      if (!url || seen.has(url)) return;
+      seen.add(url);
+      urls.push(url);
+    });
 
     return urls;
   }
@@ -971,7 +971,9 @@ function initChat(WHO) {
       }
     });
   };
-  msgContainer.addEventListener("scroll", handleMessageScroll, { passive: true });
+  msgContainer.addEventListener("scroll", handleMessageScroll, {
+    passive: true,
+  });
   trackCleanup(() => {
     msgContainer.removeEventListener("scroll", handleMessageScroll);
     if (_messageScrollFrame !== null) cancelAnimationFrame(_messageScrollFrame);
@@ -1691,10 +1693,7 @@ function initChat(WHO) {
       unlockScroll();
     }
 
-    if (
-      useHistoryBack &&
-      history.state?.[CHAT_FEATURE_STATE_KEY]
-    ) {
+    if (useHistoryBack && history.state?.[CHAT_FEATURE_STATE_KEY]) {
       featureOverlayHistoryClosing = true;
       history.back();
     }
@@ -1704,9 +1703,7 @@ function initChat(WHO) {
     if (history.state?.[CHAT_FEATURE_STATE_KEY]) return;
 
     const currentState =
-      history.state && typeof history.state === "object"
-        ? history.state
-        : {};
+      history.state && typeof history.state === "object" ? history.state : {};
 
     history.pushState(
       {
@@ -1906,7 +1903,9 @@ function initChat(WHO) {
     if (!state?.grid || !Array.isArray(items) || items.length === 0) return;
 
     const fragment = document.createDocumentFragment();
-    items.forEach((item) => fragment.appendChild(createSharedMediaButton(item)));
+    items.forEach((item) =>
+      fragment.appendChild(createSharedMediaButton(item)),
+    );
 
     if (prepend) state.grid.prepend(fragment);
     else state.grid.appendChild(fragment);
@@ -2035,7 +2034,8 @@ function initChat(WHO) {
     } catch (error) {
       console.error("Shared media page failed:", error);
       if (state.status) {
-        state.status.textContent = "Photos could not be loaded. Scroll to retry.";
+        state.status.textContent =
+          "Photos could not be loaded. Scroll to retry.";
       }
     } finally {
       state.loading = false;
@@ -2322,9 +2322,7 @@ function initChat(WHO) {
 
     try {
       const workerCount = Math.min(MAX_CONCURRENT_UPLOADS, files.length);
-      await Promise.all(
-        Array.from({ length: workerCount }, () => worker()),
-      );
+      await Promise.all(Array.from({ length: workerCount }, () => worker()));
 
       // Persist every URL that completed, including uploads that finished while
       // another concurrent worker was reporting a failure.
@@ -2350,7 +2348,10 @@ function initChat(WHO) {
     try {
       uploadPayload = await compressImage(file);
     } catch (compressionError) {
-      console.warn("Image compression failed; uploading original:", compressionError);
+      console.warn(
+        "Image compression failed; uploading original:",
+        compressionError,
+      );
     }
 
     try {
@@ -2671,12 +2672,7 @@ function initChat(WHO) {
               imgTapTimer = null;
 
               if (navigator.vibrate) navigator.vibrate(30);
-              openImageActionMenu(
-                imgUrl,
-                gridImg,
-                isSent,
-                images,
-              );
+              openImageActionMenu(imgUrl, gridImg, isSent, images);
             }, 600);
           },
           { passive: true },
@@ -2847,11 +2843,7 @@ function initChat(WHO) {
   function rememberReactions(msgId, reactions) {
     const normalized = { ...(reactions || {}) };
     setBoundedMapValue(_reactionStateByMessage, msgId, normalized);
-    setBoundedMapValue(
-      _lastKnownReactions,
-      msgId,
-      JSON.stringify(normalized),
-    );
+    setBoundedMapValue(_lastKnownReactions, msgId, JSON.stringify(normalized));
     return normalized;
   }
 
@@ -3008,7 +3000,6 @@ function initChat(WHO) {
       openReactionPicker(msgId, row);
     });
     bar.appendChild(plusBtn);
-
 
     // Append to body as fixed so it is never clipped by overflow:hidden parents
     bar.style.position = "fixed";
@@ -3303,7 +3294,6 @@ function initChat(WHO) {
           // The image-specific handler suppresses a delayed lightbox open.
           return;
         }
-
 
         // Only handle double-tap-to-react on non-image parts of the bubble
         // (images handle their own double-tap)
@@ -3855,7 +3845,6 @@ function initChat(WHO) {
   // FIX: no double-open glitch — touch uses preventDefault so no synthetic click fires.
   // FIX: click zones on image itself for navigation.
 
-
   function openLightbox(images, startIdx = 0, useExactList = false) {
     const clickedUrl = images[startIdx];
     if (useExactList) {
@@ -4076,8 +4065,7 @@ function initChat(WHO) {
 
     const isBlurred = isImageBlurred(imgUrl);
     const allBlurred =
-      messageUrls.length > 0 &&
-      messageUrls.every((url) => isImageBlurred(url));
+      messageUrls.length > 0 && messageUrls.every((url) => isImageBlurred(url));
 
     const items = [];
 
@@ -4193,8 +4181,7 @@ function initChat(WHO) {
 
       const clampLeft = (value) =>
         Math.max(pad, Math.min(value, vw - pw - pad));
-      const clampTop = (value) =>
-        Math.max(pad, Math.min(value, vh - ph - pad));
+      const clampTop = (value) => Math.max(pad, Math.min(value, vh - ph - pad));
 
       originalLeft = clampLeft(originalLeft);
       originalTop = clampTop(originalTop);
@@ -4240,10 +4227,22 @@ function initChat(WHO) {
             [originalLeft, reactionRect.top - ph - collisionGap],
             [reactionRect.right + collisionGap, originalTop],
             [reactionRect.left - pw - collisionGap, originalTop],
-            [reactionRect.right + collisionGap, reactionRect.bottom + collisionGap],
-            [reactionRect.left - pw - collisionGap, reactionRect.bottom + collisionGap],
-            [reactionRect.right + collisionGap, reactionRect.top - ph - collisionGap],
-            [reactionRect.left - pw - collisionGap, reactionRect.top - ph - collisionGap],
+            [
+              reactionRect.right + collisionGap,
+              reactionRect.bottom + collisionGap,
+            ],
+            [
+              reactionRect.left - pw - collisionGap,
+              reactionRect.bottom + collisionGap,
+            ],
+            [
+              reactionRect.right + collisionGap,
+              reactionRect.top - ph - collisionGap,
+            ],
+            [
+              reactionRect.left - pw - collisionGap,
+              reactionRect.top - ph - collisionGap,
+            ],
           ];
 
           const candidates = candidateValues.map(([left, top]) => {
@@ -4496,13 +4495,19 @@ function initChat(WHO) {
       } else if (spaceBelow >= spaceAbove) {
         top = Math.max(
           viewportTop + edgeGap,
-          Math.min(buttonRect.bottom + menuGap, viewportBottom - menuHeight - edgeGap),
+          Math.min(
+            buttonRect.bottom + menuGap,
+            viewportBottom - menuHeight - edgeGap,
+          ),
         );
         cameraTimerMenu.dataset.placement = "below";
       } else {
         top = Math.max(
           viewportTop + edgeGap,
-          Math.min(buttonRect.top - menuHeight - menuGap, viewportBottom - menuHeight - edgeGap),
+          Math.min(
+            buttonRect.top - menuHeight - menuGap,
+            viewportBottom - menuHeight - edgeGap,
+          ),
         );
         cameraTimerMenu.dataset.placement = "above";
       }
@@ -4521,30 +4526,38 @@ function initChat(WHO) {
       delete cameraTimerMenu.dataset.placement;
     }
 
-    cameraTimerBtn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const willOpen = !cameraTimerMenu.classList.contains("visible");
-      if (!willOpen) {
-        closeCameraTimerMenu();
-        return;
-      }
+    cameraTimerBtn.addEventListener(
+      "click",
+      (event) => {
+        event.stopPropagation();
+        const willOpen = !cameraTimerMenu.classList.contains("visible");
+        if (!willOpen) {
+          closeCameraTimerMenu();
+          return;
+        }
 
-      cameraTimerMenu.classList.add("visible");
-      requestAnimationFrame(positionCameraTimerMenu);
-    }, { signal: cameraUiSignal });
+        cameraTimerMenu.classList.add("visible");
+        requestAnimationFrame(positionCameraTimerMenu);
+      },
+      { signal: cameraUiSignal },
+    );
 
     cameraTimerMenu
       .querySelectorAll(".camera-timer-choice")
       .forEach((button) => {
-        button.addEventListener("click", () => {
-          setCameraTimer(Number(button.dataset.seconds));
-          closeCameraTimerMenu();
-        }, { signal: cameraUiSignal });
+        button.addEventListener(
+          "click",
+          () => {
+            setCameraTimer(Number(button.dataset.seconds));
+            closeCameraTimerMenu();
+          },
+          { signal: cameraUiSignal },
+        );
       });
 
-    cameraTimerMenu
-      .querySelector("#camera-custom-set")
-      .addEventListener("click", () => {
+    cameraTimerMenu.querySelector("#camera-custom-set").addEventListener(
+      "click",
+      () => {
         const input = cameraTimerMenu.querySelector("#camera-custom-seconds");
         const requestedSeconds = Number(input.value);
         if (!Number.isFinite(requestedSeconds) || requestedSeconds < 1) return;
@@ -4552,97 +4565,94 @@ function initChat(WHO) {
         input.value = String(seconds);
         setCameraTimer(seconds);
         closeCameraTimerMenu();
-      }, { signal: cameraUiSignal });
-
-    cameraStage.addEventListener(
-      "pointerdown",
-      handleCameraPointerDown,
+      },
       { signal: cameraUiSignal },
     );
-    cameraStage.addEventListener(
-      "pointermove",
-      handleCameraPointerMove,
-      { signal: cameraUiSignal },
-    );
-    cameraStage.addEventListener(
-      "pointerup",
-      handleCameraPointerEnd,
-      { signal: cameraUiSignal },
-    );
-    cameraStage.addEventListener(
-      "pointercancel",
-      handleCameraPointerEnd,
-      { signal: cameraUiSignal },
-    );
-    cameraZoomSlider.addEventListener("input", () => {
-      requestCameraZoom(Number(cameraZoomSlider.value));
-    }, { signal: cameraUiSignal });
 
-    cameraRatioSelect.addEventListener("change", () => {
-      const requestedRatio = cameraRatioSelect.value;
-      cameraRatioKey = Object.prototype.hasOwnProperty.call(
-        CAMERA_RATIOS,
-        requestedRatio,
-      )
-        ? requestedRatio
-        : "default";
-
-      clearSoftwareCameraZoomLayout({ restoreRatio: false });
-      applyCameraRatioLayout();
-
-      if (cameraZoomUsesSoftware && cameraZoomCurrent > 1) {
-        requestAnimationFrame(() => {
-          applySoftwareCameraZoom(cameraZoomCurrent);
-        });
-      }
-    }, { signal: cameraUiSignal });
-
-    cameraExposureSlider.addEventListener(
+    cameraStage.addEventListener("pointerdown", handleCameraPointerDown, {
+      signal: cameraUiSignal,
+    });
+    cameraStage.addEventListener("pointermove", handleCameraPointerMove, {
+      signal: cameraUiSignal,
+    });
+    cameraStage.addEventListener("pointerup", handleCameraPointerEnd, {
+      signal: cameraUiSignal,
+    });
+    cameraStage.addEventListener("pointercancel", handleCameraPointerEnd, {
+      signal: cameraUiSignal,
+    });
+    cameraZoomSlider.addEventListener(
       "input",
-      applyExposureCompensation,
+      () => {
+        requestCameraZoom(Number(cameraZoomSlider.value));
+      },
       { signal: cameraUiSignal },
     );
-    cameraTorchBtn.addEventListener(
+
+    cameraRatioSelect.addEventListener(
+      "change",
+      () => {
+        const requestedRatio = cameraRatioSelect.value;
+        cameraRatioKey = Object.prototype.hasOwnProperty.call(
+          CAMERA_RATIOS,
+          requestedRatio,
+        )
+          ? requestedRatio
+          : "default";
+
+        clearSoftwareCameraZoomLayout({ restoreRatio: false });
+        applyCameraRatioLayout();
+
+        if (cameraZoomUsesSoftware && cameraZoomCurrent > 1) {
+          requestAnimationFrame(() => {
+            applySoftwareCameraZoom(cameraZoomCurrent);
+          });
+        }
+      },
+      { signal: cameraUiSignal },
+    );
+
+    cameraExposureSlider.addEventListener("input", applyExposureCompensation, {
+      signal: cameraUiSignal,
+    });
+    cameraTorchBtn.addEventListener("click", toggleCameraTorch, {
+      signal: cameraUiSignal,
+    });
+
+    document.addEventListener(
       "click",
-      toggleCameraTorch,
+      (event) => {
+        if (
+          cameraTimerMenu &&
+          !timerWrap.contains(event.target) &&
+          !cameraTimerMenu.contains(event.target)
+        ) {
+          closeCameraTimerMenu();
+        }
+      },
       { signal: cameraUiSignal },
     );
 
-    document.addEventListener("click", (event) => {
-      if (
-        cameraTimerMenu &&
-        !timerWrap.contains(event.target) &&
-        !cameraTimerMenu.contains(event.target)
-      ) {
-        closeCameraTimerMenu();
-      }
-    }, { signal: cameraUiSignal });
-
-    window.addEventListener(
-      "resize",
-      positionCameraTimerMenu,
-      { passive: true, signal: cameraUiSignal },
-    );
-    window.visualViewport?.addEventListener(
-      "resize",
-      positionCameraTimerMenu,
-      { passive: true, signal: cameraUiSignal },
-    );
-    window.visualViewport?.addEventListener(
-      "scroll",
-      positionCameraTimerMenu,
-      { passive: true, signal: cameraUiSignal },
-    );
-    window.addEventListener(
-      "resize",
-      syncCameraStageAspect,
-      { passive: true, signal: cameraUiSignal },
-    );
-    window.visualViewport?.addEventListener(
-      "resize",
-      syncCameraStageAspect,
-      { passive: true, signal: cameraUiSignal },
-    );
+    window.addEventListener("resize", positionCameraTimerMenu, {
+      passive: true,
+      signal: cameraUiSignal,
+    });
+    window.visualViewport?.addEventListener("resize", positionCameraTimerMenu, {
+      passive: true,
+      signal: cameraUiSignal,
+    });
+    window.visualViewport?.addEventListener("scroll", positionCameraTimerMenu, {
+      passive: true,
+      signal: cameraUiSignal,
+    });
+    window.addEventListener("resize", syncCameraStageAspect, {
+      passive: true,
+      signal: cameraUiSignal,
+    });
+    window.visualViewport?.addEventListener("resize", syncCameraStageAspect, {
+      passive: true,
+      signal: cameraUiSignal,
+    });
   }
 
   function setCameraTimer(seconds) {
@@ -4680,14 +4690,18 @@ function initChat(WHO) {
       const onLoaded = () =>
         finish(() => {
           if (requestId !== cameraStreamRequestId) {
-            reject(new DOMException("Camera request was replaced", "AbortError"));
+            reject(
+              new DOMException("Camera request was replaced", "AbortError"),
+            );
           } else {
             resolve();
           }
         });
       const onError = () =>
         finish(() =>
-          reject(cameraFeed.error || new Error("Could not load camera preview")),
+          reject(
+            cameraFeed.error || new Error("Could not load camera preview"),
+          ),
         );
       const timeoutId = setTimeout(() => {
         finish(() =>
@@ -4813,16 +4827,8 @@ function initChat(WHO) {
         height: baseHeight,
       };
 
-      cameraStage.style.setProperty(
-        "width",
-        `${baseWidth}px`,
-        "important",
-      );
-      cameraStage.style.setProperty(
-        "height",
-        `${baseHeight}px`,
-        "important",
-      );
+      cameraStage.style.setProperty("width", `${baseWidth}px`, "important");
+      cameraStage.style.setProperty("height", `${baseHeight}px`, "important");
     }
 
     cameraStage.classList.add("camera-software-zoom-active");
@@ -4934,17 +4940,15 @@ function initChat(WHO) {
 
         try {
           await track.applyConstraints({ advanced: [{ zoom: value }] });
-          const settings = typeof track.getSettings === "function"
-            ? track.getSettings()
-            : {};
+          const settings =
+            typeof track.getSettings === "function" ? track.getSettings() : {};
           syncCameraZoomUI(
             Number.isFinite(settings.zoom) ? settings.zoom : value,
           );
         } catch (error) {
           console.warn("Camera zoom was not accepted:", error);
-          const settings = typeof track.getSettings === "function"
-            ? track.getSettings()
-            : {};
+          const settings =
+            typeof track.getSettings === "function" ? track.getSettings() : {};
           if (Number.isFinite(settings.zoom)) syncCameraZoomUI(settings.zoom);
           break;
         }
@@ -4958,7 +4962,9 @@ function initChat(WHO) {
     cameraTorchOn = false;
     cameraTorchSupported =
       facingMode === "environment" &&
-      Boolean(capabilities?.torch === true || capabilities?.torch?.includes?.(true));
+      Boolean(
+        capabilities?.torch === true || capabilities?.torch?.includes?.(true),
+      );
 
     cameraTorchBtn?.classList.toggle("supported", cameraTorchSupported);
     cameraTorchBtn?.classList.remove("on");
@@ -4995,10 +5001,7 @@ function initChat(WHO) {
   function getPointerDistance() {
     const points = [...cameraPointers.values()];
     if (points.length < 2) return 0;
-    return Math.hypot(
-      points[0].x - points[1].x,
-      points[0].y - points[1].y,
-    );
+    return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
   }
 
   function handleCameraPointerDown(event) {
@@ -5181,20 +5184,13 @@ function initChat(WHO) {
 
     const liveWrapRect = cameraLiveWrap?.getBoundingClientRect();
     const liveWrapWidth =
-      liveWrapRect?.width ||
-      cameraLiveWrap?.clientWidth ||
-      modalInnerWidth;
+      liveWrapRect?.width || cameraLiveWrap?.clientWidth || modalInnerWidth;
 
     // Never trust a stale 480px flex measurement on a narrower phone.
     // Keep a small safety gap so rounded corners and shadows remain visible.
     const availableWidth = Math.max(
       1,
-      Math.min(
-        480,
-        liveWrapWidth,
-        modalInnerWidth,
-        viewportWidth - 20,
-      ),
+      Math.min(480, liveWrapWidth, modalInnerWidth, viewportWidth - 20),
     );
     const availableHeight = Math.max(120, viewportHeight * 0.65);
 
@@ -5555,9 +5551,7 @@ function initChat(WHO) {
 
     if (!accepted && !cameraFocusUnsupportedNotified) {
       cameraFocusUnsupportedNotified = true;
-      showMiniNotif(
-        "This camera only allows automatic focus in the browser",
-      );
+      showMiniNotif("This camera only allows automatic focus in the browser");
     }
   }
 
@@ -5667,10 +5661,17 @@ function initChat(WHO) {
       "front-camera-corrected",
     );
 
+    const captureId = ++cameraCaptureRequestId;
+    const shouldMirrorCapturedFrame = cameraFeed.classList.contains(
+      "front-camera-corrected",
+    );
+    const selectedRatio = CAMERA_RATIOS[cameraRatioKey]; // <-- add this line
+
     try {
       const blob = await tripCamera.captureFullFrame(
         video,
         shouldMirrorCapturedFrame,
+        selectedRatio, // <-- add this argument
       );
 
       // Once a frame exists, always queue it. Closing the camera or sending the
@@ -5753,15 +5754,13 @@ function initChat(WHO) {
       }
     }
 
-    const shouldMirrorCapturedFrame =
-      cameraFeed.classList.contains("front-camera-corrected");
+    const shouldMirrorCapturedFrame = cameraFeed.classList.contains(
+      "front-camera-corrected",
+    );
 
     if (shouldMirrorCapturedFrame) {
       sourceX = video.videoWidth - sourceX - sourceWidth;
-      sourceX = Math.max(
-        0,
-        Math.min(video.videoWidth - sourceWidth, sourceX),
-      );
+      sourceX = Math.max(0, Math.min(video.videoWidth - sourceWidth, sourceX));
     }
 
     snapCanvas.width = Math.max(1, Math.round(sourceWidth));
@@ -5911,10 +5910,7 @@ function initChat(WHO) {
       return;
     }
 
-    if (
-      _activeFeatureOverlay &&
-      !e.state?.[CHAT_FEATURE_STATE_KEY]
-    ) {
+    if (_activeFeatureOverlay && !e.state?.[CHAT_FEATURE_STATE_KEY]) {
       e.preventDefault();
       e.stopImmediatePropagation();
       closeFeatureOverlay(false);
@@ -5964,10 +5960,7 @@ function initChat(WHO) {
     await startCameraStream();
   }
 
-  function closeCamera(
-    useHistoryBack = true,
-    discardPending = true,
-  ) {
+  function closeCamera(useHistoryBack = true, discardPending = true) {
     cameraStreamRequestId += 1;
     cameraCaptureRequestId += 1;
 
@@ -5982,9 +5975,7 @@ function initChat(WHO) {
     stopMediaStream(cameraStream);
 
     if (cameraPreviewObjectUrl) {
-      URL.revokeObjectURL(
-        cameraPreviewObjectUrl,
-      );
+      URL.revokeObjectURL(cameraPreviewObjectUrl);
 
       cameraPreviewObjectUrl = null;
     }
@@ -5998,14 +5989,11 @@ function initChat(WHO) {
 
     cameraPreviewImg.removeAttribute("src");
 
-    cameraFeed.classList.remove(
-      "front-camera-corrected",
-    );
+    cameraFeed.classList.remove("front-camera-corrected");
 
     cameraModal.classList.remove("open", "camera-reviewing");
 
-    window.KikiMikiTripCameraUI
-      ?.onCameraClosed();
+    window.KikiMikiTripCameraUI?.onCameraClosed();
 
     disableCameraGestureGuard();
 
@@ -6018,40 +6006,27 @@ function initChat(WHO) {
       restoreRatio: true,
     });
 
-    cameraZoomWrap?.classList.remove(
-      "supported",
-      "software",
-    );
+    cameraZoomWrap?.classList.remove("supported", "software");
 
     cameraTorchSupported = false;
     cameraTorchOn = false;
 
-    cameraTorchBtn?.classList.remove(
-      "supported",
-      "on",
-    );
+    cameraTorchBtn?.classList.remove("supported", "on");
 
     if (cameraTimerMenu) {
-      cameraTimerMenu.classList.remove(
-        "visible",
-      );
+      cameraTimerMenu.classList.remove("visible");
 
       cameraTimerMenu.style.left = "";
       cameraTimerMenu.style.top = "";
       cameraTimerMenu.style.width = "";
       cameraTimerMenu.style.maxHeight = "";
 
-      delete cameraTimerMenu.dataset
-        .placement;
+      delete cameraTimerMenu.dataset.placement;
     }
 
     document.body.style.overflow = "";
 
-    if (
-      useHistoryBack &&
-      history.state &&
-      history.state.cameraOpen
-    ) {
+    if (useHistoryBack && history.state && history.state.cameraOpen) {
       history.back();
     }
   }
@@ -6126,17 +6101,19 @@ function initChat(WHO) {
             lastSeen: now,
           }));
 
-        let records = [...existingRecords, ...legacyRecords].filter((record) => {
-          if (!record || typeof record.token !== "string" || !record.token) {
-            return false;
-          }
-          const lastSeen =
-            typeof record.lastSeen === "number"
-              ? record.lastSeen
-              : record.lastSeen?.toMillis?.() || 0;
-          record.lastSeen = lastSeen;
-          return lastSeen >= cutoff;
-        });
+        let records = [...existingRecords, ...legacyRecords].filter(
+          (record) => {
+            if (!record || typeof record.token !== "string" || !record.token) {
+              return false;
+            }
+            const lastSeen =
+              typeof record.lastSeen === "number"
+                ? record.lastSeen
+                : record.lastSeen?.toMillis?.() || 0;
+            record.lastSeen = lastSeen;
+            return lastSeen >= cutoff;
+          },
+        );
 
         records = records.filter(
           (record) => record.deviceId !== deviceId && record.token !== token,

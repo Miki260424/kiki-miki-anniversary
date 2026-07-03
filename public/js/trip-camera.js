@@ -1128,48 +1128,69 @@
     return best;
   }
 
-  async function captureFullFrame(video, shouldMirror = false) {
-    if (!video?.videoWidth || !video?.videoHeight) {
-      throw new Error("The camera frame is not ready.");
-    }
-
-    const canvas = document.createElement("canvas");
-
-    canvas.width = video.videoWidth;
-
-    canvas.height = video.videoHeight;
-
-    const context = canvas.getContext("2d", {
-      alpha: false,
-    });
-
-    if (!context) {
-      throw new Error("The camera frame could not be captured.");
-    }
-
-    context.fillStyle = "#ffffff";
-
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    context.save();
-
-    if (shouldMirror) {
-      context.translate(canvas.width, 0);
-
-      context.scale(-1, 1);
-    }
-
-    /*
-     * The complete camera frame is saved.
-     * The ratio selector is ignored for Trip storage.
-     * No part of the image is cropped.
-     */
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    context.restore();
-
-    return canvasToBlob(canvas, "image/jpeg", 0.96);
+ async function captureFullFrame(video, shouldMirror = false, ratio = null) {
+  if (!video?.videoWidth || !video?.videoHeight) {
+    throw new Error("The camera frame is not ready.");
   }
+
+  let sourceX = 0;
+  let sourceY = 0;
+  let sourceWidth = video.videoWidth;
+  let sourceHeight = video.videoHeight;
+
+  // Center-crop the source rectangle to the selected ratio, mirroring the
+  // same math chat.js already uses for the non-Trip camera. This must
+  // happen before the mirror adjustment below.
+  if (ratio) {
+    const sourceRatio = sourceWidth / sourceHeight;
+
+    if (sourceRatio > ratio) {
+      const croppedWidth = sourceHeight * ratio;
+      sourceX += (sourceWidth - croppedWidth) / 2;
+      sourceWidth = croppedWidth;
+    } else if (sourceRatio < ratio) {
+      const croppedHeight = sourceWidth / ratio;
+      sourceY += (sourceHeight - croppedHeight) / 2;
+      sourceHeight = croppedHeight;
+    }
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(sourceWidth));
+  canvas.height = Math.max(1, Math.round(sourceHeight));
+
+  const context = canvas.getContext("2d", { alpha: false });
+  if (!context) {
+    throw new Error("The camera frame could not be captured.");
+  }
+
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  context.save();
+
+  if (shouldMirror) {
+    // Mirror around the cropped rectangle, not the full source frame.
+    sourceX = video.videoWidth - sourceX - sourceWidth;
+    sourceX = Math.max(0, Math.min(video.videoWidth - sourceWidth, sourceX));
+
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
+  }
+
+  // When `ratio` is provided, the source rectangle above is already
+  // center-cropped to match it, so the saved Trip photo now has the same
+  // aspect ratio the user picked instead of the full uncropped frame.
+  context.drawImage(
+    video,
+    sourceX, sourceY, sourceWidth, sourceHeight,
+    0, 0, canvas.width, canvas.height,
+  );
+
+  context.restore();
+
+  return canvasToBlob(canvas, "image/jpeg", 0.96);
+}
 
   function openQueueDatabase() {
     return new Promise((resolve, reject) => {
@@ -2049,3 +2070,5 @@
     startForUser(rememberedWho);
   }
 })();
+
+
