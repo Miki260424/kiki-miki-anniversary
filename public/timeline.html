@@ -1,246 +1,180 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>❤️ Our Timeline ❤️</title>
-    <link rel="icon" href="sliki/icons/mk.png" />
-    <link rel="stylesheet" href="timeline.css" />
-    <link rel="preload" href="corkboard/pozadinaKomGotovo.webp" as="image" />
-    <link rel="manifest" href="/manifest.json" />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0&icon_names=add_2"
-    />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add_2"
-    />
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
-    <script src="js/firebase-config.js"></script>
-    <script src="js/safetyCode.js"></script>
-    <script src="js/cloudinary-config.js"></script>
-    <script src="js/database-helpers.js"></script>
-      <script defer src="js/app-back-gesture.js?v=20260630-1"></script>
-  </head>
 
-  <body>
-    <header id="hideHeader">
-      <nav class="navbar">
-        <h1 class="timelineH1">Our timeline</h1>
-        <ul class="navUl ul1">
-          <li><a href="landingPage.html">HOME</a></li>
-          <li><a href="favourites.html">Favourites</a></li>
-        </ul>
-        <ul class="navUl ul2">
-          <li><a href="chat.html">Message me</a></li>
-          <li><a href="#">Coming soon</a></li>
-        </ul>
-        <div id="menu">
-          <img
-            id="menuChange"
-            class="rotateMenu"
-            src="sliki/icons/burgerBig.png"
-            alt="menu"
-          />
-        </div>
-        <div id="colectionOfDrop" class="colectionOfDrop">
-          <ul id="navlistDrop">
-            <a class="listItemLinkDrop" href="landingPage.html"
-              ><li>Home</li></a
-            >
-            <a class="listItemLinkDrop" href="favourites.html"
-              ><li>Favourites</li></a
-            >
-            <a class="listItemLinkDrop" href="chat.html"><li>Message me</li></a>
-            <a class="listItemLinkDrop" href="#"><li>Coming soon</li></a>
-            <a class="listItemLinkDrop" href="#"><li>Coming soon</li></a>
-            <button id="logOutDrop" class="logOut"><span>Log out</span></button>
-          </ul>
-        </div>
-      </nav>
-    </header>
-    <div id="shadow2"></div>
-    <!-- Ushte barash?? Sho barasash barem kazi mi ke ti pomozam  -->
-    <!-- Babygirl what iz ju doing -->
-    <!-- Easter eggs barash? -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>❤️ Our Timeline ❤️</title>
+  <link rel="icon" href="sliki/icons/mk.png" />
+  <link rel="stylesheet" href="timeline.css" />
+  <link rel="preload" href="corkboard/pozadinaKomGotovo.webp" as="image" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0&icon_names=add_2" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=add_2" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/safetyCode.js"></script>
+  <script src="js/cloudinary-config.js"></script>
+  <script src="js/database-helpers.js"></script>
+  <script defer src="js/app-back-gesture.js?v=20260630-1"></script>
+</head>
 
-    <div class="upLine"></div>
-    <div id="timelineWrapper">
-      <svg id="connectionSVG"></svg>
-      <div id="popUpWindowInsertionOfMemory">
-        <div id="addInpMemory">
-          <div id="titleAndBtn">
-            <div class="empy">
-              <button class="backGo" id="backBtnMemory">Back</button>
-              <img
-                class="backGo"
-                id="imageBackArrow"
-                src="sliki/icons/close3.png"
-                alt="backArrow"
-              />
+<body>
+  <header id="hideHeader">
+    <nav class="navbar">
+      <h1 class="timelineH1">Our timeline</h1>
+      <ul class="navUl ul1">
+        <li><a href="landingPage.html">HOME</a></li>
+        <li><a href="favourites.html">Favourites</a></li>
+      </ul>
+      <ul class="navUl ul2">
+        <li><a href="chat.html">Message me</a></li>
+        <li><a href="#">Coming soon</a></li>
+      </ul>
+      <div id="menu">
+        <img id="menuChange" class="rotateMenu" src="sliki/icons/burgerBig.png" alt="menu" />
+      </div>
+      <div id="colectionOfDrop" class="colectionOfDrop">
+        <ul id="navlistDrop">
+          <a class="listItemLinkDrop" href="landingPage.html">
+            <li>Home</li>
+          </a>
+          <a class="listItemLinkDrop" href="favourites.html">
+            <li>Favourites</li>
+          </a>
+          <a class="listItemLinkDrop" href="chat.html">
+            <li>Message me</li>
+          </a>
+          <a class="listItemLinkDrop" href="#">
+            <li>Coming soon</li>
+          </a>
+          <a class="listItemLinkDrop" href="#">
+            <li>Coming soon</li>
+          </a>
+          <button id="logOutDrop" class="logOut"><span>Log out</span></button>
+        </ul>
+      </div>
+    </nav>
+  </header>
+  <div id="shadow2"></div>
+  <!-- Ushte barash?? Sho barasash barem kazi mi ke ti pomozam  -->
+  <!-- Babygirl what iz ju doing -->
+  <!-- Easter eggs barash? -->
+
+  <div class="upLine"></div>
+  <div id="timelineWrapper">
+    <svg id="connectionSVG"></svg>
+    <div id="popUpWindowInsertionOfMemory">
+      <div id="addInpMemory">
+        <div id="titleAndBtn">
+          <div class="empy">
+            <button class="backGo" id="backBtnMemory">Back</button>
+            <img class="backGo" id="imageBackArrow" src="sliki/icons/close3.png" alt="backArrow" />
+          </div>
+          <h1 id="titleOfPopUpInpDesc">A NEW MEMORY OF US</h1>
+          <div class="empy"></div>
+        </div>
+
+        <div id="wholeDiv">
+          <div id="leftSideOfPopUp">
+            <input type="file" class="imageInputFile" name="fileInp" id="fileInput" hidden accept="image/*" />
+            <div id="imagePreviewHolder">
+              <img id="imagePreview" src="" alt="preview" />
+              <button id="removeImageBtn">✕</button>
             </div>
-            <h1 id="titleOfPopUpInpDesc">A NEW MEMORY OF US</h1>
-            <div class="empy"></div>
+            <label for="fileInput" class="custom-file-btn" id="uploadLabelLeft">Upload an Image</label>
           </div>
 
-          <div id="wholeDiv">
-            <div id="leftSideOfPopUp">
-              <input
-                type="file"
-                class="imageInputFile"
-                name="fileInp"
-                id="fileInput"
-                hidden
-                accept="image/*"
-              />
-              <div id="imagePreviewHolder">
-                <img id="imagePreview" src="" alt="preview" />
-                <button id="removeImageBtn">✕</button>
+          <!-- Aj mozi ke najdish 😁 -->
+          <div id="rightSideOfPopUp">
+            <div id="divOfTextInp">
+              <div id="bothInps">
+                <input type="text" class="inps" name="city" id="cityInput" placeholder="City" />
+                <input type="text" class="inps" name="place" id="placeInput" placeholder="Place" />
               </div>
-              <label
-                for="fileInput"
-                class="custom-file-btn"
-                id="uploadLabelLeft"
-                >Upload an Image</label
-              >
-            </div>
-
-            <!-- Aj mozi ke najdish 😁 -->
-            <div id="rightSideOfPopUp">
-              <div id="divOfTextInp">
-                <div id="bothInps">
-                  <input
-                    type="text"
-                    class="inps"
-                    name="city"
-                    id="cityInput"
-                    placeholder="City"
-                  />
-                  <input
-                    type="text"
-                    class="inps"
-                    name="place"
-                    id="placeInput"
-                    placeholder="Place"
-                  />
-                </div>
-                <input
-                  type="text"
-                  class="inps"
-                  name="title"
-                  id="titleInput"
-                  placeholder="Title"
-                />
-                <input
-                  type="text"
-                  class="inps"
-                  name="country"
-                  id="countryInput"
-                  placeholder="Country"
-                />
-                <input
-                  type="date"
-                  class="inps"
-                  name="date"
-                  id="dateInput"
-                  placeholder="Select date"
-                />
-                <div id="holderOfTextareaAndImg">
-                  <textarea
-                    class="inpDescription"
-                    id="textOfDescription"
-                    placeholder="Description"
-                  ></textarea>
-                  <div id="rightImageHolder">
-                    <input
-                      type="file"
-                      class="imageInputFile"
-                      name="fileInp"
-                      id="fileInput2"
-                      hidden
-                      accept="image/*"
-                    />
-                    <div id="smallImagePreviewHolder">
-                      <img id="smallImagePreview" src="" alt="preview" />
-                      <button id="removeSmallImageBtn">✕</button>
-                    </div>
-                    <label for="fileInput2" class="custom-file-btn" id="uploadLabelSmall">
-                      <span id="uploadImgDisap">Upload an Image</span>
-                      <span class="material-symbols-outlined">add_2</span>
-                    </label>
+              <input type="text" class="inps" name="title" id="titleInput" placeholder="Title" />
+              <input type="text" class="inps" name="country" id="countryInput" placeholder="Country" />
+              <input type="date" class="inps" name="date" id="dateInput" placeholder="Select date" />
+              <div id="holderOfTextareaAndImg">
+                <textarea class="inpDescription" id="textOfDescription" placeholder="Description"></textarea>
+                <div id="rightImageHolder">
+                  <input type="file" class="imageInputFile" name="fileInp" id="fileInput2" hidden accept="image/*" />
+                  <div id="smallImagePreviewHolder">
+                    <img id="smallImagePreview" src="" alt="preview" />
+                    <button id="removeSmallImageBtn">✕</button>
                   </div>
+                  <label for="fileInput2" class="custom-file-btn" id="uploadLabelSmall">
+                    <span id="uploadImgDisap">Upload an Image</span>
+                    <span class="material-symbols-outlined">add_2</span>
+                  </label>
                 </div>
-                <button id="submitMemoryBtn">ADD OUR MEMORY</button>
               </div>
+              <button id="submitMemoryBtn">ADD OUR MEMORY</button>
             </div>
           </div>
-          <div id="rightColor"></div>
         </div>
+        <div id="rightColor"></div>
       </div>
-
-      <div id="popUpWindow">
-        <h1 id="titleOfPopUp" class="titleOfPopUpClass">Our first trip</h1>
-        <div class="imageHolder">
-          <img class="slika" />
-        </div>
-        <div class="btnHolder">
-          <div id="divOfTitle">
-            <h1 id="titleOfPopUp2" class="titleOfPopUpClass hiddenTextOfTitle">
-              Our first trip
-            </h1>
-          </div>
-          <div id="divOfText">
-            <p>
-              <b class="boldText">City: </b
-              ><span id="popupCity" class="memoryText"></span>
-            </p>
-            <p>
-              <b class="boldText">Country: </b
-              ><span id="popupCountry" class="memoryText"></span>
-            </p>
-            <p>
-              <b class="boldText">Place: </b
-              ><span id="popupPlace" class="memoryText"></span>
-            </p>
-            <p>
-              <b class="boldText">Date: </b
-              ><span id="popupDate" class="memoryText"></span>
-            </p>
-            <p>
-              <b class="boldText">Description: </b>
-              <span
-                class="memoryText descriptionTextMemory"
-                id="popupDescription"
-              ></span>
-            </p>
-          </div>
-          <div id="divOfBtn">
-            <h3 class="editBtn btnOfPop" id="editBnt">Edit</h3>
-            <h3 class="backBtn btnOfPop" id="backBnt">Done</h3>
-          </div>
-        </div>
-      </div>
-      
-
-      <!-- Ako ja vide ova poraka pishi mi: JOU OLA SOI KIKICA MAINE BABUSH -->
-
-      <div id="shadow"></div>
-      <div id="loader">
-        <div class="back"></div>
-        <div class="heart"></div>
-      </div>
-      <div id="boja"></div>
-
-      <button id="memoryAdd">
-        <span id="btnDisapearingText">Add a New memory</span>
-        <span class="material-symbols-outlined" id="additionSign">add_2</span>
-      </button>
     </div>
 
-    <script src="js/timeline.js"></script>
-  </body>
+    <div id="popUpWindow">
+      <h1 id="titleOfPopUp" class="titleOfPopUpClass">Our first trip</h1>
+      <div class="imageHolder">
+        <img class="slika" />
+      </div>
+      <div class="btnHolder">
+        <div id="divOfTitle">
+          <h1 id="titleOfPopUp2" class="titleOfPopUpClass hiddenTextOfTitle">
+            Our first trip
+          </h1>
+        </div>
+        <div id="divOfText">
+          <p>
+            <b class="boldText">City: </b><span id="popupCity" class="memoryText"></span>
+          </p>
+          <p>
+            <b class="boldText">Country: </b><span id="popupCountry" class="memoryText"></span>
+          </p>
+          <p>
+            <b class="boldText">Place: </b><span id="popupPlace" class="memoryText"></span>
+          </p>
+          <p>
+            <b class="boldText">Date: </b><span id="popupDate" class="memoryText"></span>
+          </p>
+          <p>
+            <b class="boldText">Description: </b>
+            <span class="memoryText descriptionTextMemory" id="popupDescription"></span>
+          </p>
+        </div>
+        <div id="divOfBtn">
+          <h3 class="editBtn btnOfPop" id="editBnt">Edit</h3>
+          <h3 class="backBtn btnOfPop" id="backBnt">Done</h3>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Ako ja vide ova poraka pishi mi: JOU OLA SOI KIKICA MAINE BABUSH -->
+
+    <div id="shadow"></div>
+    <div id="loader">
+      <div class="back"></div>
+      <div class="heart"></div>
+    </div>
+    <div id="boja"></div>
+
+    <button id="memoryAdd">
+      <span id="btnDisapearingText">Add a New memory</span>
+      <span class="material-symbols-outlined" id="additionSign">add_2</span>
+    </button>
+  </div>
+
+  <script src="js/timeline.js"></script>
+</body>
+
 </html>
