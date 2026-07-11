@@ -429,43 +429,72 @@
 
       const originalLabel = `Finish ${state.selectedTrip.name}`;
       const FINISH_CONFIRM_SECONDS = 10;
+      const READY_TIMEOUT_MS = 15_000; // auto-cancel if left unconfirmed
       let countdownTimer = null;
+      let readyTimeout = null;
       let remainingSeconds = 0;
-      let armed = false;
+      // "idle" -> "counting" (button disabled, waiting out the 10s) ->
+      // "ready" (button re-enabled, one tap now finishes the trip)
+      let phase = "idle";
 
       function resetFinishButton() {
-        armed = false;
+        phase = "idle";
+        clearInterval(countdownTimer);
+        clearTimeout(readyTimeout);
+        countdownTimer = null;
+        readyTimeout = null;
+        finishButton.disabled = false;
+        finishButton.textContent = originalLabel;
+        finishButton.classList.remove(
+          "trip-camera-danger-button-armed",
+          "trip-camera-danger-button-ready",
+        );
+      }
+
+      function enterReadyPhase() {
+        phase = "ready";
         clearInterval(countdownTimer);
         countdownTimer = null;
-        finishButton.textContent = originalLabel;
+        finishButton.disabled = false;
+        finishButton.textContent = "Tap to confirm — finish trip";
         finishButton.classList.remove("trip-camera-danger-button-armed");
+        finishButton.classList.add("trip-camera-danger-button-ready");
+        // If they don't confirm shortly after the wait ends, cancel rather
+        // than leaving a one-tap "finish" button sitting there indefinitely.
+        readyTimeout = setTimeout(resetFinishButton, READY_TIMEOUT_MS);
       }
 
       function tickCountdown() {
         remainingSeconds -= 1;
         if (remainingSeconds <= 0) {
-          resetFinishButton();
+          enterReadyPhase();
           return;
         }
-        finishButton.textContent = `Tap again to finish (${remainingSeconds})`;
+        finishButton.textContent = `Please wait… (${remainingSeconds})`;
       }
 
       finishButton.addEventListener("click", async () => {
-        if (!armed) {
-          // First tap: arm a 10-second confirmation window instead of
-          // finishing immediately, so an accidental tap can't end the trip.
-          armed = true;
+        if (phase === "idle") {
+          // First tap: start a mandatory 10-second wait. The button is
+          // disabled for the entire wait, so a reflexive second tap or
+          // double-tap cannot finish the trip early — you can only confirm
+          // once the full delay has actually passed.
+          phase = "counting";
           remainingSeconds = FINISH_CONFIRM_SECONDS;
-          finishButton.textContent = `Tap again to finish (${remainingSeconds})`;
+          finishButton.disabled = true;
+          finishButton.textContent = `Please wait… (${remainingSeconds})`;
           finishButton.classList.add("trip-camera-danger-button-armed");
           countdownTimer = setInterval(tickCountdown, 1000);
           return;
         }
 
-        // Second tap while armed: actually finish the trip. Finished trips
-        // cannot be reopened, so this is the real point of no return.
-        clearInterval(countdownTimer);
-        countdownTimer = null;
+        if (phase !== "ready") return; // ignore clicks mid-countdown
+
+        // Confirm tap, only reachable after the full wait has elapsed.
+        // Finished trips cannot be reopened, so this is the real point of
+        // no return.
+        clearTimeout(readyTimeout);
+        readyTimeout = null;
         finishButton.disabled = true;
         finishButton.textContent = "Finishing…";
         try {

@@ -582,6 +582,13 @@
   border-color: #c6344d;
   background: #c6344d;
   color: #ffffff;
+  opacity: 0.75;
+}
+
+.trip-camera-danger-button-ready {
+  border-color: #c6344d;
+  background: #c6344d;
+  color: #ffffff;
   animation: trip-camera-armed-pulse 1s ease-in-out infinite;
 }
 
