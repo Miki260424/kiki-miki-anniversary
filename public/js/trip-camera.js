@@ -1831,10 +1831,27 @@
         (a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0),
       );
 
-      for (const record of records) {
-        if (!state.laptopOnline && !canUseCloudinary()) break;
-        await processRecord(record);
+      // Upload a few photos at once instead of strictly one-at-a-time.
+      // Each photo still goes through the exact same prepare/upload/verify
+      // steps as before; this just lets several of those steps run
+      // concurrently so a batch of photos from a trip clears the queue
+      // much faster instead of waiting for each one to fully finish before
+      // the next even starts.
+      const CONCURRENT_UPLOADS = 3;
+      let nextIndex = 0;
+
+      async function worker() {
+        while (nextIndex < records.length) {
+          if (!state.laptopOnline && !canUseCloudinary()) return;
+          const record = records[nextIndex];
+          nextIndex += 1;
+          await processRecord(record);
+        }
       }
+
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENT_UPLOADS, records.length) }, worker),
+      );
     } catch (error) {
       console.warn("Trip upload queue failed:", error);
     } finally {
