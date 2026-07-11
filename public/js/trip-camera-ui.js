@@ -427,67 +427,58 @@
         "Finish selected trip",
       );
 
-      finishButton.addEventListener("click", async () => {
-        const confirmed = window.confirm(
-          `Finish “${state.selectedTrip.name}”? The trip can be reopened later.`,
-        );
-        if (!confirmed) return;
+      const originalLabel = `Finish ${state.selectedTrip.name}`;
+      const FINISH_CONFIRM_SECONDS = 10;
+      let countdownTimer = null;
+      let remainingSeconds = 0;
+      let armed = false;
 
+      function resetFinishButton() {
+        armed = false;
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+        finishButton.textContent = originalLabel;
+        finishButton.classList.remove("trip-camera-danger-button-armed");
+      }
+
+      function tickCountdown() {
+        remainingSeconds -= 1;
+        if (remainingSeconds <= 0) {
+          resetFinishButton();
+          return;
+        }
+        finishButton.textContent = `Tap again to finish (${remainingSeconds})`;
+      }
+
+      finishButton.addEventListener("click", async () => {
+        if (!armed) {
+          // First tap: arm a 10-second confirmation window instead of
+          // finishing immediately, so an accidental tap can't end the trip.
+          armed = true;
+          remainingSeconds = FINISH_CONFIRM_SECONDS;
+          finishButton.textContent = `Tap again to finish (${remainingSeconds})`;
+          finishButton.classList.add("trip-camera-danger-button-armed");
+          countdownTimer = setInterval(tickCountdown, 1000);
+          return;
+        }
+
+        // Second tap while armed: actually finish the trip. Finished trips
+        // cannot be reopened, so this is the real point of no return.
+        clearInterval(countdownTimer);
+        countdownTimer = null;
         finishButton.disabled = true;
+        finishButton.textContent = "Finishing…";
         try {
           await engine.finishTrip(state.selectedTrip.id);
           closeOverlay();
         } catch (error) {
           window.alert(error.message);
           finishButton.disabled = false;
+          resetFinishButton();
         }
       });
 
       management.appendChild(finishButton);
-    }
-
-    if (state.finishedTrips?.length) {
-      const finishedSelect = document.createElement("select");
-      finishedSelect.className = "trip-camera-dialog-select";
-
-      const placeholder = document.createElement("option");
-      placeholder.value = "";
-      placeholder.textContent = "Choose a finished trip";
-      finishedSelect.appendChild(placeholder);
-
-      state.finishedTrips.forEach((trip) => {
-        const option = document.createElement("option");
-        option.value = trip.id;
-        option.textContent = trip.name;
-        finishedSelect.appendChild(option);
-      });
-
-      const reopenButton = makeButton(
-        "trip-camera-secondary-button",
-        "Reopen selected trip",
-        "Reopen selected trip",
-      );
-      reopenButton.disabled = true;
-
-      finishedSelect.addEventListener("change", () => {
-        reopenButton.disabled = !finishedSelect.value;
-      });
-
-      reopenButton.addEventListener("click", async () => {
-        if (!finishedSelect.value) return;
-        reopenButton.disabled = true;
-
-        try {
-          await engine.reopenTrip(finishedSelect.value);
-          engine.selectTrip(finishedSelect.value);
-          closeOverlay();
-        } catch (error) {
-          window.alert(error.message);
-          reopenButton.disabled = false;
-        }
-      });
-
-      management.append(finishedSelect, reopenButton);
     }
 
     if (!management.children.length) {

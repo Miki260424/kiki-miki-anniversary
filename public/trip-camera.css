@@ -578,6 +578,23 @@
   color: #c6344d;
 }
 
+.trip-camera-danger-button-armed {
+  border-color: #c6344d;
+  background: #c6344d;
+  color: #ffffff;
+  animation: trip-camera-armed-pulse 1s ease-in-out infinite;
+}
+
+@keyframes trip-camera-armed-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(198, 52, 77, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(198, 52, 77, 0);
+  }
+}
+
 .trip-camera-primary-button:disabled,
 .trip-camera-secondary-button:disabled,
 .trip-camera-danger-button:disabled {
