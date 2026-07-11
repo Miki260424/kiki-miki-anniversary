@@ -697,6 +697,7 @@
     state.unsubscribeFallback = null;
     state.activityCounts = emptyActivityCounts();
     state.fallbackCounts.cloudinaryWaiting = 0;
+    state._lastObservedTripId = state.selectedTripId;
 
     const tripId = state.selectedTripId;
     if (!state.started || !tripId) {
@@ -1691,6 +1692,8 @@
       state.localUploading = 0;
 
       for (const record of records) {
+        let justRecovered = false;
+
         if (
           record.status === "uploading" ||
           record.status === "compressing" ||
@@ -1699,9 +1702,17 @@
           record.status = "retry";
           record.lastError = "The previous upload was interrupted when the website closed.";
           await putRecord(record);
+          justRecovered = true;
         }
 
-        if (["queued", "retry", "uploading", "compressing"].includes(record.status)) {
+        // Only touch Firestore when this record's status just changed here.
+        // Records already correctly sitting in "queued"/"retry" already have
+        // that reflected in Firestore from the last real change — rewriting
+        // them every 60s (and on every screen unlock) is what caused the
+        // runaway read/write volume when the laptop was offline for days.
+        // The record itself still retries locally every tick either way;
+        // this only skips the redundant Firestore write.
+        if (justRecovered) {
           await updateActivity(record.fileId, {
             tripId: record.metadata?.tripId || null,
             tripName: record.metadata?.tripName || null,
@@ -1885,7 +1896,17 @@
           });
 
           state.ready = true;
-          syncTripObservers();
+
+          // syncTripObservers() tears down and recreates the activity/
+          // fallback listeners, which re-reads every matching document for
+          // the trip from scratch. Only do that when the selected trip
+          // actually changed — not on every unrelated trips-list update
+          // (e.g. another device editing a different trip).
+          if (state.selectedTripId !== state._lastObservedTripId) {
+            state._lastObservedTripId = state.selectedTripId;
+            syncTripObservers();
+          }
+
           notify();
         },
         (error) => {
@@ -1928,6 +1949,7 @@
     state.unsubscribeReceiver?.();
     state.unsubscribeActivity?.();
     state.unsubscribeFallback?.();
+    state._lastObservedTripId = undefined;
 
     state.unsubscribeTrips = null;
     state.unsubscribeReceiver = null;
