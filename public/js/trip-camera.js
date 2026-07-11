@@ -1996,21 +1996,16 @@
     stop,
   });
 
-  window.addEventListener("mk_user_ready", (event) => {
-    startForUser(event.detail?.who);
-  });
-
-  firebase.auth().onAuthStateChanged(async (user) => {
-    if (!user) return;
-    if (state.started) return;
-
-    try {
-      const token = await user.getIdTokenResult();
-      startForUser(token.claims?.who || storageGet("mk_user"));
-    } catch (error) {
-      console.warn("Trip Camera could not restore the authenticated user:", error);
-    }
-  });
+  // NOTE: Trip Camera used to auto-start here on every chat page load
+  // (via "mk_user_ready" and onAuthStateChanged), which opened 4 Firestore
+  // listeners plus the 60s retry loop even when nobody touched the camera.
+  // It now only starts on demand, via ensureStartedForUser(), which chat.js
+  // already calls from openCamera(). Behavior once started is unchanged:
+  // laptop-save in trip mode and chat-save in chat mode both work exactly
+  // as before, and any queued/interrupted photo from a previous session is
+  // still picked up automatically (processPendingQueue runs at the end of
+  // startForUser), just as soon as the camera is next opened instead of on
+  // every page load.
 
   window.addEventListener("online", () => {
     state.cloudinaryAvailable = canUseCloudinary();
@@ -2065,10 +2060,4 @@
     }
   }, SETTINGS.retryInterval);
 
-  const rememberedWho = storageGet("mk_user");
-  if (rememberedWho) {
-    startForUser(rememberedWho);
-  }
 })();
-
-
